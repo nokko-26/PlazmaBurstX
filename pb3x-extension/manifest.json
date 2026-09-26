@@ -1,0 +1,47 @@
+{
+	"manifest_version": 3,
+	"name": "PB3X — Plazma Burst 3 client mods",
+	"short_name": "PB3X",
+	"version": "0.0.26.6443",
+	"version_name": "0.0.26.202609261101",
+	"description": "Client mods for Plazma Burst 3: new vehicles, physics gore, menu themes and effects, chat tools and more. Runs on plazmaburst.net.",
+	"icons": {
+		"16": "icons/icon16.png",
+		"32": "icons/icon32.png",
+		"48": "icons/icon48.png",
+		"128": "icons/icon128.png"
+	},
+	"permissions": [
+		"declarativeNetRequest"
+	],
+	"host_permissions": [
+		"https://www.plazmaburst.net/*",
+		"https://plazmaburst.net/*",
+		"https://vgmtreasurechest.com/*",
+		"https://*.vgmtreasurechest.com/*",
+		"https://downloads.khinsider.com/*"
+	],
+	"declarative_net_request": {
+		"rule_resources": [
+			{
+				"id": "music",
+				"enabled": true,
+				"path": "music.json"
+			}
+		]
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"https://www.plazmaburst.net/*",
+				"https://plazmaburst.net/*"
+			],
+			"js": [
+				"pb3x.js"
+			],
+			"run_at": "document_start",
+			"world": "MAIN",
+			"all_frames": false
+		}
+	]
+}
