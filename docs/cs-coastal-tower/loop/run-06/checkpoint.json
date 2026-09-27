@@ -1,6 +1,6 @@
 {
- "phase": "OBSERVE",
- "seq": 30,
+ "phase": "ACT",
+ "seq": 31,
  "cycle": 13,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
@@ -19,7 +19,8 @@
    4,
    3,
    3,
-   4
+   4,
+   3
   ],
   "actionSigs": [
    "80fe487f50efe234",
@@ -91,11 +92,12 @@
    "0c074a212190000f",
    "4c14fc7d8c12405d",
    "423cdfb4e3612a41",
-   "7fab19fceed350ae"
+   "7fab19fceed350ae",
+   "d1ab90d6265da8d4"
   ]
  },
  "budgetSpent": {
-  "engineCalls": 30,
+  "engineCalls": 31,
   "actions": 59,
   "cycles": 13,
   "cost": 51,
@@ -163,16 +165,16 @@
   "act_208393254f2e58e9585a"
  ],
  "lastProbeIds": {
-  "probe:d22e87edb3fa10bb": "ev_muk9xnhv_4690c8de2c",
-  "probe:5e40829617afc91e": "ev_muka55mg_055e24a002",
-  "probe:f0da2bbb4787153c": "ev_muka55nj_13e55f7dfc",
-  "probe:7980a067bb842f7b": "ev_muka55uo_c969fa4afe",
-  "probe:3ddf0d6bd2086dd8": "ev_muka560b_a6f10d2982",
-  "probe:cb3bd0e8c318b9ec": "ev_muka568b_1c1bc6ae27",
-  "probe:990fb3e94a4cb262": "ev_muka92do_5614008d65",
-  "probe:5ae70d282044ba98": "ev_mukabmdi_0da96a07c2",
-  "probe:91dd14c2d620911a": "ev_mukaczda_65a73b4f5a",
-  "probe:aea6c2d28affb31d": "ev_mukaczfa_1944dcb313"
+  "probe:d22e87edb3fa10bb": "ev_mukakoc8_e95fc6c56a",
+  "probe:5e40829617afc91e": "ev_mukas66h_e3556aa6cb",
+  "probe:f0da2bbb4787153c": "ev_mukas67o_48f5262e64",
+  "probe:7980a067bb842f7b": "ev_mukas6f3_e4aa49c0d9",
+  "probe:3ddf0d6bd2086dd8": "ev_mukas6kf_b9fe2e3cfb",
+  "probe:cb3bd0e8c318b9ec": "ev_mukas6r9_11e2433769",
+  "probe:990fb3e94a4cb262": "ev_mukaw28g_62a481efd9",
+  "probe:5ae70d282044ba98": "ev_mukayltc_a87455694d",
+  "probe:91dd14c2d620911a": "ev_mukb028h_32bde5a4b2",
+  "probe:aea6c2d28affb31d": "ev_mukb02a8_6c251c1128"
  },
  "terminal": null,
  "finalRounds": 0,
@@ -430,8 +432,22 @@
   "ev_muka92do_5614008d65",
   "ev_mukabmdi_0da96a07c2",
   "ev_mukaczda_65a73b4f5a",
-  "ev_mukaczfa_1944dcb313"
+  "ev_mukaczfa_1944dcb313",
+  "ev_mukako0q_86c62316b4",
+  "ev_mukako7r_f3cf25c71f",
+  "ev_mukako7t_e14a16761f",
+  "ev_mukako7u_4c1a731c22",
+  "ev_mukakoc8_e95fc6c56a",
+  "ev_mukas66h_e3556aa6cb",
+  "ev_mukas67o_48f5262e64",
+  "ev_mukas6f3_e4aa49c0d9",
+  "ev_mukas6kf_b9fe2e3cfb",
+  "ev_mukas6r9_11e2433769",
+  "ev_mukaw28g_62a481efd9",
+  "ev_mukayltc_a87455694d",
+  "ev_mukb028h_32bde5a4b2",
+  "ev_mukb02a8_6c251c1128"
  ],
- "failureHandled": true,
+ "failureHandled": false,
  "stallReason": "REGRESSION"
 }
