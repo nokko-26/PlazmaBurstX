@@ -1,7 +1,7 @@
 // The AI's way through a level, as the game shows it (its "AI waypoints" debug view: the waypoints it builds on every
 // floor and the links between them, and each bot's path): node levels/waypoints.js 01
 // The player waits, unhurt, where the hunters should come to. Shots at set spots go to
-// levels/results/<level>-waypoints-<spot>.png, with how far each enemy moved in 20 s (hunters path; posts hold).
+// levels/results/<level>-waypoints-<spot>.png, with how far each enemy moved in 20 s of game time (hunters path; posts hold).
 const fs = require( 'fs' ), path = require( 'path' );
 const { launch } = require( '../launch' );
 const { MODS, openEditor, importLevel, playTest } = require( '../level' );
@@ -44,9 +44,13 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		{
 			const R = pb2Ragdoll.prototype, hurt = R._beb;
 			R._beb = function( atom, dmg, ...rest ) { const ch = this.owner_character; if ( ch && ch.controller && ch.controller.player_connection ) dmg = 0; return hurt.call( this, atom, dmg, ...rest ); };
-			const W = window.__wp = { deaths: 0, far: 0, worst: 0 };
+			const W = window.__wp = { deaths: 0, game: 0 };
 			const tick = ()=>{ requestAnimationFrame( tick ); const m = __lab.me(); if ( !m || !( m.hea > 0 ) ) { W.deaths++; return; } m.hmax = 150; m.hea = 150; };
 			tick();
+			// (the game's own clock: each think is given its step in 30 fps ticks — on a slow machine the game runs slower
+			// than the wall clock, so the wait is counted in game time)
+			const T = pb2Controller.ThinkNow;
+			pb2Controller.ThinkNow = function( gs ) { if ( gs > 0 ) W.game += gs / 30; return T.apply( this, arguments ); };
 		} );
 		await place(); await page.waitForTimeout( 100 ); await place();
 		await page.waitForTimeout( 400 );
@@ -57,14 +61,26 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			window.__wpStart = pb2Character.characters.filter( ( c )=>c && c.hea > 0 && !c.controller.player_connection ).map( ( c )=>( { c, x: c.x, y: c.y, crew: !!c.ragdoll.driver_of } ) );
 			return window.__wpStart.length;
 		}, BAIT[ LEVEL ] );
-		// (the player watched while it waits: where it is, twice a second)
-		const at = [];
-		for ( let i = 0; i < 40; i++ ) { await page.waitForTimeout( 500 ); at.push( await page.evaluate( ()=>{ const m = __lab.me(); return m && m.hea > 0 ? [ Math.round( m.x ), Math.round( m.y ), !!m.ragdoll.driver_of ] : null; } ) ); }
+		// 20 s of the game's time; the player watched while it waits, twice a second — a waiting player holds its ground,
+		// so one knocked more than 100 px off is put back (counted)
+		const at = [], bait = BAIT[ LEVEL ];
+		let replaced = 0;
+		const g0 = await page.evaluate( ()=>window.__wp.game ), w0 = Date.now();
+		while ( Date.now() - w0 < 240000 )
+		{
+			await page.waitForTimeout( 500 );
+			const p = await page.evaluate( ()=>{ const m = __lab.me(); return m && m.hea > 0 ? [ Math.round( m.x ), Math.round( m.y ), !!m.ragdoll.driver_of ] : null; } );
+			at.push( p );
+			if ( p && !p[ 2 ] && Math.hypot( p[ 0 ] - bait[ 0 ], p[ 1 ] - bait[ 1 ] ) > 100 ) { await place(); replaced++; }
+			if ( await page.evaluate( ()=>window.__wp.game ) - g0 >= 20 ) break;
+		}
+		out.gameSecs = +( ( await page.evaluate( ()=>window.__wp.game ) ) - g0 ).toFixed( 1 );
+		out.wallSecs = +( ( Date.now() - w0 ) / 1000 ).toFixed( 1 );
 		out.enemies = start;
-		const bait = BAIT[ LEVEL ];
-		out.player = { first: at[ 0 ], last: at[ at.length - 1 ], deaths: await page.evaluate( ()=>window.__wp.deaths ), worst: Math.max( ...at.map( ( p )=>p ? Math.hypot( p[ 0 ] - bait[ 0 ], p[ 1 ] - bait[ 1 ] ) : 1e9 ) ) | 0, inVehicle: at.some( ( p )=>p && p[ 2 ] ) };
-		// (the probe holds only if the player waited where it says: at the bait, alive, on foot, the whole time)
-		out.playerHeld = out.player.worst <= 160 && !out.player.inVehicle;
+		out.player = { first: at[ 0 ], last: at[ at.length - 1 ], deaths: await page.evaluate( ()=>window.__wp.deaths ), worst: Math.max( ...at.map( ( p )=>p ? Math.hypot( p[ 0 ] - bait[ 0 ], p[ 1 ] - bait[ 1 ] ) : 1e9 ) ) | 0, inVehicle: at.some( ( p )=>p && p[ 2 ] ), replaced };
+		// (the probe holds only if the player waited where it says: at the bait — put back when knocked, never thrown
+		// more than 400 px — alive, on foot, the whole 20 game seconds)
+		out.playerHeld = out.player.worst <= 400 && !out.player.inVehicle && out.player.deaths === 0 && out.gameSecs >= 20;
 		if ( !out.playerHeld ) out.failed = 'the player did not stay at the bait: ' + JSON.stringify( out.player );
 		out.moved = await page.evaluate( ( bait )=>window.__wpStart.map( ( { c, x, y, crew } )=>{ const alive = c.hea > 0 && !c.is_being_removed; const d0 = Math.hypot( x - bait[ 0 ], y - bait[ 1 ] ), d1 = Math.hypot( c.x - bait[ 0 ], c.y - bait[ 1 ] );
 			return { name: String( ( c.ragdoll.name || {} ).text || '' ), from: [ Math.round( x ), Math.round( y ) ], to: alive ? [ Math.round( c.x ), Math.round( c.y ) ] : 'dead', crew, moved: Math.round( Math.hypot( c.x - x, c.y - y ) ), closer: alive ? Math.round( d0 - d1 ) : 0, alive }; } ), BAIT[ LEVEL ] );

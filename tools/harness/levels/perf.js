@@ -77,15 +77,30 @@ async function measure( page, x, y, secs = 8 )
 		{
 			const { LABKIT } = require( '../labkit' );
 			await page.evaluate( LABKIT );
-			// (the player unhurt: this measures the frame, not the fight)
-			await page.evaluate( ()=>{ const R = pb2Ragdoll.prototype, hurt = R._beb; R._beb = function( atom, dmg, ...rest ) { const ch = this.owner_character; if ( dmg > 0 && ch && ch.controller && ch.controller.player_connection ) dmg = 0; return hurt.call( this, atom, dmg, ...rest ); }; } );
+			// (the player unhurt: this measures the frame, not the fight — blows through the ragdoll's damage, and fire,
+			// which doesn't come through it: healed every frame too. A player who died would be put back at the dock and
+			// the spot measured without it)
+			await page.evaluate( ()=>{ const R = pb2Ragdoll.prototype, hurt = R._beb; R._beb = function( atom, dmg, ...rest ) { const ch = this.owner_character; if ( dmg > 0 && ch && ch.controller && ch.controller.player_connection ) dmg = 0; return hurt.call( this, atom, dmg, ...rest ); };
+				const W = window.__perf = { deaths: 0 }; const tick = ()=>{ requestAnimationFrame( tick ); const m = __lab.me(); if ( !m || !( m.hea > 0 ) ) { W.deaths++; return; } m.hmax = 150; m.hea = 150; }; tick(); } );
 		}
 		for ( const [ name, x, y ] of SPOTS[ LEVEL ] )
 		{
 			const at = STAND[ LEVEL ] && STAND[ LEVEL ][ name ];
-			if ( at ) { await page.evaluate( ( [ px, feet ] )=>{ const m = __lab.me(); if ( !m ) return; const v = m.ragdoll.driver_of; if ( v && v.ExcludeRagdoll ) v.ExcludeRagdoll( m.ragdoll, true ); __lab.teleport( px, feet - 44 ); }, at ); await page.waitForTimeout( 3000 ); }
+			// (out of any vehicle, put there twice a moment apart, every body stilled: a teleport keeps a vehicle's momentum)
+			const place = ()=>page.evaluate( ( [ px, feet ] )=>{ const m = __lab.me(); if ( !m ) return; const v = m.ragdoll.driver_of; if ( v && v.ExcludeRagdoll ) v.ExcludeRagdoll( m.ragdoll, true ); __lab.teleport( px, feet - 44 );
+				const bodies = ( m.ragdoll.local_atoms || [] ).filter( Boolean ).map( ( a )=>a.box2d_body ); for ( const k of [ 'box2d_body', 'gy', 'lS' ] ) bodies.push( m[ k ] ); for ( const b of bodies ) { if ( !b || typeof b.SetLinearVelocity !== 'function' ) continue; try { b.SetLinearVelocity( new b2Vec2( 0, 0 ) ); } catch ( e ) {} } }, at );
+			if ( at ) { await place(); await page.waitForTimeout( 100 ); await place(); await page.waitForTimeout( 3000 ); }
+			const where = ()=>page.evaluate( ()=>{ const m = __lab.me(); return m && m.hea > 0 ? [ Math.round( m.x ), Math.round( m.y + 44 ), !!m.ragdoll.driver_of ] : null; } );
+			const before = at ? await where() : null, deaths0 = at ? await page.evaluate( ()=>window.__perf.deaths ) : 0;
 			out.spots[ name ] = await measure( page, x, y );
-			if ( at ) out.spots[ name ].player = at;
+			if ( at )
+			{
+				// (and it was there, alive and on foot, from before the measure to after it)
+				const after = await where(), deaths = await page.evaluate( ()=>window.__perf.deaths ) - deaths0;
+				const near = ( p )=>!!p && !p[ 2 ] && Math.abs( p[ 0 ] - at[ 0 ] ) <= 400 && Math.abs( p[ 1 ] - at[ 1 ] ) <= 200;   // (a knock under fire is allowed; thrown off the spot isn't)
+				Object.assign( out.spots[ name ], { player: at, before, after, deaths, held: near( before ) && near( after ) && deaths === 0, asleep: await page.evaluate( ()=>window.__csTower.asleep ), charsOffCam: await page.evaluate( ()=>window.__csTower.charsOffCam ) } );
+				if ( !out.spots[ name ].held ) out.failed = ( out.failed ? out.failed + '; ' : '' ) + 'the player was not held at ' + name + ': ' + JSON.stringify( { before, after, deaths } );
+			}
 			log( name, JSON.stringify( out.spots[ name ] ) );
 		}
 		out.mod = await page.evaluate( ()=>( { status: window.__csTower.status, error: window.__csTower.error } ) );

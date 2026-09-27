@@ -503,7 +503,7 @@ function autopilot()
 // moves its own character too, so its view doesn't wait for the host.
 const ladderFoot = ( s )=>s.toy === null || s.toy <= s.y + 40 ? s.y + 300 : s.toy;
 const LAD = { half: 28, water: 55, grab: 60, speed: 260, side: 150, pull: 8, below: 90, catchSpeed: 380, catchHalf: 70 };
-const onLadder = new WeakMap(), ladderT = new WeakMap(), ghosted = new WeakMap();
+const onLadder = new WeakMap(), ladderT = new WeakMap(), ghosted = new WeakMap(), heldAt = new WeakMap();
 // (a climber passes through nothing but its shaft; while it climbs its body and gun collide with nothing, so a gun held
 // out sideways can't snag a hatch's edge. Put back when it lets go.)
 function ghost( ch, on )
@@ -535,7 +535,7 @@ function setVel( ch, vx, vy )
 }
 // letting go of a ladder, however it happens: its clock forgotten (else the next climb's first step is a jump), the
 // climber solid again
-function letGo( ch ) { onLadder.delete( ch ); ladderT.delete( ch ); ghost( ch, false ); }
+function letGo( ch ) { onLadder.delete( ch ); ladderT.delete( ch ); heldAt.delete( ch ); ghost( ch, false ); }
 function ladders()
 {
 	const list = markers( 'ladder' );
@@ -568,17 +568,26 @@ function ladders()
 		const now = clock(), step = clamp( now - ( ladderT.get( ch ) || now ), 0, 0.25 );
 		ladderT.set( ch, now );
 		let vy = ( ctl.act_y || 0 ) * LAD.speed;
-		if ( vy < 0 && feet <= s.y ) vy = 0;                                        // (at the top: step off sideways)
-		if ( vy < 0 ) vy = Math.max( vy, ( s.y - feet ) / Math.max( step, 1e-3 ) );   // (and never past it)
-		if ( vy > 0 && feet >= bottom ) { letGo( ch ); continue; }                   // (off the foot of it)
+		if ( vy > 0 && feet >= bottom - 2 ) { letGo( ch ); continue; }             // (off the foot of it)
+		// (where the climber is held: moved by the climb from where it was held, never past the top or the foot. A
+		// ghost falls between ticks — gravity acts within the physics steps of a slow frame — so each tick it's put back
+		// where it's held, not left where it sank)
+		let want = heldAt.has( ch ) ? heldAt.get( ch ) : feet;
+		if ( vy < 0 && want <= s.y ) vy = 0;                                        // (at the top: step off sideways)
+		want += vy * step;
+		if ( vy < 0 ) want = Math.max( want, s.y );
+		if ( vy > 0 ) want = Math.min( want, bottom );
 		// (left / right step off only when the climber isn't moving along it — nothing held, or at the top: held together
 		// with up or down they'd carry a climber off the rungs mid-shaft, so there they're ignored)
 		const side = ctl.act_x && ( !ctl.act_y || vy === 0 );
 		const vx = side ? ctl.act_x * LAD.side : clamp( ( s.x - ch.x ) * LAD.pull, -LAD.side, LAD.side );
 		if ( side && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { letGo( ch ); continue; }
 		ghost( ch, true );
-		opt( ()=>ch.ragdoll.Teleport( vx * step, vy * step ) );
+		opt( ()=>ch.ragdoll.Teleport( vx * step, want - feet ) );
 		setVel( ch, 0, 0 );
+		heldAt.set( ch, want );
+		// (down at the foot: standing there, off the ladder)
+		if ( vy > 0 && want >= bottom ) { letGo( ch ); continue; }
 		n++;
 	}
 	state.onLadder = n;
@@ -1904,7 +1913,7 @@ function level06()
 	// the extraction: the hilltop above the bunker, a CS-4 Ranger (the raiders' ride out) beside it
 	B.entity( H.exit, hills[ 2 ][ 2 ], 'pb2Entity.TYPE_CS_EXIT', { style_id: '1' } );
 	B.entity( 15420, hills[ 2 ][ 2 ] - 80, 'pb2Entity.TYPE_TANK', { style_id: '4', side: '1' } );
-	B.entity( 13760, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
+	B.entity( 13440, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );          // (on the catwalk, outside the door: not in the guards' faces)
 	B.entity( 14800, L.floor, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
 	B.call( 'pb2GameWorld.FinalizeWorld', true );
 	return B.out;
