@@ -66,7 +66,7 @@ alternate routes (water vs corridor), rotating objective variants and a random w
 water boxes and liquids, current/damage regions, lamps, enemies/allies/teams/AI presets, guns, barrels, crates,
 placed vehicles, triggers, timers, dialogue text.
 
-**New mod code**, shipped as four PB3X mods (all start off, like the rest):
+**New mod code**, shipped as PB3X mods (all start off, like the rest; the fifth, `cs-skies`, is below):
 
 | Mod | What it adds |
 |---|---|
@@ -78,6 +78,40 @@ placed vehicles, triggers, timers, dialogue text.
 The models are procedural three.js built in code, the same way the mod's vehicles are built, so they're
 light, lit by the map and match the game.
 
+### Skies (a fifth mod, `cs-skies`)
+
+HD sky panoramas behind every level (and usable on any map and as the menu backdrop, which PB3X already
+supports with its "behind the city" background mode):
+
+- **Set:** storm night with lightning, moonlit overcast, clear starry night, dusk over the sea (the sheet's
+  exterior view), fog-bank dawn, and heavy squall. Each level lists the skies that suit it; a replay picks
+  one of them with a matching weather preset (rain, wind, fog, lightning rate), so the same level plays
+  under different conditions.
+- **Layers:** the panorama itself, a moving cloud layer drawn over it, the moon and its glow, lightning that
+  lights the clouds from inside, and the sky's colour feeding the map's sun/sky light, so characters and
+  vehicles are lit to match.
+- **Format:** each sky is a 4096 × 2048 equirectangular WebP (tonemapped from the source HDRI; HD without
+  bloating the mod), plus a small blurred copy for ambient light. The budget is about 3–5 MB a sky.
+- **Loading:** the files ship in `pb3x-extension/assets/skies/`, declared as `web_accessible_resources`. The
+  mods run in the page, which can't call `chrome.runtime`, so a tiny isolated-world content script writes the
+  extension's base URL onto the page for them to read. Nothing is fetched from a CDN at play time.
+- **Editor:** a Sky picker in the world settings (none = the game's own sky), with a preview.
+
+### Free HD resources (licence-safe only)
+
+| Source | What for | Licence |
+|---|---|---|
+| Poly Haven | sky HDRIs, PBR textures (concrete, rusted steel, wet asphalt, rock), a few models | CC0 |
+| ambientCG | PBR textures (metal plates, grating, concrete, rock, decals), HDRIs | CC0 |
+| Kenney | UI and sound effects, simple props | CC0 |
+| Freesound | rain, surf, wind, metal creaks, sirens, foghorn, machinery | CC0 entries only |
+| OpenGameArt | sound effects, textures | CC0 entries only |
+| NASA image library | moon surface, star field | public domain (no NASA logos / endorsement) |
+
+Not used: anything CC-BY-NC, "free for personal use", or royalty-free packs whose licence forbids passing on
+the raw files (a mod ships the files). Every file used is listed in `docs/cs-coastal-tower/CREDITS.md` with its
+source URL, author and licence, and is resized/compressed to what the game actually shows.
+
 ## 5. How each level is verified
 
 Build → play → screenshots from at least four angles (overview, player eye line, each tier, vehicle lanes),
@@ -87,8 +121,9 @@ saved to `docs/cs-coastal-tower/shots/` and shown after each level before the ne
 
 ## 6. Packaging
 
-Source in `mods/*.user.js` (same format as the launcher's `mods-builtin/`) plus a small script that bakes them
-into `pb3x-extension/pb3x.js`, so the extension works as-is; the same files drop into the launcher repo.
+Source in `mods/*.user.js` (same format as the launcher's `mods-builtin/`), baked into
+`pb3x-extension/pb3x.js` by `node tools/bake-mods.js` (done: re-baking replaces its earlier output, and with no
+mods it restores the bundle byte for byte; `--check` only verifies). The same files drop into the launcher repo.
 Work lands on the branch `cs-coastal-tower`, not `main`.
 
 ## 7. Blockers
