@@ -83,10 +83,12 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		out.playerHeld = out.player.worst <= 400 && !out.player.inVehicle && out.player.deaths === 0 && out.gameSecs >= 20;
 		if ( !out.playerHeld ) out.failed = 'the player did not stay at the bait: ' + JSON.stringify( out.player );
 		out.moved = await page.evaluate( ( bait )=>window.__wpStart.map( ( { c, x, y, crew } )=>{ const alive = c.hea > 0 && !c.is_being_removed; const d0 = Math.hypot( x - bait[ 0 ], y - bait[ 1 ] ), d1 = Math.hypot( c.x - bait[ 0 ], c.y - bait[ 1 ] );
-			return { name: String( ( c.ragdoll.name || {} ).text || '' ), from: [ Math.round( x ), Math.round( y ) ], to: alive ? [ Math.round( c.x ), Math.round( c.y ) ] : 'dead', crew, moved: Math.round( Math.hypot( c.x - x, c.y - y ) ), closer: alive ? Math.round( d0 - d1 ) : 0, alive }; } ), BAIT[ LEVEL ] );
-		// (hunters walking to the player: alive, on foot — not a boat's crew — and more than 150 px closer to it; a fall
-		// into the sea or a body thrown by a blast isn't a hunter pathing)
-		out.movedCount = out.moved.filter( ( m )=>m.alive && !m.crew && m.closer > 150 ).length;
+			return { name: String( ( c.ragdoll.name || {} ).text || '' ), from: [ Math.round( x ), Math.round( y ) ], to: alive ? [ Math.round( c.x ), Math.round( c.y ) ] : 'dead', crew, moved: Math.round( Math.hypot( c.x - x, c.y - y ) ), closer: alive ? Math.round( d0 - d1 ) : 0, end: alive ? Math.round( d1 ) : null, alive }; } ), BAIT[ LEVEL ] );
+		// (hunters walking to the player: alive, on foot — not a boat's crew — and either more than 150 px closer to it, or
+		// come to it: moved more than 150 px and ended within 200 px of it (one that started 200 px off can't close 150
+		// and still be beside it). A fall into the sea or a body thrown by a blast isn't a hunter pathing)
+		for ( const m of out.moved ) m.towards = m.alive && !m.crew ? ( m.closer > 150 ? 'closed' : m.moved > 150 && m.end !== null && m.end < 200 ? 'reached' : null ) : null;
+		out.movedCount = out.moved.filter( ( m )=>m.towards ).length;
 		out.anyMoved = out.moved.filter( ( m )=>m.moved > 150 ).length;
 		for ( const [ name, x, y, zoom ] of SPOTS[ LEVEL ] ) { await shoot( page, path.join( OUT, LEVEL + '-waypoints-' + name + '.png' ), { x, y, zoom, frames: 40 } ); log( 'shot', name ); }
 	}
