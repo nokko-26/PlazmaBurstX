@@ -273,7 +273,7 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 				if ( prev && q.feet > prev.feet ) fastest = Math.max( fastest, ( q.feet - prev.feet ) / ( ( t - prev.t ) / 1000 ) );
 				if ( !q.ladder && q.feet > L.road + 30 && q.feet < L.cap.top - 30 ) offAbove++;
 				prev = { feet: q.feet, t };
-				if ( took !== null && q.feet >= L.cap.top - 5 ) break;
+				if ( took !== null && !q.ladder && Math.abs( q.feet - L.cap.top ) < 12 ) break;
 			}
 			await key( 'keyup', 'KeyS' ); if ( aHeld ) await key( 'keyup', 'KeyA' );
 			await page.waitForTimeout( 700 );
@@ -360,7 +360,7 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		} );
 
 		// ---- the layers, at eye level ----
-		for ( const [ name, x, feet ] of [ [ 'eye-cap2', c2 - 300, L.cap.top ], [ 'eye-interior-security', 6500, L.floor ], [ 'eye-interior-bay', 8400, L.floor ], [ 'eye-road-tower', 6900, L.road ], [ 'eye-observation', L.tower.x0 + 200, L.tower.l3 ], [ 'eye-cliff-facility', 900, L.floor ], [ 'eye-cliff-ledge', 1000, L.cliff.ledge ], [ 'eye-bunker-lower', 14100, L.cap.top ], [ 'eye-bunker-stairs', 14550, -470 ], [ 'eye-hilltop', 15300, L.shore.hill[ 2 ][ 2 ] ] ] )
+		for ( const [ name, x, feet ] of [ [ 'eye-cap2', c2 - 300, L.cap.top ], [ 'eye-interior-security', 6500, L.floor ], [ 'eye-interior-bay', 8400, L.floor ], [ 'eye-road-tower', 6900, L.road ], [ 'eye-observation', L.tower.x0 + 200, L.tower.l3 ], [ 'eye-cliff-facility', 900, L.floor ], [ 'eye-cliff-ledge', 1000, L.cliff.ledge ], [ 'eye-bunker-lower', 13980, L.cap.top ], [ 'eye-bunker-stairs', 14550, -470 ], [ 'eye-hilltop', 15300, L.shore.hill[ 2 ][ 2 ] ] ] )
 		{
 			await put( x, feet, 1500 );
 			await shot( name );
@@ -381,6 +381,7 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 				if ( !m || m.dead ) { if ( !gone ) goneAt = Date.now(); gone = true; }
 				else if ( gone ) { back = m; backAt = Date.now(); break; }
 			}
+			const first = back;
 			await ev( ()=>{ window.__watch.god = true; } );
 			if ( back ) { await page.waitForTimeout( 1500 ); back = await me(); }
 			await shot( 'respawned' );
@@ -389,10 +390,11 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			const cpNow = await ev( ()=>window.__csTower.checkpoint );
 			const now = back ? await me() : null;
 			const standing = !!now && !now.dead && !!cpNow && Math.abs( now.feet - cpNow.y ) < 20;
-			// (back within 8 s, at the checkpoint — within 150 px of it — not somewhere else that happens to be level)
+			// (back within 8 s, put at the checkpoint — its first moment alive within 150 px of it, not somewhere else
+			// that happens to be level — and still on its floor 3 s on: a knock under fire along the floor is the fight's)
 			const secs = goneAt && backAt ? +( ( backAt - goneAt ) / 1000 ).toFixed( 1 ) : null;
-			const atCheckpoint = !!now && !!cpNow && Math.abs( now.x - cpNow.x ) <= 150;
-			return { ok: gone && !!back && standing && secs !== null && secs <= 8 && atCheckpoint, gone, back, now, standing, secs, atCheckpoint, checkpoint: cp, used: cpNow, respawns: await ev( ()=>window.__csTower.respawns ) };
+			const atCheckpoint = !!first && !!cpNow && Math.abs( first.x - cpNow.x ) <= 150;
+			return { ok: gone && !!back && standing && secs !== null && secs <= 8 && atCheckpoint, gone, first, back, now, standing, secs, atCheckpoint, checkpoint: cp, used: cpNow, respawns: await ev( ()=>window.__csTower.respawns ) };
 		} );
 
 		// ---- frame times, errors ----

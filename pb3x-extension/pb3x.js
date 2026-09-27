@@ -18838,7 +18838,7 @@ const L06 = {
 	cap: { half: 450, top: -330, t: 30 },
 	soffit: -580, floor: -620, ceil: -820, road: -860, header: 40,
 	shaft: -120,                                                              // (each leg's ladder shaft, from its centre)
-	hatch: 70,                                                                // (half the hatch it climbs through: room for a climber's arms and gun)
+	hatch: 15,                                                                // (half the hatch a ladder goes through: a climber collides with nothing, so the hole only shows the way — 30 px, which walkers, soldiers and vehicles cross in their stride; a 140 px one cut every floor for the AI, which fell down the shafts)
 	containerH: 90, containerTop: -400,
 	partitions: [ 1900, 2800, 3450, 4350, 5250, 6150, 6850, 7050, 7950, 8850, 9750, 10650, 11550, 12450, 13350 ],
 	rooms: [ [ 1300, 1900, 'bg_room', 'Store' ], [ 1900, 2800, 'bg_room', 'Services' ], [ 2800, 3450, 'bg_sec', 'Security' ], [ 3450, 4350, 'bg_room', 'Services' ],

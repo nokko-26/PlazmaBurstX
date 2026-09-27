@@ -1,7 +1,7 @@
 {
- "phase": "ACT",
- "seq": 31,
- "cycle": 13,
+ "phase": "OBSERVE",
+ "seq": 32,
+ "cycle": 14,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
@@ -81,7 +81,11 @@
    "7bf01c140875a575",
    "49945993ba0646e5",
    "3f74bac72552f6be",
-   "08e8556dc6a8b8c4"
+   "08e8556dc6a8b8c4",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
+   "0a86473e94b5aaa5",
+   "498fe5716500fe14"
   ],
   "hypotheses": [
    "0eb01c3a31fa5b2d",
@@ -97,9 +101,9 @@
   ]
  },
  "budgetSpent": {
-  "engineCalls": 31,
-  "actions": 59,
-  "cycles": 13,
+  "engineCalls": 32,
+  "actions": 63,
+  "cycles": 14,
   "cost": 51,
   "startedAt": 1790529166395
  },
@@ -162,7 +166,11 @@
   "act_dc7c654467dc0f1dfb05",
   "act_b275456d85c9e5be1bbf",
   "act_faf28ee8c5f7f72e9368",
-  "act_208393254f2e58e9585a"
+  "act_208393254f2e58e9585a",
+  "act_85344bb65b7394e647c5",
+  "act_0cc66647c80b7f9e08ac",
+  "act_02e51627010288942786",
+  "act_20915147d5d843791c11"
  ],
  "lastProbeIds": {
   "probe:d22e87edb3fa10bb": "ev_mukakoc8_e95fc6c56a",
@@ -180,15 +188,14 @@
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_dc7c654467dc0f1dfb05",
+   "id": "act_85344bb65b7394e647c5",
    "tool": "file.write_from",
    "targets": [
-    "ladders-work",
-    "respawn-works"
+    "enemies-path"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_mukako0q_86c62316b4",
+   "evidence": "ev_mukb5gaz_6f8d1caaa7",
    "expectedEvidence": [
     "tool.file.write_from with a new sha256"
    ],
@@ -197,15 +204,14 @@
    ]
   },
   {
-   "id": "act_b275456d85c9e5be1bbf",
+   "id": "act_0cc66647c80b7f9e08ac",
    "tool": "pb3x.bake",
    "targets": [
-    "ladders-work",
-    "respawn-works"
+    "enemies-path"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_mukako7r_f3cf25c71f",
+   "evidence": "ev_mukb5ghg_514fedf86f",
    "expectedEvidence": [
     "tool.pb3x.bake ok"
    ],
@@ -214,14 +220,14 @@
    ]
   },
   {
-   "id": "act_faf28ee8c5f7f72e9368",
+   "id": "act_02e51627010288942786",
    "tool": "file.write_from",
    "targets": [
-    "enemies-path"
+    "respawn-works"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_mukako7t_e14a16761f",
+   "evidence": "ev_mukb5ghi_b2c2b40ef8",
    "expectedEvidence": [
     "tool.file.write_from with a new sha256"
    ],
@@ -230,16 +236,16 @@
    ]
   },
   {
-   "id": "act_208393254f2e58e9585a",
+   "id": "act_20915147d5d843791c11",
    "tool": "file.write_from",
    "targets": [
     "frame-cost"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_mukako7u_4c1a731c22",
+   "evidence": "ev_mukb5ghj_80b9ad8337",
    "expectedEvidence": [
-    "tool.file.write_from with a new sha256"
+    "tool.file.write_from with a sha256"
    ],
    "failureSignatures": [
     "write error"
