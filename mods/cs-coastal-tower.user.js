@@ -1366,29 +1366,40 @@ function level01()
 // pitstop fights: 330 px up, the boat passes under them; ladders come up out of the water at both ends), the hanging
 // containers between them (a jump route from cap to cap), the deck interior (a run of rooms: services, red security
 // rooms, a vehicle bay with CS tanks), and the road deck and the tower on top. Each leg has a ladder shaft from its cap
-// through hatches in the deck to the road. Three objectives in any order open the extraction: this is the middle chunk
-// (the command room in the tower); the cliff facility (left) and the bunker shore (right) come next.
+// through hatches in the deck to the road. Three objectives in any order open the extraction on the hilltop: the power
+// in the cliff facility (left: rooms cut into the rock where the deck meets the cliff, a ledge and a catwalk out to the
+// first cap), the command room in the tower (middle), and the basement of the shore bunker (right: a lower corridor at
+// cap level, an upper one at deck level, stairs between them, a shaft down to the basement below the sea, a shaft up to
+// the hilltop where the extraction waits).
 //
 // (Seen side-on the sea is one lane: a footing at the waterline would block the boat. The footings are drawn behind the
 // lane, where the concept has them, and the caps are high enough for the boat to pass under: ≥ 290 px clear.)
 const L06 = {
 	style: 6,
 	sea: 0, bed: 700,
-	ends: [ 4200, 10800 ],                                                    // (the headlands closing the middle chunk for now)
-	bridge: [ 4600, 10400 ],
-	legs: [ 5700, 7500, 9300 ],
+	ends: [ 0, 15800 ],
+	bridge: [ 1300, 13700 ],
+	legs: [ 2100, 3900, 5700, 7500, 9300, 11100, 12900 ],
 	cap: { half: 450, top: -330, t: 30 },
 	soffit: -580, floor: -620, ceil: -820, road: -860, header: 40,
 	shaft: -120,                                                              // (each leg's ladder shaft, from its centre)
 	hatch: 55,                                                                // (half the hatch it climbs through: a climber's arms and gun need the room)
 	containerH: 90, containerTop: -400,
-	partitions: [ 5250, 6150, 6850, 7050, 7950, 8850, 9750 ],
-	rooms: [ [ 4600, 5250, 'bg_room', 'Store' ], [ 5250, 6150, 'bg_room', 'Services' ], [ 6150, 6850, 'bg_sec', 'Security' ], [ 6850, 7050, 'bg_room', 'Vestibule' ],
-		[ 7050, 7950, 'bg_tower', 'Tower base' ], [ 7950, 8850, 'bg_bay', 'Vehicle bay' ], [ 8850, 9750, 'bg_room', 'Services' ], [ 9750, 10400, 'bg_sec', 'Security' ] ],
+	partitions: [ 1900, 2800, 3450, 4350, 5250, 6150, 6850, 7050, 7950, 8850, 9750, 10650, 11550, 12450, 13350 ],
+	rooms: [ [ 1300, 1900, 'bg_room', 'Store' ], [ 1900, 2800, 'bg_room', 'Services' ], [ 2800, 3450, 'bg_sec', 'Security' ], [ 3450, 4350, 'bg_room', 'Services' ],
+		[ 4350, 5250, 'bg_room', 'Store' ], [ 5250, 6150, 'bg_room', 'Services' ], [ 6150, 6850, 'bg_sec', 'Security' ], [ 6850, 7050, 'bg_room', 'Vestibule' ],
+		[ 7050, 7950, 'bg_tower', 'Tower base' ], [ 7950, 8850, 'bg_bay', 'Vehicle bay' ], [ 8850, 9750, 'bg_room', 'Services' ], [ 9750, 10650, 'bg_sec', 'Security' ],
+		[ 10650, 11550, 'bg_room', 'Services' ], [ 11550, 12450, 'bg_sec', 'Security' ], [ 12450, 13350, 'bg_room', 'Services' ], [ 13350, 13700, 'bg_room', 'Vestibule' ] ],
 	tower: { x0: 7100, x1: 7900, wall: 40, l2: -1100, l3: -1340, slab: 20, roof: -1600, roofT: 40, doorTop: -1020, l3Open: -1520, shaft: 7800 },
-	cranes: [ { x: 5850, dir: -1, load: -1180 }, { x: 9450, dir: 1, load: -1180 } ],
-	watchtowers: [ 4880, 10150 ],
-	start: { dock: [ 4600, 4680 ], boat: 4900 },
+	cranes: [ { x: 2250, dir: -1, load: -1180 }, { x: 5850, dir: -1, load: -1180 }, { x: 9450, dir: 1, load: -1180 }, { x: 13050, dir: 1, load: -1180 } ],
+	watchtowers: [ 1450, 4880, 10150, 13550 ],
+	start: { dock: [ 1200, 1300 ], boat: 1560 },
+	// the cliff facility (left): the rock from the level's left edge to the bridge, cut into rooms
+	cliff: { x0: 0, x1: 1300, top: -1300, ledge: -330, dockBack: 1150, tunnel: [ 700, 1300, -490 ], facility: [ 300, 1300 ], shaft: 1000, ladder: 1200, power: 450 },
+	// the shore bunker (right): lower corridor (cap level), stairs up to the upper corridor (deck level), the basement
+	// under the sea, the hilltop
+	shore: { x0: 13700, x1: 15800, dock: [ 13550, 13700 ], lower: [ 13700, 14400, -490 ], stairs: 14400, upper: [ 13700, 15200 ], basement: [ 13900, 14700, 100, 300 ],
+		baseShaft: 14100, hillShaft: 15100, hill: [ [ 13700, 14400, -860 ], [ 14400, 14700, -940 ], [ 14700, 15800, -1020 ] ], exit: 15600, objective: 14550 },
 	hanging: []
 };
 ( ()=>
@@ -1430,15 +1441,81 @@ function level06()
 	B.ai( 'cs_post', { skill: '0.75', behavior: 'pb2AIModule.BEHAVIOR_IDLE', hear_range: '700', hunt_random_known_threats_range: '0' } );
 	B.ai( 'cs_hunter', { skill: '0.8', behavior: 'pb2AIModule.BEHAVIOR_MPBOT', hear_range: '800', hunt_random_known_threats_range: '1400' } );
 	B.ai( 'cs_crew', { skill: '0.7', behavior: 'pb2AIModule.BEHAVIOR_IDLE', hear_range: '900', hunt_random_known_threats_range: '0' } );
-	// the headlands, the seabed, the sea
-	const top = -1300, bot = L.bed + 250;
-	B.wall( L.ends[ 0 ], top, bx0 - L.ends[ 0 ], bot - top, 'cliff' );
-	B.wall( bx1, top, L.ends[ 1 ] - bx1, bot - top, 'cliff' );
-	B.wall( bx0, L.bed, bx1 - bx0, bot - L.bed, 'seabed' );
-	for ( const [ x, w, h ] of [ [ 5300, 420, 120 ], [ 6500, 300, 90 ], [ 8200, 460, 140 ], [ 9900, 280, 100 ] ] ) B.wall( x, L.bed - h, w, h, 'seabed' );
-	B.water( bx0, L.sea, bx1 - bx0, L.bed, 'sea' );
-	// the start: a dock at the foot of the left headland, level with the boat's deck, solid to the seabed
+	// rock with rooms cut out of it: the box [ x0, x1 ] × [ y0, y1 ] less each hole [ x0, x1, y0, y1 ], as columns of walls
+	// (neighbouring columns cut alike are merged)
+	const carve = ( x0, y0, x1, y1, holes, m )=>
+	{
+		const xs = [ x0, x1 ];
+		for ( const h of holes ) for ( const x of [ h[ 0 ], h[ 1 ] ] ) if ( x > x0 && x < x1 ) xs.push( x );
+		xs.sort( ( a, b )=>a - b );
+		let prev = null;
+		for ( let i = 0; i < xs.length - 1; i++ )
+		{
+			const a = xs[ i ], b = xs[ i + 1 ];
+			if ( b - a < 1 ) continue;
+			let ivs = [ [ y0, y1 ] ];
+			for ( const h of holes ) if ( h[ 0 ] < b && h[ 1 ] > a ) { const out = []; for ( const [ p, q ] of ivs ) { if ( h[ 3 ] <= p || h[ 2 ] >= q ) { out.push( [ p, q ] ); continue; } if ( h[ 2 ] > p ) out.push( [ p, h[ 2 ] ] ); if ( h[ 3 ] < q ) out.push( [ h[ 3 ], q ] ); } ivs = out; }
+			const key = JSON.stringify( ivs );
+			if ( prev && prev.key === key && prev.b === a ) { prev.b = b; continue; }
+			if ( prev ) for ( const [ p, q ] of prev.ivs ) B.wall( prev.a, p, prev.b - prev.a, q - p, m );
+			prev = { a, b, ivs, key };
+		}
+		if ( prev ) for ( const [ p, q ] of prev.ivs ) B.wall( prev.a, p, prev.b - prev.a, q - p, m );
+	};
+	const slabAt = ( x0, x1, y, h, m, holes )=>
+	{
+		let segs = [ [ x0, x1 ] ];
+		for ( const [ a, b ] of holes ) { const out = []; for ( const [ p, q ] of segs ) { if ( b <= p || a >= q ) { out.push( [ p, q ] ); continue; } if ( a > p ) out.push( [ p, a ] ); if ( b < q ) out.push( [ b, q ] ); } segs = out; }
+		for ( const [ p, q ] of segs ) B.wall( p, y, q - p, h, m );
+	};
+	const bot = L.bed + 250, C = L.cliff, H = L.shore;
+	// the cliff facility: rock from the level's edge to the bridge. The dock at its foot (the start) under a ledge; a
+	// ladder up through the ledge; the ledge's tunnel into the rock; a shaft up to the facility (the deck's level, where the
+	// deck interior runs in); the power room at its back; the cliff's top level with the road, a peak behind
+	carve( C.x0, C.top, C.x1, bot, [
+		[ C.dockBack, C.x1, -48 - 400, -48 ],                                                    // (over the dock, under the ledge)
+		[ C.tunnel[ 0 ], C.tunnel[ 1 ], C.tunnel[ 2 ], C.ledge ],                               // (the ledge's tunnel)
+		[ C.shaft - L.hatch, C.shaft + L.hatch, L.floor, C.tunnel[ 2 ] ],                      // (the shaft up to the facility)
+		[ C.facility[ 0 ], C.facility[ 1 ], L.ceil, L.floor ],                                  // (the facility's rooms)
+		[ C.x0 + 400, C.x1, C.top, R ]                                                          // (open sky over the cliff's top, left of the peak)
+	], 'cliff' );
+	// (the ledge over the dock: a slab with a hatch for the ladder; the dock level with a boat's deck, solid to the bed)
+	slabAt( C.dockBack, C.x1, C.ledge, 20, 'pier', [ [ C.ladder - L.hatch, C.ladder + L.hatch ] ] );
 	B.wall( L.start.dock[ 0 ], -48, L.start.dock[ 1 ] - L.start.dock[ 0 ], L.bed + 48, 'pier' );
+	B.entity( C.ladder, C.ledge - 70, 'pb2Entity.TYPE_CS_LADDER', { toy: '-48' } );
+	B.wall( C.x1, C.ledge, L.legs[ 0 ] - L.cap.half - C.x1, 20, 'pier' );                      // (the catwalk out to the first cap)
+	B.entity( C.shaft, L.floor - 60, 'pb2Entity.TYPE_CS_LADDER', { toy: S( C.ledge ) } );
+	B.back( C.facility[ 0 ], L.ceil, C.facility[ 1 ] - C.facility[ 0 ], L.floor - L.ceil, 'bg_sec' );
+	B.back( C.tunnel[ 0 ], C.tunnel[ 2 ], C.tunnel[ 1 ] - C.tunnel[ 0 ], C.ledge - C.tunnel[ 2 ], 'bg_room' );
+	B.wall( 640, L.ceil, 30, L.header, 'slab' );                                                // (the power room's door header)
+	// the shore bunker: the rock from the bridge's end to the level's right edge; the hill above it
+	const hills = H.hill;
+	for ( const [ x0, x1, t ] of hills )
+		carve( x0, t, x1, bot, [
+			[ H.lower[ 0 ], H.lower[ 1 ], H.lower[ 2 ], L.cap.top ],                                 // (the lower corridor)
+			[ H.stairs + 72, H.stairs + 360, L.floor, H.lower[ 2 ] ],                              // (the stairwell, open from the third step up)
+			[ H.stairs, H.stairs + 360, H.lower[ 2 ], L.cap.top ],                                 // (the stairs' room)
+			[ H.upper[ 0 ], H.upper[ 1 ], L.ceil, L.floor ],                                       // (the upper corridor)
+			[ H.baseShaft - L.hatch, H.baseShaft + L.hatch, L.cap.top, H.basement[ 2 ] ],         // (the shaft to the basement)
+			[ H.basement[ 0 ], H.basement[ 1 ], H.basement[ 2 ], H.basement[ 3 ] ],               // (the basement)
+			[ H.hillShaft - L.hatch, H.hillShaft + L.hatch, -1100, L.ceil ]                         // (the shaft to the hilltop)
+		], 'cliff' );
+	for ( let k = 1; k <= 10; k++ ) B.wall( H.stairs + 36 * ( k - 1 ), Math.round( L.cap.top - ( L.cap.top - L.floor ) * k / 10 ), 36, Math.round( ( L.cap.top - L.floor ) * k / 10 ), 'slab' );
+	B.wall( H.dock[ 0 ], -48, H.dock[ 1 ] - H.dock[ 0 ], L.bed + 48, 'pier' );
+	slabAt( bx1 - 350, H.x0, L.cap.top, 20, 'pier', [ [ H.dock[ 0 ] + 50 - L.hatch, H.dock[ 0 ] + 50 + L.hatch ] ] );   // (the catwalk from the last cap)
+	B.entity( H.dock[ 0 ] + 50, L.cap.top - 70, 'pb2Entity.TYPE_CS_LADDER', { toy: '-48' } );
+	B.entity( H.baseShaft, L.cap.top - 60, 'pb2Entity.TYPE_CS_LADDER', { toy: S( H.basement[ 3 ] ) } );
+	B.entity( H.hillShaft, hills[ 2 ][ 2 ] - 60, 'pb2Entity.TYPE_CS_LADDER', { toy: S( L.floor ) } );
+	B.back( H.lower[ 0 ], H.lower[ 2 ], H.stairs + 360 - H.lower[ 0 ], L.cap.top - H.lower[ 2 ], 'bg_room' );
+	B.back( H.upper[ 0 ], L.ceil, H.upper[ 1 ] - H.upper[ 0 ], L.floor - L.ceil, 'bg_sec' );
+	B.back( H.basement[ 0 ], H.basement[ 2 ], H.basement[ 1 ] - H.basement[ 0 ], H.basement[ 3 ] - H.basement[ 2 ], 'bg_bay' );
+	for ( const [ x, y, c, pw ] of [ [ 900, C.ledge - 80, '0xffc890', 0.5 ], [ 480, L.ceil + 60, '0xff3020', 0.6 ], [ 1000, L.ceil + 60, '0xffd0a0', 0.5 ],
+		[ 14000, H.lower[ 2 ] + 50, '0xffd0a0', 0.5 ], [ 14300, H.basement[ 2 ] + 60, '0xff3020', 0.65 ], [ 14200, L.ceil + 60, '0xffd0a0', 0.5 ], [ 14900, L.ceil + 60, '0xff3020', 0.55 ], [ 15450, hills[ 2 ][ 2 ] - 140, '0xffb070', 0.5 ] ] )
+		B.lamp( x, y, c, pw, 5 );
+	// the seabed, the sea (between the dock at the cliff's foot and the bunker's dock)
+	B.wall( bx0, L.bed, bx1 - bx0, bot - L.bed, 'seabed' );
+	for ( const [ x, w, h ] of [ [ 2600, 380, 110 ], [ 5300, 420, 120 ], [ 6500, 300, 90 ], [ 8200, 460, 140 ], [ 9900, 280, 100 ], [ 11800, 360, 120 ] ] ) B.wall( x, L.bed - h, w, h, 'seabed' );
+	B.water( bx0, L.sea, bx1 - bx0, L.bed, 'sea' );
 	// a slab with hatches: a floor [ x0, x1 ] at y (thickness h), open over each leg's shaft
 	const hatches = L.legs.map( ( c )=>[ c + L.shaft - L.hatch, c + L.shaft + L.hatch ] );
 	const slab = ( x0, x1, y, h, m, holes )=>
@@ -1451,7 +1528,8 @@ function level06()
 	for ( const c of L.legs )
 	{
 		B.wall( c - L.cap.half, L.cap.top, 2 * L.cap.half, L.cap.t, 'pier' );
-		for ( const sx of [ -1, 1 ] ) B.entity( c + sx * ( L.cap.half + 20 ), L.cap.top - 70, 'pb2Entity.TYPE_CS_LADDER', { toy: '160' } );   // (down into the water: a swimmer's feet hang low)
+		// (down into the water: a swimmer's feet hang low. The first and last caps' outer ends have catwalks instead)
+		for ( const sx of [ -1, 1 ] ) if ( !( c === L.legs[ 0 ] && sx < 0 ) && !( c === L.legs[ L.legs.length - 1 ] && sx > 0 ) ) B.entity( c + sx * ( L.cap.half + 20 ), L.cap.top - 70, 'pb2Entity.TYPE_CS_LADDER', { toy: '160' } );
 		B.entity( c + L.shaft, R - 60, 'pb2Entity.TYPE_CS_LADDER', { toy: S( L.cap.top ) } );
 		B.lamp( c - 300, L.cap.top - 90, '0xffc890', 0.45, 4 ); B.lamp( c + 300, L.cap.top - 90, '0xffc890', 0.45, 4 );
 		B.entity( c + 250, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
@@ -1478,7 +1556,8 @@ function level06()
 	// the road deck: crane pedestals, container stacks, a utility module
 	for ( const cr of L.cranes ) B.wall( cr.x - 60, R - 100, 120, 100, 'plant' );
 	// (stacks of two, the upper one set back: climb the first, then the second)
-	for ( const [ x, y, w, h, m ] of [ [ 6300, R - 90, 240, 90, 'box_rust' ], [ 6360, R - 180, 180, 90, 'box_blue' ], [ 8480, R - 90, 240, 90, 'box_red' ], [ 8480, R - 180, 180, 90, 'box_rust' ], [ 5120, R - 130, 180, 130, 'plant' ] ] )
+	for ( const [ x, y, w, h, m ] of [ [ 6300, R - 90, 240, 90, 'box_rust' ], [ 6360, R - 180, 180, 90, 'box_blue' ], [ 8480, R - 90, 240, 90, 'box_red' ], [ 8480, R - 180, 180, 90, 'box_rust' ], [ 5120, R - 130, 180, 130, 'plant' ],
+		[ 2900, R - 90, 240, 90, 'box_blue' ], [ 2960, R - 180, 180, 90, 'box_red' ], [ 11900, R - 90, 240, 90, 'box_rust' ], [ 11960, R - 180, 180, 90, 'box_blue' ], [ 4300, R - 130, 180, 130, 'plant' ] ] )
 		B.wall( x, y, w, h, m );
 	for ( let x = bx0 + 300; x < bx1; x += 900 ) if ( x < T.x0 - 60 || x > T.x1 + 60 ) B.lamp( x, R - 130, '0xffb070', 0.45, 5 );
 	for ( let x = bx0 + 200; x < bx1; x += 900 ) B.lamp( x, SF + 40, '0xffb070', 0.6, 8 );          // (the soffit's lamps, over the lane)
@@ -1505,8 +1584,9 @@ function level06()
 	// the set pieces: the bridge's legs, soffit, cranes, the tower's crown, the hills
 	B.entity( ( bx0 + bx1 ) / 2, 0, 'pb2Entity.TYPE_CS_BRIDGE', { style_id: String( L.style ) } );
 	// the raiders: on the dock, their boat moored off it (a berth here), a rifle and a pistol
-	B.char( 4640, -48 - 44, { id: 'raider1', skin: 'skin_raider', team: 'raiders', player_controllable: 'true', hmax: '150', side: '1' } );
-	B.gun( 4630, -48 - 20, 'gun_real_rifle' ); B.gun( 4660, -48 - 20, 'gun_pistol2' );
+	const sx0 = ( L.start.dock[ 0 ] + L.start.dock[ 1 ] ) / 2;
+	B.char( sx0, -48 - 44, { id: 'raider1', skin: 'skin_raider', team: 'raiders', player_controllable: 'true', hmax: '150', side: '1' } );
+	B.gun( sx0 - 20, -48 - 20, 'gun_real_rifle' ); B.gun( sx0 + 20, -48 - 20, 'gun_pistol2' );
 	B.entity( L.start.boat, -60, 'pb2Entity.TYPE_BOAT', { id: 'raider_boat', style_id: '1', side: '1', multiply_health: '2' } );
 	B.entity( L.start.boat + 25, 0, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '1' } );
 	for ( let i = 0; i < L.legs.length - 1; i++ ) B.entity( ( L.legs[ i ] + L.legs[ i + 1 ] ) / 2, 0, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '1' } );
@@ -1560,8 +1640,54 @@ function level06()
 	eboat( 'cs_boat1', 7000, 'Patrol 1' );
 	eboat( 'cs_boat2', 8900, 'Patrol 2' );
 	eboat( 'cs_boat3', 9900, 'Patrol 3 [2+]' );
-	// the extraction (for now at the road's right end: the shore chunk will have the real one)
-	B.entity( bx1 - 100, R, 'pb2Entity.TYPE_CS_EXIT', { style_id: '1' } );
+	eboat( 'cs_boat0', 3300, 'Patrol 0' );
+	eboat( 'cs_boat4', 12000, 'Patrol 4' );
+	// the left chunk: the cliff facility's power room (the first objective), its ledge, caps 1 and 2, the deck and road
+	B.entity( C.power, L.floor, 'pb2Entity.TYPE_CS_OBJECTIVE', { style_id: '1' } );
+	B.cs( 520, fl, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Power guard', 1 );
+	B.cs( 850, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 1150, fl, 'skin_cs_lite', 'gun_real_shotgun', 'cs_post', 'CS Engineer [2+]', -1 );
+	B.cs( 880, C.ledge, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Ledge guard', 1 );
+	B.cs( 1900, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
+	B.cs( 2440, cap, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman [2+]', -1 );
+	B.cs( 3700, cap, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy [3+]', -1 );
+	B.cs( 4150, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
+	B.cs( L.hanging[ 1 ][ 0 ] + 100, L.containerTop, 'skin_cs_lite', 'gun_gl', 'cs_post', 'CS Grenadier', -1 );
+	B.cs( 2300, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 3100, fl, 'skin_cs_heavy', 'gun_flame', 'cs_post', 'CS Heavy', -1 );
+	B.cs( 3350, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper [2+]', -1 );
+	B.cs( 4100, fl, 'skin_cs_lite', 'gun_real_shotgun', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 1600, R, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
+	B.cs( 2700, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 3040, R - 180, 'skin_cs_lite', 'gun_rl', 'cs_post', 'CS Rocketeer [2+]', -1 );
+	// the right chunk: caps 6 and 7, the containers, the deck and road, the bunker (both corridors, the basement: the
+	// third objective), the hilltop
+	B.cs( 10900, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
+	B.cs( 11350, cap, 'skin_cs_lite', 'gun_rl', 'cs_post', 'CS Rocketeer', -1 );
+	B.cs( 12700, cap, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
+	B.cs( 13150, cap, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy [2+]', -1 );
+	B.cs( L.hanging[ 11 ][ 0 ] + 100, L.containerTop, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman [3+]', -1 );
+	B.cs( 11800, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper [2+]', -1 );
+	B.cs( 12050, fl, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy', -1 );
+	B.cs( 12600, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 10850, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 12050, R - 180, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
+	B.cs( 13300, R, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy [3+]', -1 );
+	B.cs( 13900, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Bunker guard', -1 );
+	B.cs( 14250, cap, 'skin_cs_lite', 'gun_real_shotgun', 'cs_hunter', 'CS Bunker trooper', -1 );
+	B.cs( 13950, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Bunker guard', -1 );
+	B.cs( 14950, fl, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Bunker heavy', -1 );
+	B.cs( 15070, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Bunker guard [2+]', -1 );
+	B.cs( 14250, H.basement[ 3 ], 'skin_cs_boss', 'gun_oicw', 'cs_post', 'CS Basement chief', -1 );
+	B.cs( 14000, H.basement[ 3 ], 'skin_cs_lite', 'gun_real_shotgun', 'cs_post', 'CS Basement guard [2+]', 1 );
+	B.cs( 15300, hills[ 2 ][ 2 ], 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Hill sniper', -1 );
+	B.cs( 15720, hills[ 2 ][ 2 ], 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Hill trooper', -1 );
+	B.entity( H.objective, H.basement[ 3 ], 'pb2Entity.TYPE_CS_OBJECTIVE', { style_id: '3' } );
+	// the extraction: the hilltop above the bunker, a CS-4 Ranger (the raiders' ride out) beside it
+	B.entity( H.exit, hills[ 2 ][ 2 ], 'pb2Entity.TYPE_CS_EXIT', { style_id: '1' } );
+	B.entity( 15420, hills[ 2 ][ 2 ] - 80, 'pb2Entity.TYPE_TANK', { style_id: '4', side: '1' } );
+	B.entity( 14000, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
+	B.entity( 14900, L.floor, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
 	B.call( 'pb2GameWorld.FinalizeWorld', true );
 	return B.out;
 }

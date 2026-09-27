@@ -1,0 +1,74 @@
+{
+ "summary": "Cycle 2. The broker refused two of my cycle-2 actions because they targeted only residues already satisfied: the bake (plays-clean) and the linter update (route-complete). It also refused git-state.js as already executed; that was a framework flaw, now fixed with content fingerprints in the idempotency key (test 15). So the game ran the old bundle: the ladder count stayed 0 and the objective clock was still capped. Meanwhile mods/ holds the 110 px hatches, which the old linter's 40 px ladder reach can't join, so route-complete regressed. The probe fixes did take: boat-run, boat-returns (1979 px), patrols-drive (2 moved) and respawn-works are now satisfied. Frame ratio 2.88 on the same old bundle (2.13 before) shows how noisy the software renderer's timing is.",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "The installed bundle predates the ladder and objective fixes: onLadder never appears (0 throughout) and the objective still stalls at about 10%.",
+   "cites": [
+    "ev_muk3q9gr_5e38e401cc"
+   ],
+   "residueIds": [
+    "ladders-work",
+    "objective-gates-exit",
+    "tower-climb"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "route-complete regressed: the mod's hatches are 110 px, but the installed linter still joins ladders only to floors within 40 px.",
+   "cites": [
+    "ev_muk3jqj6_076676d21f"
+   ],
+   "residueIds": [
+    "route-complete"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The boat now boards from its deck, runs east under the caps, and backs 1979 px west. Two patrols moved under autopilot.",
+   "cites": [
+    "ev_muk3q9gr_5e38e401cc"
+   ],
+   "residueIds": [
+    "boat-run",
+    "boat-returns",
+    "patrols-drive"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The frame ratio reads 2.88 against 2.13 last cycle on the same bundle, so this measurement is noisy by about \u00b10.4.",
+   "cites": [
+    "ev_muk3t4vq_fdcb76409c"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  },
+  {
+   "kind": "PLAN",
+   "text": "Re-issue the bake and the linter targeting open residues (ladders-work, three-chunks), and ship the three-chunk level with the probes updated for it.",
+   "cites": [
+    "ev_muk3q9gr_5e38e401cc"
+   ],
+   "residueIds": [
+    "three-chunks",
+    "ladders-work"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [
+  {
+   "residueId": "underpass-framing",
+   "verdict": "UNSURE",
+   "evidenceIds": [
+    "ev_muk3qa3o_92c597c693"
+   ],
+   "reason": "The lane screenshot now exists, but it comes from the old bundle's look (bright sky, pale sea). I'll judge it after the look fixes are in the game."
+  }
+ ],
+ "unknowns": [
+  "the frame cost once the three-chunk level (69 enemies, 74 lamps) is loaded: the enemies' AI may dominate"
+ ]
+}

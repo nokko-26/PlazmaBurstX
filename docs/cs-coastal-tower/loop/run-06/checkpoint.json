@@ -1,14 +1,15 @@
 {
  "phase": "OBSERVE",
- "seq": 8,
- "cycle": 2,
+ "seq": 10,
+ "cycle": 3,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
   "window": 3,
   "deltas": [
    27,
-   17
+   17,
+   14
   ],
   "actionSigs": [
    "80fe487f50efe234",
@@ -21,15 +22,21 @@
    "bb9262bf626b9bf5",
    "aba2f50c650d42ea",
    "7bf01c140875a575",
-   "0a86473e94b5aaa5"
+   "0a86473e94b5aaa5",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
+   "80fe487f50efe234",
+   "0a86473e94b5aaa5",
+   "d7fae43b34bfc37d",
+   "f3874984c8c3eab4"
   ],
   "hypotheses": []
  },
  "budgetSpent": {
-  "engineCalls": 8,
-  "actions": 11,
-  "cycles": 2,
-  "cost": 11,
+  "engineCalls": 10,
+  "actions": 17,
+  "cycles": 3,
+  "cost": 17,
   "startedAt": 1790529166395
  },
  "done": [
@@ -43,74 +50,84 @@
   "act_c7b13283a3a75f31be55",
   "act_779739eae5fc0aca628a",
   "act_ee83118b071e55947b49",
-  "act_250ab5c4fac2c5a1613d"
+  "act_250ab5c4fac2c5a1613d",
+  "act_1128c42e615ffb641fbe",
+  "act_c76734a086bbd8af3289",
+  "act_3bc8ac023fe2299fdda6",
+  "act_ac3a043db2dbc10c15f5",
+  "act_4565d259431f329af286",
+  "act_9eb36c22c7f3067acdba"
  ],
  "lastProbeIds": {
-  "probe:d22e87edb3fa10bb": "ev_muk32tt1_8d22839c7b",
-  "probe:5e40829617afc91e": "ev_muk37w14_a0551a7bab",
-  "probe:f0da2bbb4787153c": "ev_muk37w2d_df029966ba",
-  "probe:7980a067bb842f7b": "ev_muk37w9h_76e69804bd",
-  "probe:3ddf0d6bd2086dd8": "ev_muk37wex_2aa1da26fd",
-  "probe:cb3bd0e8c318b9ec": "ev_muk37wgb_574d1c6232",
-  "probe:990fb3e94a4cb262": "ev_muk3ar5x_6991d41937",
-  "probe:5ae70d282044ba98": "ev_muk3dau7_8dccbe8f7d",
-  "probe:91dd14c2d620911a": "ev_muk3erds_c22c7d2b5e",
-  "probe:aea6c2d28affb31d": "ev_muk3erff_59fc6910ef"
+  "probe:d22e87edb3fa10bb": "ev_muk3jqj6_076676d21f",
+  "probe:5e40829617afc91e": "ev_muk3q9gr_5e38e401cc",
+  "probe:f0da2bbb4787153c": "ev_muk3q9hz_9581e151f4",
+  "probe:7980a067bb842f7b": "ev_muk3q9q9_eebbcf750c",
+  "probe:3ddf0d6bd2086dd8": "ev_muk3q9w9_246361a50d",
+  "probe:cb3bd0e8c318b9ec": "ev_muk3qa3o_92c597c693",
+  "probe:990fb3e94a4cb262": "ev_muk3t4vq_fdcb76409c",
+  "probe:5ae70d282044ba98": "ev_muk3v60l_f57a794f4e",
+  "probe:91dd14c2d620911a": "ev_muk3wmmz_a08336889c",
+  "probe:aea6c2d28affb31d": "ev_muk3wmov_c58804c964"
  },
  "terminal": null,
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_ee83118b071e55947b49",
+   "id": "act_1128c42e615ffb641fbe",
    "tool": "file.write_from",
    "targets": [
+    "three-chunks",
     "ladders-work",
-    "tower-climb",
     "objective-gates-exit",
-    "coop-ladder",
-    "frame-cost",
+    "tower-climb",
     "look-dusk-palette",
     "look-structure",
-    "look-interior"
+    "look-interior",
+    "coop-ladder"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk3jqfr_714e6c1cb3",
+   "evidence": "ev_muk3xs3d_d128bda994",
    "expectedEvidence": [
-    "report.tests.ladders.ok",
-    "report.tests.objective.ok"
+    "json.route.objectives length 3",
+    "json.bounds.2 15800"
    ],
    "failureSignatures": [
-    "climb stalls near a floor again"
+    "json.error"
    ]
   },
   {
-   "id": "act_de834e27c892ed721560",
+   "id": "act_c76734a086bbd8af3289",
    "tool": "pb3x.bake",
    "targets": [
-    "plays-clean"
+    "ladders-work",
+    "objective-gates-exit",
+    "tower-climb",
+    "coop-ladder",
+    "look-dusk-palette"
    ],
-   "executed": false,
-   "problems": [
-    "targets already-satisfied residue plays-clean"
-   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk3xsa6_252945c363",
    "expectedEvidence": [
-    "bake ok"
+    "bake ok",
+    "state.onLadder > 0 during a climb"
    ],
    "failureSignatures": [
     "bake failed"
    ]
   },
   {
-   "id": "act_bdc21c5c65970735d252",
+   "id": "act_3bc8ac023fe2299fdda6",
    "tool": "file.write_from",
    "targets": [
+    "three-chunks",
     "route-complete"
    ],
-   "executed": false,
-   "problems": [
-    "targets already-satisfied residue route-complete"
-   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk3xsa8_9f75926fa4",
    "expectedEvidence": [
     "json.route.unreachable empty"
    ],
@@ -119,37 +136,48 @@
    ]
   },
   {
-   "id": "act_250ab5c4fac2c5a1613d",
+   "id": "act_ac3a043db2dbc10c15f5",
    "tool": "file.write_from",
    "targets": [
-    "boat-run",
-    "boat-returns",
-    "patrols-drive",
-    "respawn-works",
-    "tower-climb",
-    "underpass-framing",
-    "editor-views"
+    "objective-gates-exit",
+    "ladders-work",
+    "editor-views",
+    "look-dusk-palette"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk3jqfs_4a94232c45",
+   "evidence": "ev_muk3xsaa_4ca977f528",
    "expectedEvidence": [
-    "report.tests.boat.start"
+    "report.tests.objective.held length 3"
    ],
    "failureSignatures": [
-    "could not board"
+    "report.failed"
    ]
   },
   {
-   "id": "act_045d692afdfd026108e5",
+   "id": "act_4565d259431f329af286",
+   "tool": "file.write_from",
+   "targets": [
+    "coop-two",
+    "coop-ladder"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk3xsab_a579444410",
+   "expectedEvidence": [
+    "report.guestLadder"
+   ],
+   "failureSignatures": []
+  },
+  {
+   "id": "act_9eb36c22c7f3067acdba",
    "tool": "file.write_from",
    "targets": [
     "work-landed"
    ],
-   "executed": false,
-   "problems": [
-    "already executed (idempotency key act_045d692afdfd026108e5)"
-   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk3xsac_320f78ad57",
    "expectedEvidence": [
     "json.uncommitted"
    ],
@@ -186,7 +214,19 @@
   "ev_muk3ar5x_6991d41937",
   "ev_muk3dau7_8dccbe8f7d",
   "ev_muk3erds_c22c7d2b5e",
-  "ev_muk3erff_59fc6910ef"
+  "ev_muk3erff_59fc6910ef",
+  "ev_muk3jqfr_714e6c1cb3",
+  "ev_muk3jqfs_4a94232c45",
+  "ev_muk3jqj6_076676d21f",
+  "ev_muk3q9gr_5e38e401cc",
+  "ev_muk3q9hz_9581e151f4",
+  "ev_muk3q9q9_eebbcf750c",
+  "ev_muk3q9w9_246361a50d",
+  "ev_muk3qa3o_92c597c693",
+  "ev_muk3t4vq_fdcb76409c",
+  "ev_muk3v60l_f57a794f4e",
+  "ev_muk3wmmz_a08336889c",
+  "ev_muk3wmov_c58804c964"
  ],
  "failureHandled": false
 }

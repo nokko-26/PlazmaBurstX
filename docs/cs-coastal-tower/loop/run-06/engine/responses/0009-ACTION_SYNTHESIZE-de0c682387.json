@@ -1,0 +1,153 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "three-chunks",
+    "ladders-work",
+    "objective-gates-exit",
+    "tower-climb",
+    "look-dusk-palette",
+    "look-structure",
+    "look-interior",
+    "coop-ladder"
+   ],
+   "rationale": "The whole Underhang:\n- the left cliff facility, carved from rock: the dock under a ledge, a ladder up, the ledge tunnel, a shaft to the facility and the power room (objective 1), a catwalk to cap 1;\n- the right shore bunker: a catwalk and ladder from the last cap, the lower corridor, stairs to the upper corridor, a shaft to the basement (objective 3), a shaft to the hilltop (the extraction and a CS-4 Ranger);\n- seven legs, rooms along the whole deck, enemies for both chunks, and two more patrols.\nIt carries cycle 2's fixes (ladders, objective clock, look, lamps). Staging lint: 0 violations, nothing unreachable, 3 objectives reachable, 7 caps with cover, bounds 0\u201315800.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "The linter reads three chunks and three reachable objectives, and ladders work in the game once it is baked.",
+   "expectedEvidence": [
+    "json.route.objectives length 3",
+    "json.bounds.2 15800"
+   ],
+   "failureSignatures": [
+    "json.error"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "ladders-work",
+    "objective-gates-exit",
+    "tower-climb",
+    "coop-ladder",
+    "look-dusk-palette"
+   ],
+   "rationale": "Bake it. Last cycle's bake targeted only a satisfied residue and the broker rightly refused it, so the game never got the fixes.",
+   "tool": "pb3x.bake",
+   "params": {},
+   "predictedEffect": "The bundle carries the new mod: ladder count and objective clock visible in the game.",
+   "expectedEvidence": [
+    "bake ok",
+    "state.onLadder > 0 during a climb"
+   ],
+   "failureSignatures": [
+    "bake failed"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "three-chunks",
+    "route-complete"
+   ],
+   "rationale": "The linter with an 80 px ladder reach, for the 110 px hatches: a climber steps off sideways onto the hatch's edge.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "lint.js",
+    "path": "tools/harness/levels/lint.js"
+   },
+   "predictedEffect": "route-complete holds again and the three chunks are measured.",
+   "expectedEvidence": [
+    "json.route.unreachable empty"
+   ],
+   "failureSignatures": [
+    "unreachable interior"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "objective-gates-exit",
+    "ladders-work",
+    "editor-views",
+    "look-dusk-palette"
+   ],
+   "rationale": "The play probe for three chunks:\n- the ladder test on cap 1's right end (its left end is now a catwalk);\n- all three consoles held, then the hilltop extraction;\n- overviews of the cliff and the bunker;\n- eye-level shots of the facility, the ledge, the bunker's lower corridor and stairs, and the hilltop.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "play-06.js",
+    "path": "tools/harness/levels/play-06.js"
+   },
+   "predictedEffect": "The probe exercises all three objectives and the new chunks.",
+   "expectedEvidence": [
+    "report.tests.objective.held length 3"
+   ],
+   "failureSignatures": [
+    "report.failed"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "coop-two",
+    "coop-ladder"
+   ],
+   "rationale": "The co-op probe: the guest climbs cap 1's right-end ladder.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "coop-06.js",
+    "path": "tools/harness/levels/coop-06.js"
+   },
+   "predictedEffect": "guestLadder is measured at a ladder that exists.",
+   "expectedEvidence": [
+    "report.guestLadder"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "work-landed"
+   ],
+   "rationale": "The git-state check ignores the loop's own record. Last cycle's refusal was the idempotency flaw, now fixed by fingerprinting.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "git-state.js",
+    "path": "tools/harness/levels/git-state.js"
+   },
+   "predictedEffect": "uncommitted counts only work files.",
+   "expectedEvidence": [
+    "json.uncommitted"
+   ],
+   "failureSignatures": [],
+   "risk": "low",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  }
+ ]
+}

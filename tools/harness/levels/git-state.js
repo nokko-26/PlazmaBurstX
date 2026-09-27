@@ -7,5 +7,5 @@ const git = ( ...a )=>{ const r = cp.spawnSync( 'git', a, { cwd: root, encoding:
 const paths = process.argv.slice( 2 ).length ? process.argv.slice( 2 ) : [ 'mods', 'pb3x-extension/pb3x.js', 'docs/cs-coastal-tower', 'tools/harness' ];
 const branch = git( 'rev-parse', '--abbrev-ref', 'HEAD' ), head = git( 'rev-parse', 'HEAD' );
 const remote = git( 'rev-parse', 'origin/' + branch );
-const dirty = git( 'status', '--porcelain', '--', ...paths ).split( '\n' ).filter( Boolean ).filter( ( l )=>!/results\//.test( l ) );
+const dirty = git( 'status', '--porcelain', '--', ...paths ).split( '\n' ).filter( Boolean ).filter( ( l )=>!/results\//.test( l ) && !/docs\/cs-coastal-tower\/loop\//.test( l ) );   // (the loop's own record changes while it observes)
 console.log( JSON.stringify( { branch, head: head.slice( 0, 12 ), remote: remote.slice( 0, 12 ), pushed: !!head && head === remote, uncommitted: dirty.length, dirty: dirty.slice( 0, 20 ) } ) );

@@ -131,7 +131,7 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		await page.waitForTimeout( 2500 );
 		await shot( 'play-start' );
 		// the whole middle, pulled back: like the concept's side view
-		for ( const [ name, x, y, z ] of [ [ 'overview-middle', 7500, -900, 2.9 ], [ 'overview-left', 5900, -560, 1.9 ], [ 'overview-right', 9200, -560, 1.9 ], [ 'overview-lane', 7500, -250, 1.45 ] ] ) await shot( name, { x, y, zoom: z, frames: 40 } );
+		for ( const [ name, x, y, z ] of [ [ 'overview-middle', 7500, -900, 2.9 ], [ 'overview-left', 5900, -560, 1.9 ], [ 'overview-right', 9200, -560, 1.9 ], [ 'overview-lane', 7500, -250, 1.45 ], [ 'overview-cliff', 1800, -650, 2.6 ], [ 'overview-bunker', 14300, -500, 2.6 ] ] ) await shot( name, { x, y, zoom: z, frames: 40 } );
 		for ( const [ name, x, y, z, p, yw ] of [ [ 'alt3d-left', 6300, -600, 1.9, -0.1, 0.38 ], [ 'alt3d-right', 8700, -600, 1.9, -0.1, -0.38 ], [ 'alt3d-under', 7500, -250, 1.3, 0.18, 0.28 ], [ 'alt3d-tower', 7500, -1250, 1.8, -0.18, -0.3 ] ] )
 			await angled( name, x, y, z, p, yw );
 		await release( page );
@@ -140,15 +140,15 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		await test( 'ladders', async ()=>
 		{
 			const out = {};
-			// out of the water beside cap 1's left end, up, then right onto the cap
-			let p = await put( c1 - L.cap.half - 20, 30, 900 );
+			// out of the water beside cap 1's right end, up, then left onto the cap
+			let p = await put( c1 + L.cap.half + 20, 30, 900 );
 			out.inWater = p;
 			await key( 'keydown', 'KeyW' ); await page.waitForTimeout( 2600 );
 			out.climbedTo = await me();
-			await key( 'keydown', 'KeyD' ); await page.waitForTimeout( 500 ); await key( 'keyup', 'KeyW' ); await page.waitForTimeout( 400 ); await key( 'keyup', 'KeyD' );
+			await key( 'keydown', 'KeyA' ); await page.waitForTimeout( 500 ); await key( 'keyup', 'KeyW' ); await page.waitForTimeout( 400 ); await key( 'keyup', 'KeyA' );
 			await page.waitForTimeout( 700 );
 			out.onCap = await me();
-			const capOk = out.onCap && Math.abs( out.onCap.feet - L.cap.top ) < 12 && out.onCap.x > c1 - L.cap.half;
+			const capOk = out.onCap && Math.abs( out.onCap.feet - L.cap.top ) < 12 && out.onCap.x < c1 + L.cap.half;
 			await shot( 'ladder-cap' );
 			// up the shaft: from the cap at the shaft, W held, through the deck to the road, then off to the right
 			p = await put( c1 + L.shaft, L.cap.top, 800 );
@@ -171,22 +171,26 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			return { ok: capOk && roadOk && downOk, capOk, roadOk, downOk, ...out };
 		} );
 
-		// ---- the command room: the extraction locked, the console held, the extraction open ----
+		// ---- the objectives: the extraction locked; each console held (power, command room, basement); then open ----
 		await test( 'objective', async ()=>
 		{
-			const T = L.tower;
-			await put( L.bridge[ 1 ] - 100, L.road, 1200 );
+			const T = L.tower, H = L.shore, top = H.hill[ H.hill.length - 1 ][ 2 ];
+			await put( H.exit, top, 1200 );
 			const lockedFirst = await ev( ()=>!window.__csTower.complete );
 			const bannerLocked = await ev( ()=>window.__csTower.lastBanner );
-			await put( T.x0 + 300, T.l2, 400 );
-			await page.waitForTimeout( 6500 );
-			await shot( 'command-room' );
+			const held = [];
+			for ( const [ name, x, feet ] of [ [ 'power-room', L.cliff.power, L.floor ], [ 'command-room', T.x0 + 300, T.l2 ], [ 'basement', H.objective, H.basement[ 3 ] ] ] )
+			{
+				await put( x, feet, 400 );
+				await page.waitForTimeout( 6500 );
+				await shot( name );
+				held.push( { name, banner: await ev( ()=>window.__csTower.lastBanner ), objectives: await ev( ()=>window.__csTower.objectives ) } );
+			}
 			const objectives = await ev( ()=>window.__csTower.objectives );
-			const bannerDone = await ev( ()=>window.__csTower.lastBanner );
-			await put( L.bridge[ 1 ] - 100, L.road, 1500 );
+			await put( H.exit, top, 1500 );
 			const complete = await ev( ()=>window.__csTower.complete );
 			await shot( 'extraction' );
-			return { ok: lockedFirst && !!objectives && objectives.every( ( v )=>v >= 100 ) && complete, lockedFirst, bannerLocked, objectives, bannerDone, complete };
+			return { ok: lockedFirst && !!objectives && objectives.length === 3 && objectives.every( ( v )=>v >= 100 ) && complete, lockedFirst, bannerLocked, objectives, held, complete };
 		} );
 
 		// ---- the tower: from the lobby up its shaft to the command room, then on to the observation deck ----
@@ -286,7 +290,7 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		} );
 
 		// ---- the layers, at eye level ----
-		for ( const [ name, x, feet ] of [ [ 'eye-cap2', c2 - 300, L.cap.top ], [ 'eye-interior-security', 6500, L.floor ], [ 'eye-interior-bay', 8400, L.floor ], [ 'eye-road-tower', 6900, L.road ], [ 'eye-observation', L.tower.x0 + 200, L.tower.l3 ] ] )
+		for ( const [ name, x, feet ] of [ [ 'eye-cap2', c2 - 300, L.cap.top ], [ 'eye-interior-security', 6500, L.floor ], [ 'eye-interior-bay', 8400, L.floor ], [ 'eye-road-tower', 6900, L.road ], [ 'eye-observation', L.tower.x0 + 200, L.tower.l3 ], [ 'eye-cliff-facility', 900, L.floor ], [ 'eye-cliff-ledge', 1000, L.cliff.ledge ], [ 'eye-bunker-lower', 14100, L.cap.top ], [ 'eye-bunker-stairs', 14550, -470 ], [ 'eye-hilltop', 15300, L.shore.hill[ 2 ][ 2 ] ] ] )
 		{
 			await put( x, feet, 1500 );
 			await shot( name );

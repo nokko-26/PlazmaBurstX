@@ -228,7 +228,7 @@ function lint( id )
 	{
 		if ( d.bottom - d.top < 60 ) bad( 'ladder too short', [ d.x, d.top ], 'top ' + d.top + ' bottom ' + d.bottom );
 		if ( blocked( d.x - 10, d.top + 1, d.x + 10, d.bottom - 1 ) ) bad( 'ladder through a wall', [ d.x, d.top, d.bottom ], 'a solid wall crosses its shaft: ' + JSON.stringify( blockers( d.x - 10, d.top + 1, d.x + 10, d.bottom - 1 ).slice( 0, 2 ).map( ( s )=>[ s.x, s.y, s.w, s.h ] ) ) );
-		d.nodes = nodes.filter( ( n )=>!n.crouch && n.x0 <= d.x + 40 && n.x1 >= d.x - 40 && n.y >= d.top - 5 && n.y <= d.bottom + 5 );
+		d.nodes = nodes.filter( ( n )=>!n.crouch && n.x0 <= d.x + 80 && n.x1 >= d.x - 80 && n.y >= d.top - 5 && n.y <= d.bottom + 5 );
 		for ( const a of d.nodes ) for ( const b of d.nodes ) if ( a !== b ) add( a, b, 'ladder' );
 	}
 
