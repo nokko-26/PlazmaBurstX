@@ -182,7 +182,8 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			for ( const [ name, x, feet ] of [ [ 'power-room', L.cliff.power, L.floor ], [ 'command-room', T.x0 + 300, T.l2 ], [ 'basement', H.objective, H.basement[ 3 ] ] ] )
 			{
 				await put( x, feet, 400 );
-				await page.waitForTimeout( 6500 );
+				// (held until the console reports done, up to 20 s: the game's own clock decides, not the probe's)
+				for ( let i = 0; i < 40; i++ ) { await page.waitForTimeout( 500 ); const o = await ev( ()=>window.__csTower.objectives ); if ( o && o.filter( ( v )=>v >= 100 ).length > held.length ) break; }
 				await shot( name );
 				held.push( { name, banner: await ev( ()=>window.__csTower.lastBanner ), objectives: await ev( ()=>window.__csTower.objectives ) } );
 			}

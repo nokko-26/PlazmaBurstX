@@ -271,7 +271,7 @@ function hostTick( dt )
 		if ( s.on >= 100 ) continue;
 		const here = players.some( ( c )=>Math.abs( c.x - s.x ) < OBJ.reach && Math.abs( c.y + 44 - s.y ) < 90 );
 		// (on the clock, not the frame's dt: that's capped, and a slow machine would take far longer than OBJ.hold)
-		const now = clock(), step = Math.min( 1, Math.max( 0, now - ( s.tick || now ) ) ); s.tick = now;
+		const now = clock(), step = Math.min( 3, Math.max( 0, now - ( s.tick || now ) ) ); s.tick = now;
 		s.progress = clamp( ( s.progress || 0 ) + ( here ? step : -step * 0.25 ), 0, OBJ.hold );
 		s.on = s.progress >= OBJ.hold ? 100 : Math.floor( 99 * s.progress / OBJ.hold );
 		if ( s.on >= 100 )
@@ -474,10 +474,11 @@ function autopilot()
 // A ladder runs from its marker (its top) down to its To Y. A character in its shaft who holds up (W) or down (S) takes
 // hold: then up and down climb at LAD.speed, nothing held keeps them where they are, and left / right move them off it
 // (onto a floor beside the top, or away). The engine has no climbing of its own, so the character's body is moved
-// straight: every atom gets the same velocity each tick (gravity barely moves it between two). The host moves everyone;
-// a guest moves its own character too, so its view doesn't wait for the host.
+// straight: shifted by speed × the time since the last tick (the wall clock: a slow machine takes big physics steps,
+// and a velocity set once a tick is lost to gravity between them), its velocity zeroed. The host moves everyone; a guest
+// moves its own character too, so its view doesn't wait for the host.
 const LAD = { half: 28, speed: 260, side: 150, pull: 8, below: 90 };
-const onLadder = new WeakMap();
+const onLadder = new WeakMap(), ladderT = new WeakMap();
 function setVel( ch, vx, vy )
 {
 	for ( const a of opt( ()=>ch.ragdoll.local_atoms ) || [] )
@@ -511,12 +512,15 @@ function ladders()
 			onLadder.set( ch, L );
 		}
 		const s = estate.get( L ), bottom = s.toy === null ? s.y + 300 : s.toy;
+		const now = clock(), step = clamp( now - ( ladderT.get( ch ) || now ), 0, 0.25 );
+		ladderT.set( ch, now );
 		let vy = ( ctl.act_y || 0 ) * LAD.speed;
 		if ( vy < 0 && feet <= s.y ) vy = 0;                                        // (at the top: step off sideways)
 		if ( vy > 0 && feet >= bottom ) { onLadder.delete( ch ); continue; }          // (off the foot of it)
 		const vx = ctl.act_x ? ctl.act_x * LAD.side : clamp( ( s.x - ch.x ) * LAD.pull, -LAD.side, LAD.side );
-		if ( ctl.act_x && !ctl.act_y && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { onLadder.delete( ch ); continue; }
-		setVel( ch, vx, vy );
+		if ( ctl.act_x && !ctl.act_y && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { onLadder.delete( ch ); ladderT.delete( ch ); continue; }
+		opt( ()=>ch.ragdoll.Teleport( vx * step, vy * step ) );
+		setVel( ch, 0, 0 );
 		n++;
 	}
 	state.onLadder = n;
@@ -1591,8 +1595,9 @@ function level06()
 	B.entity( L.start.boat + 25, 0, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '1' } );
 	for ( let i = 0; i < L.legs.length - 1; i++ ) B.entity( ( L.legs[ i ] + L.legs[ i + 1 ] ) / 2, 0, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '1' } );
 	// the CS tanks in the vehicle bay (unmanned: the raiders can take them) and guns to find
-	B.entity( 8250, L.floor - 80, 'pb2Entity.TYPE_TANK', { style_id: '3', side: '-1' } );
-	B.entity( 8620, L.floor - 80, 'pb2Entity.TYPE_TANK', { style_id: '4', side: '-1' } );
+	// (sturdy: they wait out the fighting in the bay until the raiders get there)
+	B.entity( 8250, L.floor - 80, 'pb2Entity.TYPE_TANK', { style_id: '3', side: '-1', multiply_health: '4' } );
+	B.entity( 8620, L.floor - 80, 'pb2Entity.TYPE_TANK', { style_id: '4', side: '-1', multiply_health: '4' } );
 	B.gun( 5600, L.floor - 20, 'gun_real_shotgun' ); B.gun( 7200, R - 20, 'gun_rl' ); B.gun( 9500, L.cap.top - 20, 'gun_sniper' );
 	// Civil Security: the pier caps and the containers (they shoot down at the lane), the rooms, the road, the tower
 	const cap = L.cap.top, fl = L.floor;
@@ -1717,7 +1722,9 @@ function loadLevel( id )
 state.levelObjects = ( id )=>LEVELS[ id ] ? LEVELS[ id ]() : null;
 state.loadLevel = loadLevel;
 state.levelIds = ()=>Object.keys( LEVELS );
-state.debug = { buildTower, towerMat, unlitMat, beamMat, glowMat };                  // (the set pieces' makers, for tests in the page)
+state.debug = { buildTower, towerMat, unlitMat, beamMat, glowMat,
+	// (the set pieces shown or hidden, for measuring what they cost: returns how many groups)
+	sets( on ) { let n = 0; for ( const m of [ towers, bridges, ladderGfx, consoles, lights, beacons ] ) m.forEach( ( G )=>{ for ( const g of [ G.root, G.far, G.grp ] ) if ( g ) { g.visible = on; n++; } } ); return n; } };                  // (the set pieces' makers, for tests in the page)
 state.markers = ()=>[ ...marked ].map( ( e )=>Object.assign( {}, estate.get( e ), { body: bodyPos( e ) } ) );
 
 // ================================================================================================
