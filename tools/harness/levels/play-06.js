@@ -143,7 +143,7 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		await test( 'boat', async ()=>
 		{
 			// (on the raiders' boat's deck, beside its helm: E takes the seat)
-			const rb = await ev( ()=>{ const b = pb2Entity.entities.find( ( e )=>e && e.type === pb2Entity.TYPE_BOAT && !e.is_being_removed && !Array.from( e.gO || [] ).some( ( s )=>s && s.owner_character && !( s.owner_character.controller && s.owner_character.controller.player_connection ) ) ); return b ? [ Math.round( b.box2d_bodies[ 0 ].GetPosX() * 30 ), Math.round( b.box2d_bodies[ 0 ].GetPosY() * 30 ) ] : null; } );
+			const rb = await ev( ()=>{ const b = pb2Entity.entities.find( ( e )=>e && e.type === pb2Entity.TYPE_BOAT && !e.is_being_removed && e.hea > 0 && !Array.from( e.gO || [] ).some( ( s )=>s && s.owner_character && !( s.owner_character.controller && s.owner_character.controller.player_connection ) ) ); return b ? [ Math.round( b.box2d_bodies[ 0 ].GetPosX() * 30 ), Math.round( b.box2d_bodies[ 0 ].GetPosY() * 30 ) ] : null; } );
 			if ( !rb ) return { ok: false, why: 'no raiders\' boat' };
 			await put( rb[ 0 ] - 40, -60, 900 );
 			const aboardNow = ()=>ev( ()=>{ const m = __lab.me(); const b = pb2Entity.entities.find( ( e )=>e && e.type === pb2Entity.TYPE_BOAT && Array.from( e.gO || [] ).some( ( s )=>s && s.owner_character === m ) ); if ( !b ) return null; const B = b.box2d_bodies[ 0 ]; return { x: Math.round( B.GetPosX() * 30 ), y: Math.round( B.GetPosY() * 30 ), hea: Math.round( b.hea ) }; } );
@@ -198,7 +198,7 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		{
 			const out = {};
 			// out of the water beside cap 1's right end, up, then left onto the cap
-			let p = await put( c1 + L.cap.half + 20, 30, 900 );
+			let p = await put( c1 + L.cap.half + 20, 30, 150 );
 			out.inWater = p;
 			out.cleared = await clear( c1, L.cap.top, 800 );
 			await key( 'keydown', 'KeyW' );

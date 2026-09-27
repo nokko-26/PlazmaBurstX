@@ -478,7 +478,20 @@ function autopilot()
 // and a velocity set once a tick is lost to gravity between them), its velocity zeroed. The host moves everyone; a guest
 // moves its own character too, so its view doesn't wait for the host.
 const LAD = { half: 28, speed: 260, side: 150, pull: 8, below: 90 };
-const onLadder = new WeakMap(), ladderT = new WeakMap();
+const onLadder = new WeakMap(), ladderT = new WeakMap(), ghosted = new WeakMap();
+// (a climber passes through nothing but its shaft; while it climbs its body and gun collide with nothing, so a gun held
+// out sideways can't snag a hatch's edge. Put back when it lets go.)
+function ghost( ch, on )
+{
+	if ( on === ghosted.has( ch ) ) return;
+	if ( on )
+	{
+		const saved = [];
+		for ( const a of opt( ()=>ch.ragdoll.local_atoms ) || [] ) { const b = a && a.box2d_body; if ( b ) for ( const f of fixtures( b ) ) { saved.push( [ f, f.GetFilterData() ] ); f.SetFilterData( pb2_mp.Box2D_filter_nothing ); } }
+		ghosted.set( ch, saved );
+	}
+	else { for ( const [ f, d ] of ghosted.get( ch ) || [] ) opt( ()=>f.SetFilterData( d ) ); ghosted.delete( ch ); }
+}
 function setVel( ch, vx, vy )
 {
 	for ( const a of opt( ()=>ch.ragdoll.local_atoms ) || [] )
@@ -497,13 +510,13 @@ function ladders()
 	let n = 0;
 	for ( const ch of opt( ()=>pb2Character.characters ) || [] )
 	{
-		if ( !alive( ch ) || ( !host_ && ch !== mine ) ) { onLadder.delete( ch ); continue; }
+		if ( !alive( ch ) || ( !host_ && ch !== mine ) ) { if ( onLadder.has( ch ) ) { onLadder.delete( ch ); ghost( ch, false ); } continue; }
 		const ctl = ch.controller || controllerOf( ch );
-		if ( !ctl || !isPlayer( ch ) || opt( ()=>ch.ragdoll.driver_of ) ) { onLadder.delete( ch ); continue; }
+		if ( !ctl || !isPlayer( ch ) || opt( ()=>ch.ragdoll.driver_of ) ) { if ( onLadder.has( ch ) ) { onLadder.delete( ch ); ghost( ch, false ); } continue; }
 		const feet = ch.y + 44;
 		let L = onLadder.get( ch ) || null;
 		const inShaft = ( s )=>Math.abs( ch.x - s.x ) < LAD.half && feet > s.y - 40 && feet < ( s.toy === null ? s.y + 300 : s.toy ) + LAD.below;
-		if ( L && ( !estate.get( L ) || !inShaft( estate.get( L ) ) ) ) { onLadder.delete( ch ); L = null; }
+		if ( L && ( !estate.get( L ) || !inShaft( estate.get( L ) ) ) ) { onLadder.delete( ch ); ghost( ch, false ); L = null; }
 		if ( !L )
 		{
 			if ( !ctl.act_y ) continue;
@@ -517,9 +530,10 @@ function ladders()
 		let vy = ( ctl.act_y || 0 ) * LAD.speed;
 		if ( vy < 0 && feet <= s.y ) vy = 0;                                        // (at the top: step off sideways)
 		if ( vy < 0 ) vy = Math.max( vy, ( s.y - feet ) / Math.max( step, 1e-3 ) );   // (and never past it)
-		if ( vy > 0 && feet >= bottom ) { onLadder.delete( ch ); continue; }          // (off the foot of it)
+		if ( vy > 0 && feet >= bottom ) { onLadder.delete( ch ); ghost( ch, false ); continue; }   // (off the foot of it)
 		const vx = ctl.act_x ? ctl.act_x * LAD.side : clamp( ( s.x - ch.x ) * LAD.pull, -LAD.side, LAD.side );
-		if ( ctl.act_x && !ctl.act_y && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { onLadder.delete( ch ); ladderT.delete( ch ); continue; }
+		if ( ctl.act_x && !ctl.act_y && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { onLadder.delete( ch ); ladderT.delete( ch ); ghost( ch, false ); continue; }
+		ghost( ch, true );
 		opt( ()=>ch.ragdoll.Teleport( vx * step, vy * step ) );
 		setVel( ch, 0, 0 );
 		n++;
@@ -534,22 +548,28 @@ function ladders()
 // its inputs left at rest) until a player comes within FAR.think px, and one off the camera isn't drawn (its meshes
 // hidden just before each render, put back as it comes into view).
 const FAR = { thinkX: 2600, thinkY: 1500, margin: 320 };
-const asleep = new WeakSet(), wrappedCtl = new WeakSet();
+// (the game's objects are sealed: nothing is added to them — what we keep about them lives in these maps)
+const asleep = new WeakSet(), charMeshes = new WeakMap(), culled = new WeakSet(), hidByUs = new WeakSet();
+function hookSleep()
+{
+	const P = opt( ()=>pb2Controller.prototype );
+	if ( !P || typeof P._bm !== 'function' ) return;
+	hookFn( P, '_bm', ( orig )=>function()
+	{
+		if ( asleep.has( this ) ) { this.act_x = 0; this.act_y = 0; this.act_fire = 0; this.act_fire2 = 0; return; }
+		return orig.apply( this, arguments );
+	} );
+}
 function sleepFar()
 {
+	hookSleep();
 	const players = livingPlayers();
 	let n = 0;
 	for ( const c of opt( ()=>pb2Character.characters ) || [] )
 	{
 		if ( !alive( c ) || isPlayer( c ) ) continue;
 		const k = c.controller;
-		if ( !k || typeof k._bm !== 'function' ) continue;
-		if ( !wrappedCtl.has( k ) )
-		{
-			wrappedCtl.add( k );
-			const own = k._bm;
-			k._bm = function() { if ( asleep.has( this ) ) { this.act_x = 0; this.act_y = 0; this.act_fire = 0; this.act_fire2 = 0; return; } return own.apply( this, arguments ); };
-		}
+		if ( !k ) continue;
 		const near = !players.length || players.some( ( p )=>Math.abs( p.x - c.x ) < FAR.thinkX && Math.abs( p.y - c.y ) < FAR.thinkY );
 		if ( near ) asleep.delete( k ); else { asleep.add( k ); n++; }
 	}
@@ -567,10 +587,10 @@ function cullFar()
 		const r = c && c.ragdoll;
 		if ( !r ) continue;
 		const off = Math.abs( c.x - cam.position.x ) > hw || Math.abs( -c.y - cam.position.y ) > hh;
-		if ( !r.__csMeshes ) r.__csMeshes = Object.keys( r ).map( ( key )=>r[ key ] ).filter( ( v )=>v && v.isMesh );
-		if ( off ) { for ( const m of r.__csMeshes ) if ( m.visible ) { m.visible = false; m.__csHid = true; } n++; }
-		else if ( r.__csCulled ) for ( const m of r.__csMeshes ) if ( m.__csHid ) { m.visible = true; m.__csHid = false; }
-		r.__csCulled = off;
+		let ms = charMeshes.get( r );
+		if ( !ms ) { ms = Object.keys( r ).map( ( key )=>r[ key ] ).filter( ( v )=>v && v.isMesh ); charMeshes.set( r, ms ); }
+		if ( off ) { for ( const m of ms ) if ( m.visible ) { m.visible = false; hidByUs.add( m ); } culled.add( r ); n++; }
+		else if ( culled.has( r ) ) { for ( const m of ms ) if ( hidByUs.has( m ) ) { m.visible = true; hidByUs.delete( m ); } culled.delete( r ); }
 	}
 	state.culled = n;
 }
@@ -1051,7 +1071,7 @@ function buildBridge( L )
 	{
 		B( c - 540, -34, c + 540, 140, -560, -190, M.concrete );                                   // (the footing at the waterline)
 		B( c - 560, -44, c + 560, -30, -570, -180, M.dark );                                       // (its deck edge)
-		for ( let x = c - 500; x <= c + 500; x += 90 ) cyl( 9, x - 30, x + 30, -8, -176, M.black );  // (fenders)
+		// (no fender row: its high-contrast dashes read as busy against the calm water the concept has there)
 		for ( const x of [ c - 420, c + 420 ] ) B( x - 10, -70, x + 10, -44, -300, -280, M.yellow ); // (bollards)
 		for ( const sx of [ -1, 1 ] )
 		{
@@ -1437,14 +1457,14 @@ const L06 = {
 	cap: { half: 450, top: -330, t: 30 },
 	soffit: -580, floor: -620, ceil: -820, road: -860, header: 40,
 	shaft: -120,                                                              // (each leg's ladder shaft, from its centre)
-	hatch: 55,                                                                // (half the hatch it climbs through: a climber's arms and gun need the room)
+	hatch: 70,                                                                // (half the hatch it climbs through: room for a climber's arms and gun)
 	containerH: 90, containerTop: -400,
 	partitions: [ 1900, 2800, 3450, 4350, 5250, 6150, 6850, 7050, 7950, 8850, 9750, 10650, 11550, 12450, 13350 ],
 	rooms: [ [ 1300, 1900, 'bg_room', 'Store' ], [ 1900, 2800, 'bg_room', 'Services' ], [ 2800, 3450, 'bg_sec', 'Security' ], [ 3450, 4350, 'bg_room', 'Services' ],
 		[ 4350, 5250, 'bg_room', 'Store' ], [ 5250, 6150, 'bg_room', 'Services' ], [ 6150, 6850, 'bg_sec', 'Security' ], [ 6850, 7050, 'bg_room', 'Vestibule' ],
 		[ 7050, 7950, 'bg_tower', 'Tower base' ], [ 7950, 8850, 'bg_bay', 'Vehicle bay' ], [ 8850, 9750, 'bg_room', 'Services' ], [ 9750, 10650, 'bg_sec', 'Security' ],
 		[ 10650, 11550, 'bg_room', 'Services' ], [ 11550, 12450, 'bg_sec', 'Security' ], [ 12450, 13350, 'bg_room', 'Services' ], [ 13350, 13700, 'bg_room', 'Vestibule' ] ],
-	tower: { x0: 7100, x1: 7900, wall: 40, l2: -1100, l3: -1340, slab: 20, roof: -1600, roofT: 40, doorTop: -1020, l3Open: -1520, shaft: 7800 },
+	tower: { x0: 7100, x1: 7900, wall: 40, l2: -1100, l3: -1340, slab: 20, roof: -1600, roofT: 40, doorTop: -1020, l3Open: -1520, shaft: 7780 },
 	cranes: [ { x: 2250, dir: -1, load: -1180 }, { x: 5850, dir: -1, load: -1180 }, { x: 9450, dir: 1, load: -1180 }, { x: 13050, dir: 1, load: -1180 } ],
 	watchtowers: [ 1450, 4880, 10150, 13550 ],
 	start: { dock: [ 1200, 1300 ], boat: 1560 },
@@ -1583,7 +1603,7 @@ function level06()
 	{
 		B.wall( c - L.cap.half, L.cap.top, 2 * L.cap.half, L.cap.t, 'pier' );
 		// (down into the water: a swimmer's feet hang low. The first and last caps' outer ends have catwalks instead)
-		for ( const sx of [ -1, 1 ] ) if ( !( c === L.legs[ 0 ] && sx < 0 ) && !( c === L.legs[ L.legs.length - 1 ] && sx > 0 ) ) B.entity( c + sx * ( L.cap.half + 20 ), L.cap.top - 70, 'pb2Entity.TYPE_CS_LADDER', { toy: '160' } );
+		for ( const sx of [ -1, 1 ] ) if ( !( c === L.legs[ 0 ] && sx < 0 ) && !( c === L.legs[ L.legs.length - 1 ] && sx > 0 ) ) B.entity( c + sx * ( L.cap.half + 20 ), L.cap.top - 70, 'pb2Entity.TYPE_CS_LADDER', { toy: S( L.bed - 20 ) } );
 		B.entity( c + L.shaft, R - 60, 'pb2Entity.TYPE_CS_LADDER', { toy: S( L.cap.top ) } );
 		B.lamp( c - 300, L.cap.top - 90, '0xffc890', 0.45, 4 ); B.lamp( c + 300, L.cap.top - 90, '0xffc890', 0.45, 4 );
 		B.entity( c + 250, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
@@ -1641,7 +1661,7 @@ function level06()
 	const sx0 = ( L.start.dock[ 0 ] + L.start.dock[ 1 ] ) / 2;
 	B.char( sx0, -48 - 44, { id: 'raider1', skin: 'skin_raider', team: 'raiders', player_controllable: 'true', hmax: '150', side: '1' } );
 	B.gun( sx0 - 20, -48 - 20, 'gun_real_rifle' ); B.gun( sx0 + 20, -48 - 20, 'gun_pistol2' );
-	B.entity( L.start.boat, -60, 'pb2Entity.TYPE_BOAT', { id: 'raider_boat', style_id: '1', side: '1', multiply_health: '2' } );
+	B.entity( L.start.boat, -60, 'pb2Entity.TYPE_BOAT', { id: 'raider_boat', style_id: '1', side: '1', multiply_health: '3' } );
 	B.entity( L.start.boat + 25, 0, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '1' } );
 	for ( let i = 0; i < L.legs.length - 1; i++ ) B.entity( ( L.legs[ i ] + L.legs[ i + 1 ] ) / 2, 0, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '1' } );
 	// the CS tanks in the vehicle bay (unmanned: the raiders can take them) and guns to find
@@ -1702,9 +1722,9 @@ function level06()
 	B.cs( 520, fl, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Power guard', 1 );
 	B.cs( 850, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
 	B.cs( 1150, fl, 'skin_cs_lite', 'gun_real_shotgun', 'cs_post', 'CS Engineer [2+]', -1 );
-	B.cs( 880, C.ledge, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Ledge guard', 1 );
-	B.cs( 1900, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
-	B.cs( 2440, cap, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman [2+]', -1 );
+	// (cap 1's guards at its far end, out of sight of the start: the level opens quiet)
+	B.cs( 2420, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
+	B.cs( 2500, cap, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman [2+]', -1 );
 	B.cs( 3700, cap, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy [3+]', -1 );
 	B.cs( 4150, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
 	B.cs( L.hanging[ 1 ][ 0 ] + 100, L.containerTop, 'skin_cs_lite', 'gun_gl', 'cs_post', 'CS Grenadier', -1 );
