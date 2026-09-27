@@ -245,3 +245,24 @@ test( 'a stall sends the run to failure analysis instead of blind retries', asyn
 	assert.strictEqual( out.state, 'NEEDS_HUMAN' );
 	assert.match( out.why, /what should sum.js do/ );
 } );
+
+test( '15 a tool fingerprint makes the same call with new content a new action, a true repeat still refused', ()=>
+{
+	const { ActionBroker, ToolRuntime, BudgetManager } = require( '../src/runtime' );
+	const { EventLog, EvidenceStore } = require( '../src/stores' );
+	const { ResidueGraph } = require( '../src/model' );
+	const fs = require( 'fs' ), os = require( 'os' ), path = require( 'path' );
+	const dir = fs.mkdtempSync( path.join( os.tmpdir(), 'rl-fp-' ) );
+	let content = 'a';
+	const tools = { 'x.write': { readOnly: false, fingerprint: ()=>content, run: ()=>( { wrote: content } ) } };
+	const log = new EventLog( dir ), evidence = new EvidenceStore( dir, log );
+	const runtime = new ToolRuntime( { root: dir, evidence: evidence.writer, log, extraTools: tools, policy: {} } );
+	const graph = new ResidueGraph( null );
+	graph.add( { id: 'r', description: 'the file holds the right text', required: true, contract: { kind: 'human', question: 'ok?' } }, 'test' );
+	const broker = new ActionBroker( { runtime, graph, log, budget: new BudgetManager(), policy: {} } );
+	const act = { targets: [ 'r' ], rationale: 'write it', tool: 'x.write', params: { path: 'f' }, predictedEffect: 'written', expectedEvidence: [], failureSignatures: [], risk: 'low' };
+	assert.equal( broker.execute( act, 'c1' ).executed, true );
+	assert.equal( broker.execute( act, 'c2' ).executed, false );
+	content = 'b';
+	assert.equal( broker.execute( act, 'c3' ).executed, true );
+} );

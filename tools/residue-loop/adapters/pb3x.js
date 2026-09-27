@@ -42,7 +42,9 @@ const tools = {
 		let json = null; try { json = JSON.parse( out.stdout ); } catch ( e ) { /* none */ }
 		return { exitCode: out.exitCode, stderr: out.stderr, metrics: json };
 	} },
-	'pb3x.bake': { readOnly: false, doc: '{} — bake mods/*.user.js into pb3x-extension/pb3x.js and verify', run( p, { root } )
+	'pb3x.bake': { readOnly: false, doc: '{} — bake mods/*.user.js into pb3x-extension/pb3x.js and verify',
+		fingerprint( p, { root } ) { const d = path.join( root, 'mods' ); return sha256( fs.readdirSync( d ).filter( ( f )=>/\.user\.js$/.test( f ) ).sort().map( ( f )=>sha256( fs.readFileSync( path.join( d, f ) ) ) ).join() ); },
+		run( p, { root } )
 	{
 		const a = spawn( [ 'node', 'tools/bake-mods.js' ], { cwd: root } );
 		const b = spawn( [ 'node', 'tools/bake-mods.js', '--check' ], { cwd: root } );
@@ -50,7 +52,9 @@ const tools = {
 		return { bake: a, check: b, syntax: c, ok: a.exitCode === 0 && b.exitCode === 0 && c.exitCode === 0 };
 	} },
 	// an exact-text edit: every `find` must occur exactly once (or `all: true`)
-	'file.patch': { readOnly: false, doc: '{ path, edits: [ { find, replace, all? } ] }', run( p, { root } )
+	'file.patch': { readOnly: false, doc: '{ path, edits: [ { find, replace, all? } ] }',
+		fingerprint( p, { root } ) { return sha256( fs.readFileSync( inside( root, p.path ) ) ); },
+		run( p, { root } )
 	{
 		const abs = inside( root, p.path );
 		let s = fs.readFileSync( abs, 'utf8' );
@@ -67,7 +71,9 @@ const tools = {
 		return { path: p.path, before, after: sha256( s ), applied };
 	} },
 	// write a file from the run's staging folder (large content the engine's answer points to instead of inlining)
-	'file.write_from': { readOnly: false, doc: '{ from: "<staged file under the run\'s engine/staging>", path }', run( p, { root } )
+	'file.write_from': { readOnly: false, doc: '{ from: "<staged file under the run\'s engine/staging>", path }',
+		fingerprint( p, { root } ) { const staging = path.resolve( process.env.RL_STAGING || path.join( root, '.rl-staging' ) ); return sha256( fs.readFileSync( inside( staging, p.from ) ) ); },
+		run( p, { root } )
 	{
 		const staging = path.resolve( process.env.RL_STAGING || path.join( root, '.rl-staging' ) );
 		const src = inside( staging, p.from );

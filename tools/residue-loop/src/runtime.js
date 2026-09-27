@@ -128,7 +128,15 @@ class ActionBroker
 		this.policy = { maxRisk: 'medium', forbiddenTools: [], approved: [], ...policy };
 		this.done = new Set( done );
 	}
-	key( a ) { return 'act_' + sha256( canonical( { tool: a.tool, params: a.params, targets: [ ...a.targets ].sort() } ) ).slice( 0, 20 ); }
+	// (a tool may fingerprint what it would act on — the content a write would put down — so the same call with new
+	// content is a new action, while a true repeat is still refused)
+	key( a )
+	{
+		const t = this.runtime.tools[ a.tool ];
+		let fp = null;
+		if ( t && typeof t.fingerprint === 'function' ) { try { fp = t.fingerprint( a.params, { root: this.runtime.root } ); } catch ( e ) { fp = 'unreadable'; } }
+		return 'act_' + sha256( canonical( { tool: a.tool, params: a.params, targets: [ ...a.targets ].sort(), fp } ) ).slice( 0, 20 );
+	}
 	vet( a )
 	{
 		const problems = check( ACTION_REQUEST, a, 'action' );
