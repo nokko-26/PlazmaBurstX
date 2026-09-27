@@ -1,0 +1,76 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "frame-cost",
+    "ladders-work",
+    "tower-climb"
+   ],
+   "rationale": "Frame cost, from the experiment:\n- off-camera characters aren't drawn (their meshes hidden just before each render, restored as they come into view);\n- soldiers more than 2600 px from every player skip their AI turn.\nLadders stop exactly at the top and keep hold 40 px above it.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "The draw calls drop by most of the characters' share and the frame ratio falls a lot.",
+   "expectedEvidence": [
+    "report.worstRatio < 2.5"
+   ],
+   "failureSignatures": [
+    "the ratio doesn't move: characters are drawn from elsewhere"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost",
+    "ladders-work"
+   ],
+   "rationale": "Bake it into the bundle.",
+   "tool": "pb3x.bake",
+   "params": {},
+   "predictedEffect": "The bundle carries the change.",
+   "expectedEvidence": [
+    "bake ok"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "objective-gates-exit",
+    "boat-run",
+    "boat-returns",
+    "patrols-drive",
+    "ladders-work",
+    "tank-drivable",
+    "respawn-works",
+    "underpass-framing"
+   ],
+   "rationale": "Probe fixes:\n- the boat test runs first, before the unmanned boat is shot down;\n- each mechanics test first clears guards within 800 px (a player would have fought them; this pass tests the mechanism, not the balance);\n- the ladder test lets go of W at the top, then presses A;\n- the tank is boarded from 70 px;\n- respawn is judged 1.5 s after coming back.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "play-06.js",
+    "path": "tools/harness/levels/play-06.js"
+   },
+   "predictedEffect": "The tests measure the mechanics.",
+   "expectedEvidence": [
+    "report.tests.*.ok"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  }
+ ]
+}

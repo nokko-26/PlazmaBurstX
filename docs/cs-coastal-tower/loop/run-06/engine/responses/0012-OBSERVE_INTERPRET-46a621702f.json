@@ -1,0 +1,71 @@
+{
+ "summary": "Cycle 4. The breakdown experiment decided the frame-cost question.\nThe spot measured 1706 draw calls as the level is, 544 with the enemies removed and 1414 with the set pieces hidden. The median frame was 633 \u2192 200 ms with the enemies gone and 317 ms with the sets hidden; that timing is noisy, and render-call time is only a small share because the software GPU's work lands outside the render calls. The enemies, most of them off screen, are drawn and simulated every frame. Frame ratio 3.89.\nNewly satisfied: coop-two and coop-ladder. The guest climbed out of the water onto the cap (feet -333), respawned, and the scaling held.\nThe clock-driven ladders engage: the tower shaft reached the command room floor.\nStill failing, from the probe fighting live guards:\n- the objective consoles stall at 35\u201345%, because the guards' fire knocks the player out of reach;\n- the solo ladder test holds W past the top, so the engine's ledge-grab lifts the player onto the cap and holding W then jumps it off;\n- the boat test runs last, and by then the unmanned boat has been shot down and sits at x 6976, y +16.\nThe tank has 4\u00d7 health and survived at 845, but the player never got in.",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "The enemies account for about 1160 of 1706 draw calls at the measured spot, and most of them are off screen: the engine doesn't cull characters by the camera.",
+   "cites": [
+    "ev_muk4jfrn_919a96a628"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The guest's ladder climb works: feet -333 on the cap.",
+   "cites": [
+    "ev_muk4zx88_c6574d8cdf"
+   ],
+   "residueIds": [
+    "coop-ladder"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The objective progress stalls at 35\u201345% while the player is shot at next to each console (the power guard's minigun stands 70 px from the power console).",
+   "cites": [
+    "ev_muk4rzri_6651052823"
+   ],
+   "residueIds": [
+    "objective-gates-exit"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The raiders' boat was lost before the boat test began: at x 6976, y +16, sunk after minutes of fire while unmanned.",
+   "cites": [
+    "ev_muk4rzri_6651052823"
+   ],
+   "residueIds": [
+    "boat-run",
+    "boat-returns",
+    "patrols-drive"
+   ]
+  },
+  {
+   "kind": "HYPOTHESIS",
+   "text": "Hiding off-camera characters' meshes just before each render, and skipping the AI of soldiers more than 2600 px from every player, will bring the frame ratio under about 2, most of the way to the 1.5 limit.",
+   "cites": [
+    "ev_muk4jfrn_919a96a628"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [
+  {
+   "residueId": "underpass-framing",
+   "verdict": "UNSURE",
+   "evidenceIds": [
+    "ev_muk4s05f_a6554b6a82"
+   ],
+   "reason": "The boat wasn't boarded this cycle either, so there's still no lane shot from the boat."
+  }
+ ],
+ "unknowns": [
+  "whether the engine sets character meshes visible again each frame (the cull runs just before render, so it wins either way)"
+ ]
+}
