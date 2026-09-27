@@ -1,0 +1,50 @@
+{
+ "summary": "Cycle 8.\nThe screenshots are published (editor-views satisfied).\nThe generic cull took draws from about 700 to 200\u2013323 per frame, though it threw on a scene child with a null userData, so plays-clean is contradicted. The frame ratio reads 4.76 on this software renderer's noisy clock.\nThe guest's trail shows a clean climb out of the water to the ladder's top (-404, onLadder 1). The probe then judged 'not on the cap' from ch.y + 44, which is wrong for a landing pose: the guest was at x 2488, over the cap.\nThe solo water test began 47 px off the ladder, outside its 28 px catch.\nThe detail grid is 0.061 against 0.06. The furniture didn't show: it was placed behind the rooms' back walls (z about -45..-25).\nThe five-way read-only review (a workflow of reviewers, each finding checked by a refuting skeptic) confirmed these defects:\n- checkpoints light by x alone;\n- the lit-berth replacement is dead code;\n- a patrol with a live gunner can pass as the players' boat;\n- a stale ladder clock;\n- restoring culled meshes via visible can undo the engine's own hiding;\n- state.level is sticky;\n- the exit lock isn't synced to guests;\n- probes run with the editor's Shadows OFF, so none of the level's lamps are baked into what's measured.",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "cullFar threw 'Cannot read properties of null (reading csOwn)': some scene children have no userData.",
+   "cites": [
+    "ev_muk73yw8_8cc7f667b6"
+   ],
+   "residueIds": [
+    "plays-clean"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "Draw calls fell to 200\u2013323 per frame at the perf spots (from about 1400 in cycle 6).",
+   "cites": [
+    "ev_muk76ufk_c3eef5fc61"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The guest climbed out of the water to the ladder's top: the trail runs -47 \u2192 -404 with onLadder 1.",
+   "cites": [
+    "ev_muk7awrk_7fb1b5678f"
+   ],
+   "residueIds": [
+    "coop-ladder"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The overview's detail grid is 0.061: top-right 0.061 now (the crane is in frame), the middle row still low (0.098\u20130.114).",
+   "cites": [
+    "ev_muk73z51_28e4ef63c0"
+   ],
+   "residueIds": [
+    "look-structure"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [],
+ "unknowns": [
+  "what share of the remaining frame time is AI and physics, now that the draw calls are near the baseline's (the next breakdown will say)"
+ ]
+}

@@ -1,0 +1,103 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "plays-clean",
+    "frame-cost",
+    "ladders-work",
+    "coop-ladder",
+    "look-structure",
+    "coop-two"
+   ],
+   "rationale": "Mod, including the review's confirmed defects:\n- checkpoints light where they are (a berth from the water, a foot checkpoint on its own floor);\n- a lost boat comes back at the furthest berth reached;\n- a boat with a living bot aboard is never the players';\n- patrols target by real distance;\n- one release path for ladders (no stale clock);\n- ladders catch at 55 px in the water;\n- culling by layer mask, not visible (the engine never touches masks), with bodies shown again when their character leaves the list, and a null-safe userData;\n- the cull is gated on the bridge being in the level;\n- the exit lock is synced through on;\n- checkpoints moved clear of the posts;\n- the furniture sits in front of the rooms' back walls;\n- quieter ladder rungs.\nStaging lint: 0 violations. Level 01 lints clean too.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "No mod error; the draws stay low; the water ladder catches the swimmer; the rooms read furnished.",
+   "expectedEvidence": [
+    "report.tests.frames.mod.error null"
+   ],
+   "failureSignatures": [
+    "mod error"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "plays-clean",
+    "frame-cost",
+    "look-structure"
+   ],
+   "rationale": "Bake it into the bundle.",
+   "tool": "pb3x.bake",
+   "params": {},
+   "predictedEffect": "The bundle carries it.",
+   "expectedEvidence": [
+    "bake ok"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "look-structure",
+    "look-dusk-palette"
+   ],
+   "rationale": "Harness (review finding): play as tester with the editor's Shadows set to ON, so the level's static lamps are baked as a player sees them. With OFF, the light map is flat and no lamp reaches the screen.",
+   "tool": "file.patch",
+   "params": {
+    "path": "tools/harness/level.js",
+    "edits": [
+     {
+      "find": "\t\tfor ( const k of Object.getOwnPropertyNames( pb2Interfaces ) )",
+      "replace": "\t\t// (static lamps and shadows baked, as a player gets them: with the editor's Shadows OFF the light map is flat)\n\t\tif ( pb2LevelEditor.SZ !== undefined ) pb2LevelEditor.preview_shadows = pb2LevelEditor.SZ;\n\t\tfor ( const k of Object.getOwnPropertyNames( pb2Interfaces ) )"
+     }
+    ]
+   },
+   "predictedEffect": "Screenshots and perf are taken with the lamps lit.",
+   "expectedEvidence": [
+    "06 screenshots show lamp pools"
+   ],
+   "failureSignatures": [
+    "play test times out while baking"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "coop-ladder",
+    "coop-two"
+   ],
+   "rationale": "Co-op probe: the guest's feet are the lowest point of its atoms, not ch.y + 44 (wrong for a landing or crouched pose).",
+   "tool": "file.write_from",
+   "params": {
+    "from": "coop-06.js",
+    "path": "tools/harness/levels/coop-06.js"
+   },
+   "predictedEffect": "The guest on the cap is measured as on the cap.",
+   "expectedEvidence": [
+    "report.guestLadder"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  }
+ ]
+}
