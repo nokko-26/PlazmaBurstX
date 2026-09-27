@@ -330,7 +330,10 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			if ( back ) { await page.waitForTimeout( 1500 ); back = await me(); }
 			await shot( 'respawned' );
 			if ( back ) await page.waitForTimeout( 1500 );
-			const standing = !!back && await ev( ()=>{ const s = __lab.state(); return !!s && s.hea > 0 && Math.abs( s.vy ) < 120; } );
+			// (standing: alive, feet on the floor it came back to — not its speed: guards there may be shooting at it)
+			const cpNow = await ev( ()=>window.__csTower.checkpoint );
+			const now = back ? await me() : null;
+			const standing = !!now && !now.dead && !!cpNow && Math.abs( now.feet - cpNow.y ) < 20;
 			return { ok: gone && !!back && standing, gone, back, standing, checkpoint: cp, respawns: await ev( ()=>window.__csTower.respawns ) };
 		} );
 

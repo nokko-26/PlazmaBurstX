@@ -17803,7 +17803,7 @@ function ladders()
 // hidden just before each render, put back as it comes into view).
 const FAR = { thinkX: 2600, thinkY: 1500, margin: 320 };
 // (the game's objects are sealed: nothing is added to them — what we keep about them lives in these maps)
-const asleep = new WeakSet(), charMeshes = new WeakMap(), culled = new WeakSet(), hidByUs = new WeakSet();
+const asleep = new WeakSet(), hidByUs = new WeakSet();
 function hookSleep()
 {
 	const P = opt( ()=>pb2Controller.prototype );
@@ -17830,40 +17830,16 @@ function sleepFar()
 	state.asleep = n;
 }
 // The game draws every object wherever it is (its meshes are marked not to be frustum culled), so what's far off the
-// camera — our ladders, beacons, consoles and searchlights, the vehicles, the soldiers — is hidden just before each render
-// and shown again as it comes into view (only what we hid is shown again).
+// camera — our ladders, beacons, consoles and searchlights, and the vehicles' models — is hidden just before each render
+// and shown again as it comes into view (only what we hid is shown again). The soldiers are left to the engine: it shows
+// and hides their parts itself, and they're a small share once the far ones are asleep.
 function cullFar()
 {
 	const cam = camera();
 	if ( !cam ) return;
 	cullOwn( cam );
-	// (a pulled-back screenshot's camera is scaled after this runs: its zoom counts too)
-	const k = Math.max( 1, cam.position.z ) / 820 * ( window.__shotZoom || 1 ), hw = 604 * k + FAR.margin, hh = 340 * k + FAR.margin;
-	let n = 0;
-	for ( const c of opt( ()=>pb2Character.characters ) || [] )
-	{
-		const r = c && c.ragdoll;
-		if ( !r ) continue;
-		const off = Math.abs( c.x - cam.position.x ) > hw || Math.abs( -c.y - cam.position.y ) > hh;
-		let ms = charMeshes.get( r );
-		if ( !ms ) { ms = Object.keys( r ).map( ( key )=>r[ key ] ).filter( ( v )=>v && v.isMesh ); charMeshes.set( r, ms ); }
-		if ( off ) { if ( !culled.has( r ) ) { culled.add( r ); culledList.add( r ); for ( const m of ms ) mask( m, false ); } n++; }
-		else if ( culled.has( r ) ) { culled.delete( r ); culledList.delete( r ); for ( const m of ms ) mask( m, true ); }
-	}
-	// (a character that died while culled leaves the list: its body is shown again)
-	culledList.forEach( ( r )=>{ if ( !( opt( ()=>pb2Character.characters ) || [] ).some( ( c )=>c && c.ragdoll === r ) ) { culled.delete( r ); culledList.delete( r ); for ( const m of charMeshes.get( r ) || [] ) mask( m, true ); } } );
-	state.culled = n;
 }
-// an object drawn or not by its layer mask — the engine sets visible for its own reasons (a severed limb, an effect
-// spent), and never its layers, so hiding by mask can't undo anything the engine did
-const maskWas = new WeakMap(), culledList = new Set();
-function mask( o, on )
-{
-	const l = o && o.layers;
-	if ( !l ) return;
-	if ( !on ) { if ( !maskWas.has( o ) ) { maskWas.set( o, l.mask ); l.mask = 0; } }
-	else if ( maskWas.has( o ) ) { l.mask = maskWas.get( o ); maskWas.delete( o ); }
-}
+
 const offCam = ( cam, x, y, extra = 0 )=>{ const k = Math.max( 1, cam.position.z ) / 820 * ( window.__shotZoom || 1 ); return Math.abs( x - cam.position.x ) > 604 * k + FAR.margin + extra || Math.abs( -y - cam.position.y ) > 340 * k + FAR.margin + extra; };
 function cullOwn( cam )
 {
@@ -17887,8 +17863,11 @@ function cullOwn( cam )
 		}
 		if ( E.n < 3 || !( E.r < 1500 ) ) continue;
 		const m = o.matrixWorld.elements;
+		// (the whole model at its root: the vehicle mods show and hide their models' parts, never the roots — and this
+		// game's renderer ignores layer masks, so visible it is)
 		const off = offCam( cam, m[ 12 ], -m[ 13 ], 600 );
-		if ( off !== hidByUs.has( o ) ) { if ( off ) hidByUs.add( o ); else hidByUs.delete( o ); o.traverse( ( d )=>{ if ( d.isMesh || d.isPoints || d.isLine ) mask( d, !off ); } ); }
+		if ( off ) { if ( o.visible && !hidByUs.has( o ) ) { o.visible = false; hidByUs.add( o ); } }
+		else if ( hidByUs.has( o ) ) { o.visible = true; hidByUs.delete( o ); }
 	}
 }
 const extent = new WeakMap();
