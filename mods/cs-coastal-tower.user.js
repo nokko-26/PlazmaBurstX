@@ -610,16 +610,28 @@ function cullOwn( cam )
 	// ours: shown or hidden outright (a ladder by its middle, its half-length allowed for)
 	ladderGfx.forEach( ( G, e )=>{ const s = estate.get( e ); if ( s ) G.grp.visible = !offCam( cam, s.x, s.y + G.len / 2, G.len / 2 ); } );
 	for ( const m of [ consoles, beacons, lights ] ) m.forEach( ( G, e )=>{ const s = estate.get( e ), g = G.grp; if ( s && g ) g.visible = !offCam( cam, s.x, s.y, m === lights ? SL.len : 0 ); } );
-	// the vehicles: their own groups (e.cF), put back only if we hid them
-	for ( const e of opt( ()=>pb2Entity.entities ) || [] )
+	// everything else that is a compact model at the top of the scene — a vehicle (the More vehicles mod draws each with
+	// groups of its own), a prop — by where it stands; the level's own geometry spans the level and is never touched,
+	// nor are single meshes (effects come and go on their own). Put back only if we hid it.
+	const now = clock();
+	for ( const o of opt( ()=>pb2_mp.scene.children ) || [] )
 	{
-		if ( !e || estate.has( e ) || !e.cF ) continue;
-		const p = bodyPos( e );
-		if ( !p ) continue;
-		const off = offCam( cam, p[ 0 ], p[ 1 ], 400 );
-		for ( const g of e.cF ) { if ( !g ) continue; if ( off ) { if ( g.visible ) { g.visible = false; hidByUs.add( g ); } } else if ( hidByUs.has( g ) ) { g.visible = true; hidByUs.delete( g ); } }
+		if ( !o || o.userData.csOwn ) continue;
+		let E = extent.get( o );
+		if ( !E || now - E.at > 5 )
+		{
+			let n = 0; o.traverse( ( m )=>{ if ( m.isMesh ) n++; } );
+			let r = Infinity;
+			if ( n >= 3 ) { const b = new THREE.Box3().setFromObject( o ); if ( !b.isEmpty() ) r = Math.max( b.max.x - b.min.x, b.max.y - b.min.y ); }
+			E = { n, r, at: now }; extent.set( o, E );
+		}
+		if ( E.n < 3 || !( E.r < 1500 ) ) continue;
+		const m = o.matrixWorld.elements;
+		if ( offCam( cam, m[ 12 ], -m[ 13 ], 600 ) ) { if ( o.visible ) { o.visible = false; hidByUs.add( o ); } }
+		else if ( hidByUs.has( o ) ) { o.visible = true; hidByUs.delete( o ); }
 	}
 }
+const extent = new WeakMap();
 function waterUnder( x, y )
 {
 	const list = opt( ()=>pb2Shape.world_shapes_water ) || [];
@@ -793,6 +805,7 @@ function buildTower()
 	const warn = [];
 	for ( const px of TW.pillars ) warn.push( box( 12, 12, 12, glow( 0xff2a1a ), px, sy - 20, 60 ) );
 	mergeStatic( root, new Set( [ beacon, ...banners, ...warn ] ) );
+	root.userData.csOwn = true;
 	return { root, mats, U, beacon, banners, warn, height: up + TW.deck + 280 + TW.spire };
 }
 // One mesh per material for everything that never moves (the tower is ~80 parts: ~80 draw calls otherwise). Built
@@ -907,6 +920,7 @@ function searchlightVisual( e, scene, dt, t )
 		const post = new THREE.Mesh( new THREE.BoxBufferGeometry( 8, 60, 8 ), unlitMat( 0x2a2e34 ) ); post.position.y = 42;
 		const pivot = new THREE.Group(); pivot.add( beam ); pivot.add( head ); pivot.add( lens );
 		grp.add( pivot ); grp.add( post );
+		grp.userData.csOwn = true;
 		L = { grp, pivot, beam, light: null, phase: Math.random() * 6 };
 		lights.set( e, L );
 	}
@@ -943,6 +957,7 @@ function beaconVisual( e, scene, dt, t )
 		const lamp = new THREE.Mesh( new THREE.SphereBufferGeometry( 8, 12, 8 ), unlitMat( 0xffb030 ) ); lamp.position.y = 74;
 		const halo = new THREE.Mesh( new THREE.SphereBufferGeometry( 26, 16, 8 ), unlitMat( 0xffb030, 0.25, true ) ); halo.position.y = 74;
 		grp.add( post ); grp.add( lamp ); grp.add( halo );
+		grp.userData.csOwn = true;
 		B = { grp, lamp, halo };
 		beacons.set( e, B );
 	}
@@ -974,6 +989,7 @@ function ladderVisual( e, scene )
 		for ( const dx of [ -16, 16 ] ) { const r = new THREE.Mesh( new THREE.BoxBufferGeometry( 4, len, 4 ), m ); r.position.set( dx, -len / 2, 0 ); grp.add( r ); }
 		for ( let y = 12; y < len; y += 24 ) { const r = new THREE.Mesh( new THREE.BoxBufferGeometry( 32, 3, 3 ), dark ); r.position.set( 0, -y, 0 ); grp.add( r ); }
 		mergeStatic( grp, new Set() );
+		grp.userData.csOwn = true;
 		G = { grp, len, mats: [ m, dark ] };
 		ladderGfx.set( e, G );
 	}
@@ -1004,6 +1020,7 @@ function consoleVisual( e, scene, dt, t )
 		const bar = new THREE.Mesh( new THREE.PlaneBufferGeometry( 38, 4 ), unlitMat( 0x40ff80 ) ); bar.position.set( 0, 22, -4 );
 		const beam = new THREE.Mesh( new THREE.CylinderBufferGeometry( 22, 22, 260, 16, 1, true ), beamMat( 0xff4030, 0.6 ) ); beam.position.set( 0, 150, -20 );
 		grp.add( body ); grp.add( screen ); grp.add( bar ); grp.add( beam );
+		grp.userData.csOwn = true;
 		C = { grp, screen, bar, beam };
 		consoles.set( e, C );
 	}
@@ -1066,7 +1083,10 @@ const hillsTex = ( seed, tone )=>canvasTex( 'hills' + seed, 2048, 256, ( g, w, h
 	for ( let x = 0; x <= w; x += 16 ) { y = clamp( y + ( rnd() - 0.5 ) * 26 + Math.sin( x / 190 + seed ) * 4, h * 0.12, h * 0.85 ); g.lineTo( x, y ); }
 	g.lineTo( w, h ); g.closePath(); g.fill();
 	// (a few pines on the ridge)
-	for ( let i = 0; i < 90; i++ ) { const x = rnd() * w, b = h * ( 0.35 + rnd() * 0.5 ); g.beginPath(); g.moveTo( x - 6, b ); g.lineTo( x, b - 18 - rnd() * 16 ); g.lineTo( x + 6, b ); g.fill(); }
+	// (a few soft pines on the ridge, half lost in the mist)
+	g.globalAlpha = 0.55;
+	for ( let i = 0; i < 36; i++ ) { const x = rnd() * w, b = h * ( 0.4 + rnd() * 0.45 ); g.beginPath(); g.moveTo( x - 7, b ); g.lineTo( x, b - 14 - rnd() * 12 ); g.lineTo( x + 7, b ); g.fill(); }
+	g.globalAlpha = 1;
 }, [ 1, 1 ] );
 const bridges = new Map();
 function buildBridge( L )
@@ -1128,6 +1148,23 @@ function buildBridge( L )
 	B( x0, R, x1, S, -600, -170, M.back );
 	const T = L.tower;
 	B( T.x0, T.roof, T.x1, R, -600, -170, M.backDark );
+	// the deck's rooms, furnished behind the play plane: cabinets, consoles with lit screens, pipes under the ceiling,
+	// strip lights (red in the security rooms, hazard-yellow in the vehicle bay)
+	let seed = 11; const rnd = ()=>( seed = ( seed * 16807 ) % 2147483647 ) / 2147483647;
+	const Fl = L.floor, Ce = L.ceil;
+	for ( const [ rx0, rx1, bg ] of L.rooms || [] )
+	{
+		const red = bg === 'bg_sec', bay = bg === 'bg_bay';
+		cyl( 6, rx0 + 10, rx1 - 10, Ce + 16, -84, M.rust ); cyl( 4, rx0 + 10, rx1 - 10, Ce + 30, -78, M.steel );
+		B( rx0 + 20, Ce + 6, rx1 - 20, Ce + 10, -76, -72, glow( red ? 0xff3020 : bay ? 0xd8b030 : 0xffd9a0, red ? 0.9 : 0.55 ) );
+		for ( let x = rx0 + 60; x < rx1 - 80; x += 150 + rnd() * 90 )
+		{
+			const k = rnd();
+			if ( k < 0.4 ) { const h = 90 + rnd() * 50; B( x, Fl - h, x + 50, Fl, -96, -70, M.dark ); B( x + 8, Fl - h + 10, x + 42, Fl - h + 18, -69, -68, glow( 0x9fd0ff, 0.35 ) ); }
+			else if ( k < 0.7 ) { B( x, Fl - 60, x + 70, Fl, -96, -72, M.steel ); B( x + 10, Fl - 110, x + 60, Fl - 72, -90, -86, glow( red ? 0xff5040 : 0x80e0ff, 0.7 ) ); }
+			else { B( x, Fl - 40, x + 60, Fl, -96, -74, M.rust ); B( x + 10, Fl - 76, x + 50, Fl - 40, -94, -76, M.rust ); }
+		}
+	}
 	// the hanging containers' cables and hooks
 	for ( const k of L.hanging )
 	{
@@ -1183,13 +1220,14 @@ function buildBridge( L )
 	}
 	// the far shore: three ridges of hills in the mist, far behind (placed each frame so they sit on the horizon)
 	const hills = [];
-	for ( const [ i, tone, depth, w, h ] of [ [ 0, '#8a7f8c', 14000, 80000, 4200 ], [ 2, '#645868', 7000, 52000, 2600 ] ] )
+	for ( const [ i, tone, depth, w, h ] of [ [ 0, '#8f8490', 14000, 80000, 4200 ], [ 2, '#76697a', 7000, 52000, 2600 ] ] )
 	{
 		const m = unlitMat( 0xffffff, 1, false, hillsTex( 7 + i * 13, tone ), 0.5 ); mats.push( m );
 		const p = new THREE.Mesh( new THREE.PlaneBufferGeometry( w, h ), m );
 		p.userData = { depth, h }; far.add( p ); hills.push( p );
 	}
 	mergeStatic( root, new Set( [ beacon, ...banners, num ] ) );
+	root.userData.csOwn = far.userData.csOwn = true;
 	return { root, far, hills, mats, beacon, banners };
 }
 function bridgeVisual( e, scene, dt, t )
@@ -1491,7 +1529,7 @@ const L06 = {
 		[ 7050, 7950, 'bg_tower', 'Tower base' ], [ 7950, 8850, 'bg_bay', 'Vehicle bay' ], [ 8850, 9750, 'bg_room', 'Services' ], [ 9750, 10650, 'bg_sec', 'Security' ],
 		[ 10650, 11550, 'bg_room', 'Services' ], [ 11550, 12450, 'bg_sec', 'Security' ], [ 12450, 13350, 'bg_room', 'Services' ], [ 13350, 13700, 'bg_room', 'Vestibule' ] ],
 	tower: { x0: 7100, x1: 7900, wall: 40, l2: -1100, l3: -1340, slab: 20, roof: -1600, roofT: 40, doorTop: -1020, l3Open: -1520, shaft: 7780 },
-	cranes: [ { x: 2250, dir: -1, load: -1180 }, { x: 5850, dir: -1, load: -1180 }, { x: 9450, dir: 1, load: -1180 }, { x: 13050, dir: 1, load: -1180 } ],
+	cranes: [ { x: 2250, dir: -1, load: -1180 }, { x: 5850, dir: -1, load: -1180 }, { x: 8900, dir: 1, load: -1180 }, { x: 13050, dir: 1, load: -1180 } ],
 	watchtowers: [ 1450, 4880, 10150, 13550 ],
 	start: { dock: [ 1200, 1300 ], boat: 1560 },
 	// the cliff facility (left): the rock from the level's left edge to the bridge, cut into rooms

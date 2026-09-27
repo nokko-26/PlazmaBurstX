@@ -99,7 +99,8 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		const key = ( type, code )=>ev( ( [ t, c ] )=>__lab.key( t, c ), [ type, code ] );
 		const hold = async ( code, ms )=>{ await key( 'keydown', code ); await page.waitForTimeout( ms ); await key( 'keyup', code ); };
 		// put the player at (x, feet) standing, and let it settle
-		const put = async ( x, feet, settle = 700 )=>{ await ev( ( [ x, y ] )=>{ const m = __lab.me(), v = m && m.ragdoll.driver_of; if ( v && v.ExcludeRagdoll ) v.ExcludeRagdoll( m.ragdoll, true ); __lab.teleport( x, y ); }, [ x, feet - 44 ] ); await page.waitForTimeout( settle ); return me(); };
+		// (out of any vehicle first; teleported twice, a moment apart, so a vehicle's momentum can't carry it off)
+		const put = async ( x, feet, settle = 700 )=>{ await ev( ( [ x, y ] )=>{ const m = __lab.me(), v = m && m.ragdoll.driver_of; if ( v && v.ExcludeRagdoll ) v.ExcludeRagdoll( m.ragdoll, true ); __lab.teleport( x, y ); }, [ x, feet - 44 ] ); await page.waitForTimeout( 80 ); await ev( ( [ x, y ] )=>{ __lab.teleport( x, y ); }, [ x, feet - 44 ] ); await page.waitForTimeout( settle ); return me(); };
 		const L = await ev( ()=>window.__csTower.layouts[ '06' ] );
 		// (a mechanics test clears the guards around where it happens first — a player would have fought them: this pass
 		// tests the ladder, the console, the tank, not the fight; patrol crews stay)

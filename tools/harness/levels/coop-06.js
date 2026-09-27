@@ -88,9 +88,13 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		// a guest up a ladder: in the water beside cap 1's right end, up held, then left onto the cap
 		const c1 = L.legs[ 0 ], lx = c1 + L.cap.half + 20;
 		await ev( ( [ x, y ] )=>{ const ch = window.__guests[ 0 ].controller.character, v = ch.ragdoll.driver_of; if ( v && v.ExcludeRagdoll ) v.ExcludeRagdoll( ch.ragdoll, true ); const b = ch.ragdoll.local_atoms[ pb2Ragdoll.b_body ]; ch.ragdoll.Teleport( x - b.x, y - b.y ); }, [ lx, 30 - 44 ] );
-		await page.waitForTimeout( 150 );
+		await page.waitForTimeout( 80 );
+		await ev( ( [ x, y ] )=>{ const ch = window.__guests[ 0 ].controller.character, b = ch.ragdoll.local_atoms[ pb2Ragdoll.b_body ]; ch.ragdoll.Teleport( x - b.x, y - b.y ); }, [ lx, 30 - 44 ] );
 		await ev( ()=>{ window.__watch.drive[ 1 ] = { x: 0, y: -1 }; } );
-		await page.waitForTimeout( 2800 );
+		// (the climb, sampled: x, feet, how many are on a ladder)
+		const trail = [];
+		for ( let i = 0; i < 14; i++ ) { await page.waitForTimeout( 200 ); const t = await ev( ()=>{ const ch = window.__guests[ 0 ].controller.character; return ch ? [ Math.round( ch.x ), Math.round( ch.y + 44 ), window.__csTower.onLadder || 0, window.__guests[ 0 ].controller.act_y ] : null; } ); trail.push( t ); if ( t && t[ 1 ] <= L.cap.top - 20 ) break; }
+		report.guestTrail = trail;
 		await ev( ()=>{ window.__watch.drive[ 1 ] = { x: -1, y: -1 }; } );
 		await page.waitForTimeout( 500 );
 		await ev( ()=>{ window.__watch.drive[ 1 ] = { x: -1, y: 0 }; } );

@@ -1,7 +1,7 @@
 {
- "phase": "ACT",
- "seq": 19,
- "cycle": 7,
+ "phase": "OBSERVE",
+ "seq": 20,
+ "cycle": 8,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
@@ -48,7 +48,12 @@
    "d7fae43b34bfc37d",
    "7bf01c140875a575",
    "49945993ba0646e5",
-   "0a86473e94b5aaa5"
+   "0a86473e94b5aaa5",
+   "84529968f07e1a6e",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
+   "0a86473e94b5aaa5",
+   "d7fae43b34bfc37d"
   ],
   "hypotheses": [
    "0eb01c3a31fa5b2d",
@@ -59,10 +64,10 @@
   ]
  },
  "budgetSpent": {
-  "engineCalls": 19,
-  "actions": 32,
-  "cycles": 7,
-  "cost": 32,
+  "engineCalls": 20,
+  "actions": 37,
+  "cycles": 8,
+  "cost": 37,
   "startedAt": 1790529166395
  },
  "done": [
@@ -97,7 +102,12 @@
   "act_ed46291ff23a2dd08a72",
   "act_ec9b9102b7d00eadd5a9",
   "act_f426351b830cedab17fb",
-  "act_61705abb938d6f5fa510"
+  "act_61705abb938d6f5fa510",
+  "act_7c865102a0dabba48824",
+  "act_a56590cdf7dc47a4775b",
+  "act_596863409879a43407d9",
+  "act_bb25b9483b9dbd8f387e",
+  "act_1ffc216d86e710ea81a8"
  ],
  "lastProbeIds": {
   "probe:d22e87edb3fa10bb": "ev_muk6agwf_5722afa380",
@@ -115,57 +125,82 @@
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_ec9b9102b7d00eadd5a9",
-   "tool": "file.write_from",
+   "id": "act_7c865102a0dabba48824",
+   "tool": "process.run",
    "targets": [
-    "frame-cost",
-    "ladders-work",
-    "tower-climb",
-    "coop-ladder",
-    "boat-run"
+    "editor-views"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk6agmd_995ff320df",
+   "evidence": "ev_muk6vykl_eb5a9f2c28",
    "expectedEvidence": [
-    "perf drawCalls < 500",
-    "report.tests.ladders.roadOk"
+    "json.count >= 12 in shots-index"
    ],
    "failureSignatures": [
-    "draws unchanged",
-    "climb still falls back"
+    "exitCode != 0"
    ]
   },
   {
-   "id": "act_f426351b830cedab17fb",
-   "tool": "pb3x.bake",
+   "id": "act_a56590cdf7dc47a4775b",
+   "tool": "file.write_from",
    "targets": [
     "frame-cost",
+    "look-structure",
     "ladders-work",
-    "tower-climb"
+    "coop-ladder"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk6agsm_f129b728e1",
+   "evidence": "ev_muk6vyko_3504ef5bed",
+   "expectedEvidence": [
+    "perf drawCalls < 350",
+    "metrics.distance.detailGrid <= 0.06"
+   ],
+   "failureSignatures": [
+    "draws unchanged"
+   ]
+  },
+  {
+   "id": "act_596863409879a43407d9",
+   "tool": "pb3x.bake",
+   "targets": [
+    "frame-cost",
+    "look-structure"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk6vysq_ec2df0f2eb",
    "expectedEvidence": [
     "bake ok"
    ],
    "failureSignatures": []
   },
   {
-   "id": "act_61705abb938d6f5fa510",
+   "id": "act_bb25b9483b9dbd8f387e",
    "tool": "file.write_from",
    "targets": [
-    "boat-run",
-    "boat-returns",
-    "patrols-drive",
-    "underpass-framing"
+    "ladders-work"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk6agsn_5f917cde76",
+   "evidence": "ev_muk6vyss_75d856d2de",
    "expectedEvidence": [
-    "report.tests.boat.start"
+    "report.tests.ladders.inWater.x ≈ ladder x"
+   ],
+   "failureSignatures": []
+  },
+  {
+   "id": "act_1ffc216d86e710ea81a8",
+   "tool": "file.write_from",
+   "targets": [
+    "coop-ladder",
+    "coop-two"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk6vyst_2e13e7f93d",
+   "expectedEvidence": [
+    "report.guestTrail"
    ],
    "failureSignatures": []
   }
