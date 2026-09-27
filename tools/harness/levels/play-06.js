@@ -95,17 +95,45 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			};
 			requestAnimationFrame( tick );
 		} );
-		const me = ()=>ev( ()=>{ const c = __lab.me(); if ( !c ) return null; const s = __lab.state(); return { x: Math.round( c.x ), y: Math.round( c.y ), feet: s ? Math.round( s.bot ) : null, vehicle: !!( c.ragdoll && c.ragdoll.driver_of ) }; } );
+		const me = ()=>ev( ()=>{ const c = __lab.me(); if ( !c ) return null; const s = __lab.state(); return { x: Math.round( c.x ), y: Math.round( c.y ), feet: s ? Math.round( s.bot ) : null, hea: Math.round( c.hea ), dead: !( c.hea > 0 ), vehicle: !!( c.ragdoll && c.ragdoll.driver_of ), ladder: window.__csTower.onLadder || 0 }; } );
 		const key = ( type, code )=>ev( ( [ t, c ] )=>__lab.key( t, c ), [ type, code ] );
 		const hold = async ( code, ms )=>{ await key( 'keydown', code ); await page.waitForTimeout( ms ); await key( 'keyup', code ); };
 		// put the player at (x, feet) standing, and let it settle
 		const put = async ( x, feet, settle = 700 )=>{ await ev( ( [ x, y ] )=>{ const m = __lab.me(), v = m && m.ragdoll.driver_of; if ( v && v.ExcludeRagdoll ) v.ExcludeRagdoll( m.ragdoll, true ); __lab.teleport( x, y ); }, [ x, feet - 44 ] ); await page.waitForTimeout( settle ); return me(); };
 		const L = await ev( ()=>window.__csTower.layouts[ '06' ] );
+		// the rendered level turned in 2.5D, as the editor's Alt + drag turns its camera: the game camera turned about x
+		// and y for the frame (after the game has placed it), put back after
+		const angled = async ( name, x, y, zoom, pitch, yaw )=>
+		{
+			await ev( ( [ pitch, yaw ] )=>
+			{
+				window.__shotRot = [ pitch, yaw ];
+				if ( !window.__shotRotHooked )
+				{
+					window.__shotRotHooked = true;
+					const cam = pb2_mp.cS, XM = pb2_mp.XM, render = XM.render;
+					XM.render = function()
+					{
+						const r = window.__shotRot;
+						if ( !r ) return render.apply( this, arguments );
+						const kx = cam.rotation.x, ky = cam.rotation.y;
+						cam.rotation.x = r[ 0 ]; cam.rotation.y = r[ 1 ]; cam.updateMatrixWorld( true );
+						const out = render.apply( this, arguments );
+						cam.rotation.x = kx; cam.rotation.y = ky; cam.updateMatrixWorld( true );
+						return out;
+					};
+				}
+			}, [ pitch, yaw ] );
+			await shot( name, { x, y, zoom, frames: 40 } );
+			await ev( ()=>{ window.__shotRot = null; } );
+		};
 		const [ c1, c2, c3 ] = L.legs;
 		await page.waitForTimeout( 2500 );
 		await shot( 'play-start' );
 		// the whole middle, pulled back: like the concept's side view
 		for ( const [ name, x, y, z ] of [ [ 'overview-middle', 7500, -900, 2.9 ], [ 'overview-left', 5900, -560, 1.9 ], [ 'overview-right', 9200, -560, 1.9 ], [ 'overview-lane', 7500, -250, 1.45 ] ] ) await shot( name, { x, y, zoom: z, frames: 40 } );
+		for ( const [ name, x, y, z, p, yw ] of [ [ 'alt3d-left', 6300, -600, 1.9, -0.1, 0.38 ], [ 'alt3d-right', 8700, -600, 1.9, -0.1, -0.38 ], [ 'alt3d-under', 7500, -250, 1.3, 0.18, 0.28 ], [ 'alt3d-tower', 7500, -1250, 1.8, -0.18, -0.3 ] ] )
+			await angled( name, x, y, z, p, yw );
 		await release( page );
 
 		// ---- ladders ----
@@ -168,11 +196,12 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			await put( x, fromFeet, 700 );
 			await key( 'keydown', 'KeyW' );
 			let p = null;
-			for ( let i = 0; i < 30; i++ ) { await page.waitForTimeout( 200 ); p = await me(); if ( p && p.feet <= toFeet - 25 ) break; }
+			const trail = [];
+			for ( let i = 0; i < 30; i++ ) { await page.waitForTimeout( 200 ); p = await me(); if ( p ) trail.push( [ p.x, p.feet, p.ladder ] ); if ( p && p.feet <= toFeet - 25 ) break; }
 			await key( 'keydown', side ); await page.waitForTimeout( 450 ); await key( 'keyup', 'KeyW' ); await page.waitForTimeout( 300 ); await key( 'keyup', side );
 			await page.waitForTimeout( 900 );
 			const end = await me();
-			return { top: p, end, ok: !!end && Math.abs( end.feet - toFeet ) < 12 };
+			return { top: p, end, trail: trail.filter( ( t, i )=>i % 3 === 0 ), ok: !!end && Math.abs( end.feet - toFeet ) < 12 };
 		};
 		await test( 'tower', async ()=>
 		{
@@ -205,11 +234,14 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		// ---- the boat: the whole underpass ----
 		await test( 'boat', async ()=>
 		{
-			await put( 4640, -48, 900 );
+			// (on the raiders' boat's deck, beside its helm: E takes the seat)
+			const rb = await ev( ()=>{ const b = pb2Entity.entities.find( ( e )=>e && e.type === pb2Entity.TYPE_BOAT && !e.is_being_removed && !Array.from( e.gO || [] ).some( ( s )=>s && s.owner_character && !( s.owner_character.controller && s.owner_character.controller.player_connection ) ) ); return b ? [ Math.round( b.box2d_bodies[ 0 ].GetPosX() * 30 ), Math.round( b.box2d_bodies[ 0 ].GetPosY() * 30 ) ] : null; } );
+			if ( !rb ) return { ok: false, why: 'no raiders\' boat' };
+			await put( rb[ 0 ] - 40, -60, 900 );
 			const aboardNow = ()=>ev( ()=>{ const m = __lab.me(); const b = pb2Entity.entities.find( ( e )=>e && e.type === pb2Entity.TYPE_BOAT && Array.from( e.gO || [] ).some( ( s )=>s && s.owner_character === m ) ); if ( !b ) return null; const B = b.box2d_bodies[ 0 ]; return { x: Math.round( B.GetPosX() * 30 ), y: Math.round( B.GetPosY() * 30 ), hea: Math.round( b.hea ) }; } );
 			for ( let i = 0; i < 6 && !( await aboardNow() ); i++ ) { await hold( 'KeyE', 200 ); await page.waitForTimeout( 800 ); if ( i === 2 ) await hold( 'KeyD', 300 ); }
 			const start = await aboardNow();
-			if ( !start ) return { ok: false, why: 'could not board' };
+			if ( !start ) return { ok: false, why: 'could not board', boatAt: rb, me: await me() };
 			// (the patrols as they start: how far each gets from there)
 			await ev( ()=>{ window.__patrols = pb2Entity.entities.filter( ( e )=>e && e.type === pb2Entity.TYPE_BOAT && !e.is_being_removed && !Array.from( e.gO || [] ).some( ( s )=>s && s.owner_character === __lab.me() ) ).map( ( e )=>( { e, x0: e.box2d_bodies[ 0 ].GetPosX() * 30, max: 0 } ) ); } );
 			const patrolTick = ()=>ev( ()=>{ for ( const p of window.__patrols ) if ( !p.e.is_being_removed && p.e.box2d_bodies && p.e.box2d_bodies[ 0 ] ) p.max = Math.max( p.max, Math.abs( p.e.box2d_bodies[ 0 ].GetPosX() * 30 - p.x0 ) ); } );
@@ -263,15 +295,16 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		// ---- dying on the deck, coming back ----
 		await test( 'respawn', async ()=>
 		{
-			await put( 6000, L.floor, 800 );
 			const cp = await ev( ()=>window.__csTower.checkpoint );
-			await ev( ()=>{ window.__watch.god = false; const m = __lab.me(); m.hea = -50; } );
+			// (god mode off, dropped from 1,800 px above the road: that kills)
+			await ev( ()=>{ window.__watch.god = false; } );
+			await put( 6000, L.road - 1800, 100 );
 			let gone = false, back = null;
-			for ( let i = 0; i < 24; i++ )
+			for ( let i = 0; i < 40; i++ )
 			{
 				await page.waitForTimeout( 500 );
 				const m = await me();
-				if ( !m ) gone = true;
+				if ( !m || m.dead ) gone = true;
 				else if ( gone ) { back = m; break; }
 			}
 			await ev( ()=>{ window.__watch.god = true; } );

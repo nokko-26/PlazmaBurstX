@@ -1,0 +1,130 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "ladders-work",
+    "tower-climb",
+    "objective-gates-exit",
+    "coop-ladder",
+    "frame-cost",
+    "look-dusk-palette",
+    "look-structure",
+    "look-interior"
+   ],
+   "rationale": "Mod fixes:\n- the objective counts wall-clock time;\n- ladders climb at 260 px/s with a stronger pull to the centre;\n- the water ladders reach 160 px down, with a 90 px margin;\n- the hatches are 110 px wide;\n- the look is darker: muted sky and sun, a dark low-reflection sea, platform-steel slabs, painted containers;\n- frame cost: soffit lamps every 900 px, no footing lamps (34 lamps), 2 hill layers;\n- the trooper is moved off the new hatch.\nStaging lint is clean: 0 violations, nothing unreachable.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "Ladders engage in the water and pass the hatches; the objective finishes in 5 s; the frame ratio drops; the palette distance falls.",
+   "expectedEvidence": [
+    "report.tests.ladders.ok",
+    "report.tests.objective.ok"
+   ],
+   "failureSignatures": [
+    "climb stalls near a floor again"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "plays-clean"
+   ],
+   "rationale": "Re-bake the bundle with the mod's changes.",
+   "tool": "pb3x.bake",
+   "params": {
+    "note": "after mod fix 1"
+   },
+   "predictedEffect": "The bundle is up to date.",
+   "expectedEvidence": [
+    "bake ok"
+   ],
+   "failureSignatures": [
+    "bake failed"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "route-complete"
+   ],
+   "rationale": "The linter joins a ladder to floors within 80 px, not 40: a climber steps off sideways onto a hatch's edge 55 px away.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "lint.js",
+    "path": "tools/harness/levels/lint.js"
+   },
+   "predictedEffect": "The route stays complete with the wider hatches.",
+   "expectedEvidence": [
+    "json.route.unreachable empty"
+   ],
+   "failureSignatures": [
+    "unreachable interior"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "boat-run",
+    "boat-returns",
+    "patrols-drive",
+    "respawn-works",
+    "tower-climb",
+    "underpass-framing",
+    "editor-views"
+   ],
+   "rationale": "Probe fixes:\n- board from the raiders' boat's own deck;\n- kill by a real 1,800 px fall, with dead = no character or hea <= 0;\n- the climb records a trail (x, feet, ladder count);\n- angled 2.5D shots of the rendered level (alt3d-*) are added.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "play-06.js",
+    "path": "tools/harness/levels/play-06.js"
+   },
+   "predictedEffect": "The boat and respawn tests exercise the level itself, not the probe's own mistakes.",
+   "expectedEvidence": [
+    "report.tests.boat.start"
+   ],
+   "failureSignatures": [
+    "could not board"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "work-landed"
+   ],
+   "rationale": "The git-state check ignores the loop's own record, which changes during every observation.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "git-state.js",
+    "path": "tools/harness/levels/git-state.js"
+   },
+   "predictedEffect": "uncommitted counts only work files.",
+   "expectedEvidence": [
+    "json.uncommitted"
+   ],
+   "failureSignatures": [],
+   "risk": "low",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  }
+ ]
+}

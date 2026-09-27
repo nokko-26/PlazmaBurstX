@@ -1,0 +1,95 @@
+{
+ "summary": "Cycle 1. The level builds, plays with no errors, keeps the design rules, and its route and lane are complete. The tank works, the hunters path (6 moved), and the co-op scaling and guest respawn hold. Failing: the water ladders (a swimmer's feet sit below the ladder's foot), the shaft climb (it stalls about 70 px above each floor it passes: the 60 px hatch catches the climber's arms and gun), and the objective (its progress used the frame's capped dt, 9% in 6.5 s at about 3 fps). The boat test boarded from 260 px, beyond reach. The respawn test's hea = -50 doesn't kill. The frame cost is 2.13x (limit 1.5): 34 lamps and 3 translucent hill layers on a software renderer. The look is far off: palette 58 against a limit of 24 and luma +36, because the sky and a reflective sea are too bright and the slab and container textures render as dark gravel. The editor's Alt views show blueprint boxes (3D env off).",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "The water ladder never engaged: the swimmer's feet were at +91 to +102, past the ladder's foot (+40) plus the 50 px margin.",
+   "cites": [
+    "ev_muk37w14_a0551a7bab"
+   ],
+   "residueIds": [
+    "ladders-work"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The shaft climb stalled at feet -689, 69 px above the deck floor, after pausing at the floor: the climber catches on the 60 px hatch. It also rose at about 110 px/s against 190 asked for.",
+   "cites": [
+    "ev_muk37w14_a0551a7bab"
+   ],
+   "residueIds": [
+    "ladders-work",
+    "tower-climb"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The objective's progress reached 9% in 6.5 s because it counts capped frame dt (0.05 s a frame at about 290 ms a frame).",
+   "cites": [
+    "ev_muk37w14_a0551a7bab"
+   ],
+   "residueIds": [
+    "objective-gates-exit"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The boat test couldn't board: the player stood at 4640 and the boat's centre was 260 px away, more than its 220 px reach.",
+   "cites": [
+    "ev_muk37w14_a0551a7bab"
+   ],
+   "residueIds": [
+    "boat-run",
+    "boat-returns",
+    "patrols-drive"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The frame cost ratio is 2.13, and the busiest spot is 283 ms against 133 ms for the baseline.",
+   "cites": [
+    "ev_muk3ar5x_6991d41937"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The palette distance to the concept is 58.2 with luma +36: the overview is much brighter and paler than the dusk concept.",
+   "cites": [
+    "ev_muk37w9h_76e69804bd"
+   ],
+   "residueIds": [
+    "look-dusk-palette",
+    "look-structure"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "In co-op, the guest never engaged the water ladder (the same foot-depth fault) and ended on the boat's deck at -51.",
+   "cites": [
+    "ev_muk3erds_c22c7d2b5e"
+   ],
+   "residueIds": [
+    "coop-ladder",
+    "coop-two"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [
+  {
+   "residueId": "underpass-framing",
+   "verdict": "UNSURE",
+   "evidenceIds": [
+    "ev_muk37wgb_574d1c6232"
+   ],
+   "reason": "There's no lane screenshot because the boat test never boarded. The overview-lane shot (seen by the operator) does show the soffit, legs, containers and lamps framing the lane, but it isn't the probe's image."
+  }
+ ],
+ "unknowns": [
+  "whether hatches 110 px wide let the climber through",
+  "how much of the frame cost is lamps, and how much is characters and the hill layers"
+ ]
+}

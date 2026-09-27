@@ -1,13 +1,14 @@
 {
  "phase": "OBSERVE",
- "seq": 6,
- "cycle": 1,
+ "seq": 8,
+ "cycle": 2,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
   "window": 3,
   "deltas": [
-   27
+   27,
+   17
   ],
   "actionSigs": [
    "80fe487f50efe234",
@@ -18,15 +19,17 @@
    "6d830d548b54a54f",
    "f3874984c8c3eab4",
    "bb9262bf626b9bf5",
-   "aba2f50c650d42ea"
+   "aba2f50c650d42ea",
+   "7bf01c140875a575",
+   "0a86473e94b5aaa5"
   ],
   "hypotheses": []
  },
  "budgetSpent": {
-  "engineCalls": 6,
-  "actions": 9,
-  "cycles": 1,
-  "cost": 9,
+  "engineCalls": 8,
+  "actions": 11,
+  "cycles": 2,
+  "cost": 11,
   "startedAt": 1790529166395
  },
  "done": [
@@ -38,147 +41,103 @@
   "act_6bdf1c7932e611bae8a2",
   "act_045d692afdfd026108e5",
   "act_c7b13283a3a75f31be55",
-  "act_779739eae5fc0aca628a"
+  "act_779739eae5fc0aca628a",
+  "act_ee83118b071e55947b49",
+  "act_250ab5c4fac2c5a1613d"
  ],
  "lastProbeIds": {
-  "probe:d22e87edb3fa10bb": "ev_muk2wozn_ef415f7a83",
-  "probe:5e40829617afc91e": "ev_muk2wp2j_673ac71007",
-  "probe:f0da2bbb4787153c": "ev_muk2wp45_330fcb6b73",
-  "probe:7980a067bb842f7b": "ev_muk2wp5y_280f99fc03",
-  "probe:3ddf0d6bd2086dd8": "ev_muk2wp7f_19a083f9df",
-  "probe:cb3bd0e8c318b9ec": "ev_muk2wp8q_3be378ca9e",
-  "probe:990fb3e94a4cb262": "ev_muk2yanh_c50a414c6c",
-  "probe:5ae70d282044ba98": "ev_muk2yui3_881df54913",
-  "probe:91dd14c2d620911a": "ev_muk2yuke_eb969c3ddc",
-  "probe:aea6c2d28affb31d": "ev_muk2yulh_50fde4e69d"
+  "probe:d22e87edb3fa10bb": "ev_muk32tt1_8d22839c7b",
+  "probe:5e40829617afc91e": "ev_muk37w14_a0551a7bab",
+  "probe:f0da2bbb4787153c": "ev_muk37w2d_df029966ba",
+  "probe:7980a067bb842f7b": "ev_muk37w9h_76e69804bd",
+  "probe:3ddf0d6bd2086dd8": "ev_muk37wex_2aa1da26fd",
+  "probe:cb3bd0e8c318b9ec": "ev_muk37wgb_574d1c6232",
+  "probe:990fb3e94a4cb262": "ev_muk3ar5x_6991d41937",
+  "probe:5ae70d282044ba98": "ev_muk3dau7_8dccbe8f7d",
+  "probe:91dd14c2d620911a": "ev_muk3erds_c22c7d2b5e",
+  "probe:aea6c2d28affb31d": "ev_muk3erff_59fc6910ef"
  },
  "terminal": null,
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_eaaf37c0b6e26bf7ddbc",
+   "id": "act_ee83118b071e55947b49",
    "tool": "file.write_from",
    "targets": [
-    "level-builds",
-    "design-rules",
-    "route-complete",
-    "lane-static",
-    "cap-cover",
-    "layers-held",
-    "coop-scaling-names",
-    "three-chunks"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk32tkg_383b4cc229",
-   "expectedEvidence": [
-    "lint probe exitCode 0 with json.level == '06'"
-   ],
-   "failureSignatures": [
-    "MODULE_NOT_FOUND",
-    "json.error set"
-   ]
-  },
-  {
-   "id": "act_dd058ef4e1ccb52b76f8",
-   "tool": "file.write_from",
-   "targets": [
-    "level-builds",
-    "plays-clean",
     "ladders-work",
-    "objective-gates-exit",
     "tower-climb",
-    "cap-cover",
-    "layers-held"
+    "objective-gates-exit",
+    "coop-ladder",
+    "frame-cost",
+    "look-dusk-palette",
+    "look-structure",
+    "look-interior"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk32tki_fabcd0e31f",
+   "evidence": "ev_muk3jqfr_714e6c1cb3",
    "expectedEvidence": [
-    "json.violationCount == 0",
-    "json.route.unreachable empty"
+    "report.tests.ladders.ok",
+    "report.tests.objective.ok"
    ],
    "failureSignatures": [
-    "json.error: level06 threw"
+    "climb stalls near a floor again"
    ]
   },
   {
-   "id": "act_7cd5fc25714d673dffe2",
+   "id": "act_de834e27c892ed721560",
    "tool": "pb3x.bake",
    "targets": [
     "plays-clean"
    ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk32tqq_d48e077a4a",
+   "executed": false,
+   "problems": [
+    "targets already-satisfied residue plays-clean"
+   ],
    "expectedEvidence": [
-    "bake ok true"
+    "bake ok"
    ],
    "failureSignatures": [
-    "bake exitCode != 0",
-    "syntax error"
+    "bake failed"
    ]
   },
   {
-   "id": "act_de42ef65216009c35c87",
+   "id": "act_bdc21c5c65970735d252",
    "tool": "file.write_from",
    "targets": [
-    "plays-clean",
-    "ladders-work",
+    "route-complete"
+   ],
+   "executed": false,
+   "problems": [
+    "targets already-satisfied residue route-complete"
+   ],
+   "expectedEvidence": [
+    "json.route.unreachable empty"
+   ],
+   "failureSignatures": [
+    "unreachable interior"
+   ]
+  },
+  {
+   "id": "act_250ab5c4fac2c5a1613d",
+   "tool": "file.write_from",
+   "targets": [
     "boat-run",
     "boat-returns",
-    "objective-gates-exit",
-    "tower-climb",
-    "tank-drivable",
-    "respawn-works",
     "patrols-drive",
-    "editor-views",
-    "look-dusk-palette",
-    "look-interior",
-    "look-structure"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk32tqr_28d460415f",
-   "expectedEvidence": [
-    "report.tests.* present"
-   ],
-   "failureSignatures": [
-    "report null",
-    "report.failed"
-   ]
-  },
-  {
-   "id": "act_70a655d2f7aa833f7125",
-   "tool": "file.write_from",
-   "targets": [
-    "coop-two",
-    "coop-ladder"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk32tqs_9d1249abcb",
-   "expectedEvidence": [
-    "report.guests >= 1"
-   ],
-   "failureSignatures": [
-    "report.failed"
-   ]
-  },
-  {
-   "id": "act_6bdf1c7932e611bae8a2",
-   "tool": "file.write_from",
-   "targets": [
+    "respawn-works",
+    "tower-climb",
+    "underpass-framing",
     "editor-views"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk32tqs_770f9e3c82",
+   "evidence": "ev_muk3jqfs_4a94232c45",
    "expectedEvidence": [
-    "json.count"
+    "report.tests.boat.start"
    ],
    "failureSignatures": [
-    "MODULE_NOT_FOUND"
+    "could not board"
    ]
   },
   {
@@ -187,47 +146,14 @@
    "targets": [
     "work-landed"
    ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk32tqt_75c8572a59",
+   "executed": false,
+   "problems": [
+    "already executed (idempotency key act_045d692afdfd026108e5)"
+   ],
    "expectedEvidence": [
-    "json.branch == cs-coastal-tower"
+    "json.uncommitted"
    ],
-   "failureSignatures": [
-    "MODULE_NOT_FOUND"
-   ]
-  },
-  {
-   "id": "act_c7b13283a3a75f31be55",
-   "tool": "file.patch",
-   "targets": [
-    "frame-cost"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk32tqu_829a069da5",
-   "expectedEvidence": [
-    "report.worstRatio"
-   ],
-   "failureSignatures": [
-    "report.failed"
-   ]
-  },
-  {
-   "id": "act_779739eae5fc0aca628a",
-   "tool": "file.patch",
-   "targets": [
-    "enemies-path"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk32tqu_148c00083a",
-   "expectedEvidence": [
-    "report.movedCount"
-   ],
-   "failureSignatures": [
-    "report.failed"
-   ]
+   "failureSignatures": []
   }
  ],
  "observeProbed": false,
@@ -241,7 +167,26 @@
   "ev_muk2yanh_c50a414c6c",
   "ev_muk2yui3_881df54913",
   "ev_muk2yuke_eb969c3ddc",
-  "ev_muk2yulh_50fde4e69d"
+  "ev_muk2yulh_50fde4e69d",
+  "ev_muk32tkg_383b4cc229",
+  "ev_muk32tki_fabcd0e31f",
+  "ev_muk32tqq_d48e077a4a",
+  "ev_muk32tqr_28d460415f",
+  "ev_muk32tqs_9d1249abcb",
+  "ev_muk32tqs_770f9e3c82",
+  "ev_muk32tqt_75c8572a59",
+  "ev_muk32tqu_829a069da5",
+  "ev_muk32tqu_148c00083a",
+  "ev_muk32tt1_8d22839c7b",
+  "ev_muk37w14_a0551a7bab",
+  "ev_muk37w2d_df029966ba",
+  "ev_muk37w9h_76e69804bd",
+  "ev_muk37wex_2aa1da26fd",
+  "ev_muk37wgb_574d1c6232",
+  "ev_muk3ar5x_6991d41937",
+  "ev_muk3dau7_8dccbe8f7d",
+  "ev_muk3erds_c22c7d2b5e",
+  "ev_muk3erff_59fc6910ef"
  ],
  "failureHandled": false
 }

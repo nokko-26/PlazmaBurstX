@@ -270,7 +270,9 @@ function hostTick( dt )
 		const s = estate.get( e );
 		if ( s.on >= 100 ) continue;
 		const here = players.some( ( c )=>Math.abs( c.x - s.x ) < OBJ.reach && Math.abs( c.y + 44 - s.y ) < 90 );
-		s.progress = clamp( ( s.progress || 0 ) + ( here ? dt : -dt * 0.25 ), 0, OBJ.hold );
+		// (on the clock, not the frame's dt: that's capped, and a slow machine would take far longer than OBJ.hold)
+		const now = clock(), step = Math.min( 1, Math.max( 0, now - ( s.tick || now ) ) ); s.tick = now;
+		s.progress = clamp( ( s.progress || 0 ) + ( here ? step : -step * 0.25 ), 0, OBJ.hold );
 		s.on = s.progress >= OBJ.hold ? 100 : Math.floor( 99 * s.progress / OBJ.hold );
 		if ( s.on >= 100 )
 		{
@@ -474,7 +476,7 @@ function autopilot()
 // (onto a floor beside the top, or away). The engine has no climbing of its own, so the character's body is moved
 // straight: every atom gets the same velocity each tick (gravity barely moves it between two). The host moves everyone;
 // a guest moves its own character too, so its view doesn't wait for the host.
-const LAD = { half: 28, speed: 190, side: 150, pull: 6 };
+const LAD = { half: 28, speed: 260, side: 150, pull: 8, below: 90 };
 const onLadder = new WeakMap();
 function setVel( ch, vx, vy )
 {
@@ -491,6 +493,7 @@ function ladders()
 	const list = markers( 'ladder' );
 	if ( !list.length ) return;
 	const host_ = isHost(), mine = opt( ()=>pb2_mp.my_controller.character ) || null;
+	let n = 0;
 	for ( const ch of opt( ()=>pb2Character.characters ) || [] )
 	{
 		if ( !alive( ch ) || ( !host_ && ch !== mine ) ) { onLadder.delete( ch ); continue; }
@@ -498,7 +501,7 @@ function ladders()
 		if ( !ctl || !isPlayer( ch ) || opt( ()=>ch.ragdoll.driver_of ) ) { onLadder.delete( ch ); continue; }
 		const feet = ch.y + 44;
 		let L = onLadder.get( ch ) || null;
-		const inShaft = ( s )=>Math.abs( ch.x - s.x ) < LAD.half && feet > s.y - 10 && feet < ( s.toy === null ? s.y + 300 : s.toy ) + 50;
+		const inShaft = ( s )=>Math.abs( ch.x - s.x ) < LAD.half && feet > s.y - 10 && feet < ( s.toy === null ? s.y + 300 : s.toy ) + LAD.below;
 		if ( L && ( !estate.get( L ) || !inShaft( estate.get( L ) ) ) ) { onLadder.delete( ch ); L = null; }
 		if ( !L )
 		{
@@ -514,7 +517,9 @@ function ladders()
 		const vx = ctl.act_x ? ctl.act_x * LAD.side : clamp( ( s.x - ch.x ) * LAD.pull, -LAD.side, LAD.side );
 		if ( ctl.act_x && !ctl.act_y && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { onLadder.delete( ch ); continue; }
 		setVel( ch, vx, vy );
+		n++;
 	}
+	state.onLadder = n;
 }
 function waterUnder( x, y )
 {
@@ -1078,7 +1083,7 @@ function buildBridge( L )
 	}
 	// the far shore: three ridges of hills in the mist, far behind (placed each frame so they sit on the horizon)
 	const hills = [];
-	for ( const [ i, tone, depth, w, h ] of [ [ 0, '#9d919c', 16000, 90000, 5200 ], [ 1, '#8a7e8a', 11000, 70000, 3600 ], [ 2, '#76697a', 7000, 52000, 2600 ] ] )
+	for ( const [ i, tone, depth, w, h ] of [ [ 0, '#8a7f8c', 14000, 80000, 4200 ], [ 2, '#645868', 7000, 52000, 2600 ] ] )
 	{
 		const m = unlitMat( 0xffffff, 1, false, hillsTex( 7 + i * 13, tone ), 0.5 ); mats.push( m );
 		const p = new THREE.Mesh( new THREE.PlaneBufferGeometry( w, h ), m );
@@ -1375,7 +1380,7 @@ const L06 = {
 	cap: { half: 450, top: -330, t: 30 },
 	soffit: -580, floor: -620, ceil: -820, road: -860, header: 40,
 	shaft: -120,                                                              // (each leg's ladder shaft, from its centre)
-	hatch: 30,                                                                // (half the hatch it climbs through)
+	hatch: 55,                                                                // (half the hatch it climbs through: a climber's arms and gun need the room)
 	containerH: 90, containerTop: -400,
 	partitions: [ 5250, 6150, 6850, 7050, 7950, 8850, 9750 ],
 	rooms: [ [ 4600, 5250, 'bg_room', 'Store' ], [ 5250, 6150, 'bg_room', 'Services' ], [ 6150, 6850, 'bg_sec', 'Security' ], [ 6850, 7050, 'bg_room', 'Vestibule' ],
@@ -1400,7 +1405,7 @@ function level06()
 {
 	const B = levelBuilder(), L = L06, T = L.tower, [ bx0, bx1 ] = L.bridge, SF = L.soffit, R = L.road;
 	// dusk in the mist: a low warm sun, a mauve sky; the lamps are sodium, the security rooms red
-	B.world( { sun_color: '0xffc49a', sun_intensity: '0.42', sky_color: '0x9a8ea2', sky_intensity: '0.62', fog_intensity: '0', brightness: '1', raining: 'false', snowing: 'false',
+	B.world( { sun_color: '0xe8b48c', sun_intensity: '0.34', sky_color: '0x6e6478', sky_intensity: '0.46', fog_intensity: '0', brightness: '1', raining: 'false', snowing: 'false',
 		foreground_snow: 'false', background_snow: 'false', terrain_enabled: 'false', generate_shadowmap: 'true', camera_collisions: 'false', wind_amplitude: '-0.8', wind_random_part: '0.4' } );
 	B.call( 'pb2GameWorld.EnableSimplePlayerAssignmentLogic' );
 	B.skin( 'skin_raider', 1 ); B.skin( 'skin_cs_lite', 8 ); B.skin( 'skin_cs_heavy', 7 ); B.skin( 'skin_cs_ghost', 12 ); B.skin( 'skin_cs_boss', 11 );
@@ -1408,18 +1413,18 @@ function level06()
 	B.surface( 'cliff', 'mat_cliff', 'Headland', '0x8a8a90', { debris_material: 'pb2Entity.MATERIAL_ROCK' } );
 	B.surface( 'seabed', 'mat_sand', 'Seabed', '0x55606a' );
 	B.surface( 'pier', 'platform_texture', 'Pier concrete', '0x9a948c' );
-	B.surface( 'slab', 'metal_slice', 'Deck steel', '0x8a8680', metal );
-	B.surface( 'road', 'pb2platform_texture', 'Road deck', '0x8c8a86' );
+	B.surface( 'slab', 'platform_texture', 'Deck steel', '0x8e8a84', metal );
+	B.surface( 'road', 'platform_texture', 'Road deck', '0x86827c' );
 	B.surface( 'shell', 'mat_panel_tile', 'Tower panels', '0x8e8e94', metal );
-	B.surface( 'box_rust', 'mat_panel4_tile', 'Container (rust)', '0xb0643a', metal );
-	B.surface( 'box_blue', 'mat_panel4_tile', 'Container (blue)', '0x4a6e8a', metal );
-	B.surface( 'box_red', 'mat_panel4_tile', 'Container (red)', '0x9a3a30', metal );
+	B.surface( 'box_rust', 'mat_panel_tile', 'Container (rust)', '0xc0703c', metal );
+	B.surface( 'box_blue', 'mat_panel_tile', 'Container (blue)', '0x587c98', metal );
+	B.surface( 'box_red', 'mat_panel_tile', 'Container (red)', '0xa84436', metal );
 	B.surface( 'plant', 'mat_panel3_tile', 'Machinery', '0x8a8470', metal );
 	B.backSurface( 'bg_room', 'mat_plate1_bg', 'Deck rooms (behind)', '0x6e6a64' );
 	B.backSurface( 'bg_sec', 'mat_plate2_bg', 'Security rooms (behind)', '0x6a4644' );
 	B.backSurface( 'bg_bay', 'mat_plate3_bg', 'Vehicle bay (behind)', '0x5e605e' );
 	B.backSurface( 'bg_tower', 'mat_plate2_bg', 'Tower (behind)', '0x5a5a60' );
-	B.liquid( 'sea', { color: '0x2a3440', opacity: '0.8', reflection: '0.6' } );
+	B.liquid( 'sea', { color: '0x1a2028', opacity: '0.9', reflection: '0.22' } );
 	B.team( 'raiders', { title: Q( 'Raiders' ), hud_color: 'new pb2HighRangeColor( 0x6a94ff )', friendly_fire: 'false' } );
 	B.team( 'cs', { ai_in_team: 'true', title: Q( 'Civil Security' ), hud_color: 'new pb2HighRangeColor( 0xff4a3a )', friendly_fire: 'false', overheads_visibility: 'pb2OverheadHUD.OVERHEAD_VISIBILITY_TEAMMATES_ONLY' } );
 	B.ai( 'cs_post', { skill: '0.75', behavior: 'pb2AIModule.BEHAVIOR_IDLE', hear_range: '700', hunt_random_known_threats_range: '0' } );
@@ -1446,10 +1451,9 @@ function level06()
 	for ( const c of L.legs )
 	{
 		B.wall( c - L.cap.half, L.cap.top, 2 * L.cap.half, L.cap.t, 'pier' );
-		for ( const sx of [ -1, 1 ] ) B.entity( c + sx * ( L.cap.half + 20 ), L.cap.top - 70, 'pb2Entity.TYPE_CS_LADDER', { toy: '40' } );
+		for ( const sx of [ -1, 1 ] ) B.entity( c + sx * ( L.cap.half + 20 ), L.cap.top - 70, 'pb2Entity.TYPE_CS_LADDER', { toy: '160' } );   // (down into the water: a swimmer's feet hang low)
 		B.entity( c + L.shaft, R - 60, 'pb2Entity.TYPE_CS_LADDER', { toy: S( L.cap.top ) } );
 		B.lamp( c - 300, L.cap.top - 90, '0xffc890', 0.45, 4 ); B.lamp( c + 300, L.cap.top - 90, '0xffc890', 0.45, 4 );
-		B.lamp( c, -40, '0xffb070', 0.35, 5 );                                                  // (the footing's lamps, on the water)
 		B.entity( c + 250, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
 		// (cover on the cap: a crate to crouch behind and a machinery block, clear of the shaft and the ladders)
 		B.wall( c - 40, L.cap.top - 60, 50, 60, 'box_blue' );
@@ -1477,7 +1481,7 @@ function level06()
 	for ( const [ x, y, w, h, m ] of [ [ 6300, R - 90, 240, 90, 'box_rust' ], [ 6360, R - 180, 180, 90, 'box_blue' ], [ 8480, R - 90, 240, 90, 'box_red' ], [ 8480, R - 180, 180, 90, 'box_rust' ], [ 5120, R - 130, 180, 130, 'plant' ] ] )
 		B.wall( x, y, w, h, m );
 	for ( let x = bx0 + 300; x < bx1; x += 900 ) if ( x < T.x0 - 60 || x > T.x1 + 60 ) B.lamp( x, R - 130, '0xffb070', 0.45, 5 );
-	for ( let x = bx0 + 200; x < bx1; x += 450 ) B.lamp( x, SF + 40, '0xffb070', 0.55, 6 );         // (the soffit's lamps, over the lane)
+	for ( let x = bx0 + 200; x < bx1; x += 900 ) B.lamp( x, SF + 40, '0xffb070', 0.6, 8 );          // (the soffit's lamps, over the lane)
 	// the tower numbered 4: lobby (road level: doors each side), the command room (closed), the observation deck
 	// (open sides), the roof; a ladder shaft on its right from the lobby to the roof
 	const th = [ [ T.shaft - L.hatch, T.shaft + L.hatch ] ];
@@ -1530,7 +1534,7 @@ function level06()
 	B.cs( 7700, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper [3+]', -1 );
 	B.cs( 8420, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Tank crew', -1 );
 	B.cs( 8760, fl, 'skin_cs_lite', 'gun_real_shotgun', 'cs_hunter', 'CS Trooper [2+]', -1 );
-	B.cs( 9150, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 9000, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
 	B.cs( 10020, fl, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy [3+]', -1 );
 	B.cs( 10300, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
 	B.cs( 5300, R - 130, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
