@@ -1,0 +1,77 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "frame-cost",
+    "ladders-work",
+    "tower-climb",
+    "coop-ladder",
+    "boat-run"
+   ],
+   "rationale": "Mod:\n- culling covers everything the engine leaves unculled: the mod's ladders, beacons, consoles and searchlights, and the vehicles' groups (restored only if we hid them);\n- the sea has no reflection, so no mirror pass;\n- the climb ghosts and holds every body the character has (the ragdoll's atoms plus box2d_body, gy, lS);\n- Patrol 0 starts at 4400, out of wake range of the start.\nStaging lint: 0 violations.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "Draw calls fall several-fold; the climbs pass hatches without falling back.",
+   "expectedEvidence": [
+    "perf drawCalls < 500",
+    "report.tests.ladders.roadOk"
+   ],
+   "failureSignatures": [
+    "draws unchanged",
+    "climb still falls back"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost",
+    "ladders-work",
+    "tower-climb"
+   ],
+   "rationale": "Bake it into the bundle.",
+   "tool": "pb3x.bake",
+   "params": {},
+   "predictedEffect": "The bundle carries it.",
+   "expectedEvidence": [
+    "bake ok"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "boat-run",
+    "boat-returns",
+    "patrols-drive",
+    "underpass-framing"
+   ],
+   "rationale": "Probe: if the raiders' boat is lost before its test, wait up to 15 s for its replacement at the berth (the level's own rule) and record that it was replaced.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "play-06.js",
+    "path": "tools/harness/levels/play-06.js"
+   },
+   "predictedEffect": "The boat test runs on the boat a player would have.",
+   "expectedEvidence": [
+    "report.tests.boat.start"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  }
+ ]
+}

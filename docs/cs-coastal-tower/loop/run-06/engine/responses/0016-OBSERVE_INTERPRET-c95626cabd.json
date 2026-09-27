@@ -1,0 +1,72 @@
+{
+ "summary": "Cycle 6.\nplays-clean holds again: no mod error. The water ladder works: out of the sea onto cap 1 (capOk). Objectives with extraction, the tank and respawn still pass.\nThe frame ratio is still 5.0. Three read-only diagnostics outside the loop, on the idle game, explain it:\n- with culling working (44 characters hidden) and sleep working (38 asleep), removing every bot saves only about 210 draw calls;\n- counting what each frame draws (onBeforeRender) gives 1263 draws in two passes of the main scene (the water's mirror is a second full drawing);\n- 824 of those draws are objects more than 2500 px off camera, all marked frustumCulled = false with no bounding sphere: the mod's ladders, beacons and consoles (458) and the vehicles (366).\nThe engine never culls by camera.\nThe shaft climb passes the soffit hatch, then falls back to the cap. The character has bodies of its own (box2d_body, gy, lS) besides the ragdoll's atoms, and the climb neither ghosts them nor zeroes their velocity.\nThe boat was wrecked before its test even with the quieter start; the level replaces a lost boat at its berth after 8 s, and the probe didn't wait for that.",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "The frame ratio stayed about 5 with culling and sleep working: the remaining draws are off-camera vehicles and mod visuals that the engine draws unculled, twice per frame.",
+   "cites": [
+    "ev_muk5vzx6_ffe8d7d4f7",
+    "ev_muk5slkp_b8e772bb58"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The water ladder works in play: in water at feet 52, then onto the cap at feet -330.",
+   "cites": [
+    "ev_muk5slkp_b8e772bb58"
+   ],
+   "residueIds": [
+    "ladders-work"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The shaft climb reached feet -675 (past the soffit hatch) and fell back to -324: the character's own bodies weren't ghosted or held.",
+   "cites": [
+    "ev_muk5slkp_b8e772bb58"
+   ],
+   "residueIds": [
+    "ladders-work",
+    "tower-climb"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The guest's ladder climb failed the same way (feet -24).",
+   "cites": [
+    "ev_muk602a7_d84c17f95b"
+   ],
+   "residueIds": [
+    "coop-ladder",
+    "coop-two"
+   ]
+  },
+  {
+   "kind": "HYPOTHESIS",
+   "text": "Hiding off-camera mod visuals and vehicles before each render, plus a sea with no mirror pass, cuts the draws per frame several-fold and brings the ratio near the limit.",
+   "cites": [
+    "ev_muk5vzx6_ffe8d7d4f7"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [
+  {
+   "residueId": "underpass-framing",
+   "verdict": "UNSURE",
+   "evidenceIds": [
+    "ev_muk5sm23_a583f173c0"
+   ],
+   "reason": "The boat test didn't board, so there's no lane shot from the boat."
+  }
+ ],
+ "unknowns": [
+  "whether a reflection of 0 really skips the mirror pass (the next perf-breakdown can count the passes)"
+ ]
+}
