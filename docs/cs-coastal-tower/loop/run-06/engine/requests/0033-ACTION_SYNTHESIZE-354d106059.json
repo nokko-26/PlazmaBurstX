@@ -1,0 +1,462 @@
+{
+ "callId": "0033-ACTION_SYNTHESIZE-354d106059",
+ "mode": "ACTION_SYNTHESIZE",
+ "task": "Given the remaining residue delta, propose the highest-leverage next transformation(s) as structured ActionRequests.",
+ "outputSchema": {
+  "type": "object",
+  "required": [
+   "actions"
+  ],
+  "props": {
+   "actions": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "required": [
+      "targets",
+      "rationale",
+      "tool",
+      "params",
+      "predictedEffect",
+      "expectedEvidence",
+      "failureSignatures",
+      "risk"
+     ],
+     "props": {
+      "id": {
+       "type": "string"
+      },
+      "targets": {
+       "type": "array",
+       "min": 1,
+       "items": {
+        "type": "string"
+       }
+      },
+      "rationale": {
+       "type": "string",
+       "min": 3
+      },
+      "prerequisites": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "tool": {
+       "type": "string",
+       "min": 1
+      },
+      "params": {
+       "type": "object",
+       "props": {}
+      },
+      "predictedEffect": {
+       "type": "string",
+       "min": 3
+      },
+      "expectedEvidence": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "failureSignatures": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "risk": {
+       "type": "string",
+       "enum": [
+        "low",
+        "medium",
+        "high"
+       ]
+      },
+      "cost": {
+       "type": "number",
+       "min": 0
+      },
+      "rollback": {
+       "type": "object",
+       "nullable": true,
+       "props": {}
+      }
+     }
+    }
+   },
+   "needHuman": {
+    "type": "string"
+   }
+  }
+ },
+ "context": {
+  "intent": {
+   "desiredBehaviors": [
+    "The Level Editor's CS Tower menu loads '06 · Underhang' as an ordinary editor map, and 'Play as tester' runs it without map errors.",
+    "The raiders start in the water lane under the bridge with a CS Patrol Boat and can drive it along the whole underpass, from the left cliff to the right shore, passing every foundation.",
+    "The bridge legs stand on foundations: each is a pitstop fight point with docks level with the boat's deck, a leg platform above the boat channel, CS defenders and a respawn checkpoint.",
+    "Stairs and hatches link every layer (water, foundations, leg platforms, the deck interior, the road deck and roof, the tower) without a stuck spot.",
+    "The deck interior is a run of rooms under the road deck: work rooms, red-lit security rooms and a vehicle bay holding CS tanks that the raiders can drive.",
+    "There are three objectives, taken in any order: the cliff facility's power (left), the command room in the tower numbered 4 (centre), and the bunker basement (right shore). Once all three are done the extraction on the right hilltop opens.",
+    "CS enemies hold every layer. Enemies named [2+], [3+] or [4+] scale the fight up for co-op with 2 to 4 players, and CS patrol boats drive the lane by autopilot."
+   ],
+   "emergentProperties": [
+    "From the boat in the underpass, the soffit, the legs, the hanging containers and the lit deck interior frame the view: the top of the bridge is dressed, but the fight is under it.",
+    "Each foundation reads as a distinct fight with cover, height and a flank, and the route between foundations offers both water and foot options."
+   ],
+   "hardConstraints": [
+    "Every size follows docs/cs-coastal-tower/metrics.md § 2: ceilings ≥ 100 px over walkways and ≥ 170 px where people fight; stair risers ≤ 30 and treads ≥ 30; required gaps ≤ 300 px; required drops ≤ 400 px; docks level with the boat deck (48 px up); ≥ 240 px clear round a berth checkpoint; nothing a swimmer can get under that ends at a wall; a way out of the water at every foundation.",
+    "The boat lane is ≥ 290 px clear above the water under any span it passes, and the water is ≥ 60 px deep everywhere a boat goes.",
+    "The level is built only from the Level Editor's own objects plus the cs-coastal-tower mod's entities, so it stays editable and saveable.",
+    "The work lands on the branch cs-coastal-tower; nothing secret (the .auth file, passwords, session codes) is committed or printed.",
+    "The page never crashes, and the level adds no uncaught page errors."
+   ],
+   "preferences": [
+    "Middle chunk first, then the left, then the right.",
+    "Palette: dusk and grey steel with warm sodium lamps and red CS security lighting, as in the concept images.",
+    "Deterministic checks over judgement wherever possible."
+   ],
+   "prohibitedOutcomes": [
+    "A hand-painted look.",
+    "A route the player must take that needs a jump past the design rules.",
+    "A boat that gets stuck, or can't leave a berth.",
+    "Enemies placed where they can't be reached or fought."
+   ],
+   "qualityThresholds": [
+    "The frame cost stays within 1.5× the editor's starting map's frame cost.",
+    "The static linter reports zero rule violations, and every objective is reachable on foot from the start or from a dock.",
+    "Screenshots from ≥ 4 angles per chunk, including the editor's Alt 2.5D angled view, are saved in docs/cs-coastal-tower/shots/06/.",
+    "Measured against the matching concept image, the screenshots share its structure (a dark water band at the bottom, a soffit and deck band above it) and keep a colour distance within limits set before the comparison."
+   ],
+   "resources": [
+    "mods/cs-coastal-tower.user.js (level builder, set-piece entities); tools/harness (the real game in Chromium, with the extension)",
+    "docs/cs-coastal-tower/concept/*.webp (concept images: whole, per chunk, side views, deck interior)",
+    "docs/cs-coastal-tower/metrics.md (measured character and vehicle numbers, the design rules)"
+   ],
+   "ambiguities": [
+    "The CS banner colour (default: red and orange CS banners with the white emblem, as in the concepts).",
+    "Whether the tanks are drivable (default: yes, the CS-4 Ranger and CS-2 Bastion via the More vehicles mod).",
+    "The basement objective (default: sabotage a generator, then leave).",
+    "The 4×4's role (default: the extraction vehicle on the hilltop)."
+   ],
+   "references": [
+    "docs/cs-coastal-tower/PLAN.md",
+    "docs/cs-coastal-tower/levels/01-approach.md"
+   ],
+   "objective": "Level 06 · Underhang of the CS Coastal Tower campaign: an open, playable, AAA-feeling side-view level under a Civil Security sea bridge whose centre carries the tower numbered 4. It plays in the real PB3 game through the cs-coastal-tower mod, in the game's own style: editor walls with textures, lamps and mod 3D set pieces, not a painted look."
+  },
+  "delta": {
+   "size": 2,
+   "open": [
+    {
+     "id": "frame-cost",
+     "status": "CONTRADICTED",
+     "priority": 65,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "enemies-path",
+     "status": "CONTRADICTED",
+     "priority": 62,
+     "actionable": true,
+     "blockedBy": []
+    }
+   ],
+   "contradicted": [
+    "frame-cost",
+    "enemies-path"
+   ],
+   "signature": "91a0ecc7a92a"
+  },
+  "focus": [
+   {
+    "id": "frame-cost",
+    "description": "The level's frame time at its busiest spots stays within 1.5 times the editor's starting map's in the same browser.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 65,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/perf.js",
+       "args": [
+        "06"
+       ],
+       "report": "levels/results/06-perf.json",
+       "timeoutMs": 1500000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.failed",
+       "op": "falsy"
+      },
+      {
+       "path": "report.worstRatio",
+       "op": "lte",
+       "value": 1.5
+      }
+     ]
+    },
+    "evidence": [
+     "ev_mukbgeeg_3f4c204a7b"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T21:17:06.997Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_mukbgeeg_3f4c204a7b"
+     ],
+     "why": "contract FAIL (cycle 14): failed report.worstRatio lte 1.5 (got 5.64)"
+    }
+   },
+   {
+    "id": "enemies-path",
+    "description": "The hunters walk towards a player waiting in the deck interior: at least three enemies move more than 150 px in 20 s while the posts hold.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 62,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/waypoints.js",
+       "args": [
+        "06"
+       ],
+       "report": "levels/results/06-waypoints.json",
+       "timeoutMs": 900000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.failed",
+       "op": "falsy"
+      },
+      {
+       "path": "report.movedCount",
+       "op": "gte",
+       "value": 3
+      }
+     ]
+    },
+    "evidence": [
+     "ev_mukbiya4_da03baa78c"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T21:17:06.997Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_mukbiya4_da03baa78c"
+     ],
+     "why": "contract FAIL (cycle 14): failed report.movedCount gte 3 (got 2)"
+    }
+   }
+  ],
+  "satisfied": [
+   "level-builds",
+   "plays-clean",
+   "design-rules",
+   "route-complete",
+   "lane-static",
+   "ladders-work",
+   "boat-run",
+   "objective-gates-exit",
+   "tank-drivable",
+   "editor-views",
+   "look-dusk-palette",
+   "look-interior",
+   "underpass-framing",
+   "coop-two",
+   "three-chunks",
+   "work-landed",
+   "respawn-works",
+   "boat-returns",
+   "tower-climb",
+   "look-structure",
+   "cap-cover",
+   "coop-ladder",
+   "layers-held",
+   "patrols-drive",
+   "coop-scaling-names"
+  ],
+  "tools": [
+   {
+    "tool": "file.read",
+    "readOnly": true,
+    "doc": ""
+   },
+   {
+    "tool": "file.stat",
+    "readOnly": true,
+    "doc": ""
+   },
+   {
+    "tool": "file.write",
+    "readOnly": false,
+    "doc": ""
+   },
+   {
+    "tool": "process.run",
+    "readOnly": false,
+    "doc": ""
+   },
+   {
+    "tool": "pb3x.harness",
+    "readOnly": true,
+    "doc": "{ script: \"levels/x.js\", args: [], report: \"levels/results/x.json\", timeoutMs }"
+   },
+   {
+    "tool": "pb3x.check",
+    "readOnly": true,
+    "doc": "{ script: \"tools/…/x.js\", args: [] } → the JSON it prints"
+   },
+   {
+    "tool": "pb3x.image",
+    "readOnly": true,
+    "doc": "{ image, reference?, crop?: [x0,y0,x1,y1] fractions of the reference }"
+   },
+   {
+    "tool": "pb3x.bake",
+    "readOnly": false,
+    "doc": "{} — bake mods/*.user.js into pb3x-extension/pb3x.js and verify"
+   },
+   {
+    "tool": "file.patch",
+    "readOnly": false,
+    "doc": "{ path, edits: [ { find, replace, all? } ] }"
+   },
+   {
+    "tool": "file.write_from",
+    "readOnly": false,
+    "doc": "{ from: \"<staged file under the run's engine/staging>\", path }"
+   },
+   {
+    "commands": [
+     "node",
+     "xvfb-run",
+     "python3"
+    ],
+    "probeCommands": [
+     "node",
+     "python3"
+    ]
+   }
+  ],
+  "recentActions": [
+   {
+    "evidence": "ev_mukako0q_86c62316b4",
+    "id": "act_dc7c654467dc0f1dfb05",
+    "ok": true
+   },
+   {
+    "evidence": "ev_mukako7r_f3cf25c71f",
+    "id": "act_b275456d85c9e5be1bbf",
+    "ok": true
+   },
+   {
+    "evidence": "ev_mukako7t_e14a16761f",
+    "id": "act_faf28ee8c5f7f72e9368",
+    "ok": true
+   },
+   {
+    "evidence": "ev_mukako7u_4c1a731c22",
+    "id": "act_208393254f2e58e9585a",
+    "ok": true
+   },
+   {
+    "evidence": "ev_mukb5gaz_6f8d1caaa7",
+    "id": "act_85344bb65b7394e647c5",
+    "ok": true
+   },
+   {
+    "evidence": "ev_mukb5ghg_514fedf86f",
+    "id": "act_0cc66647c80b7f9e08ac",
+    "ok": true
+   },
+   {
+    "evidence": "ev_mukb5ghi_b2c2b40ef8",
+    "id": "act_02e51627010288942786",
+    "ok": true
+   },
+   {
+    "evidence": "ev_mukb5ghj_80b9ad8337",
+    "id": "act_20915147d5d843791c11",
+    "ok": true
+   }
+  ],
+  "rejectedActions": [
+   {
+    "engineCall": "0007-ACTION_SYNTHESIZE-f449a4edb9",
+    "id": "act_de834e27c892ed721560",
+    "problems": [
+     "targets already-satisfied residue plays-clean"
+    ],
+    "targets": [
+     "plays-clean"
+    ],
+    "tool": "pb3x.bake"
+   },
+   {
+    "engineCall": "0007-ACTION_SYNTHESIZE-f449a4edb9",
+    "id": "act_bdc21c5c65970735d252",
+    "problems": [
+     "targets already-satisfied residue route-complete"
+    ],
+    "targets": [
+     "route-complete"
+    ],
+    "tool": "file.write_from"
+   },
+   {
+    "engineCall": "0007-ACTION_SYNTHESIZE-f449a4edb9",
+    "id": "act_045d692afdfd026108e5",
+    "problems": [
+     "already executed (idempotency key act_045d692afdfd026108e5)"
+    ],
+    "targets": [
+     "work-landed"
+    ],
+    "tool": "file.write_from"
+   },
+   {
+    "engineCall": "0021-ACTION_SYNTHESIZE-d811883333",
+    "id": "act_6fc90dd11fe10262693b",
+    "problems": [
+     "targets already-satisfied residue look-dusk-palette"
+    ],
+    "targets": [
+     "look-structure",
+     "look-dusk-palette"
+    ],
+    "tool": "file.patch"
+   },
+   {
+    "engineCall": "0023-ACTION_SYNTHESIZE-1a3137a6bd",
+    "id": "act_4da1fc13550fc0c0e375",
+    "problems": [
+     "already executed (idempotency key act_4da1fc13550fc0c0e375)"
+    ],
+    "targets": [
+     "frame-cost"
+    ],
+    "tool": "pb3x.harness"
+   }
+  ]
+ }
+}

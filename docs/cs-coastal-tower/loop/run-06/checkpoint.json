@@ -1,6 +1,6 @@
 {
- "phase": "OBSERVE",
- "seq": 32,
+ "phase": "ACT",
+ "seq": 33,
  "cycle": 14,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
@@ -20,7 +20,8 @@
    3,
    3,
    4,
-   3
+   3,
+   2
   ],
   "actionSigs": [
    "80fe487f50efe234",
@@ -101,7 +102,7 @@
   ]
  },
  "budgetSpent": {
-  "engineCalls": 32,
+  "engineCalls": 33,
   "actions": 63,
   "cycles": 14,
   "cost": 51,
@@ -173,16 +174,16 @@
   "act_20915147d5d843791c11"
  ],
  "lastProbeIds": {
-  "probe:d22e87edb3fa10bb": "ev_mukakoc8_e95fc6c56a",
-  "probe:5e40829617afc91e": "ev_mukas66h_e3556aa6cb",
-  "probe:f0da2bbb4787153c": "ev_mukas67o_48f5262e64",
-  "probe:7980a067bb842f7b": "ev_mukas6f3_e4aa49c0d9",
-  "probe:3ddf0d6bd2086dd8": "ev_mukas6kf_b9fe2e3cfb",
-  "probe:cb3bd0e8c318b9ec": "ev_mukas6r9_11e2433769",
-  "probe:990fb3e94a4cb262": "ev_mukaw28g_62a481efd9",
-  "probe:5ae70d282044ba98": "ev_mukayltc_a87455694d",
-  "probe:91dd14c2d620911a": "ev_mukb028h_32bde5a4b2",
-  "probe:aea6c2d28affb31d": "ev_mukb02a8_6c251c1128"
+  "probe:d22e87edb3fa10bb": "ev_mukb5gm7_9453c35421",
+  "probe:5e40829617afc91e": "ev_mukbci5j_9ad1c51e1b",
+  "probe:f0da2bbb4787153c": "ev_mukbci6o_0d11a2c9fa",
+  "probe:7980a067bb842f7b": "ev_mukbcidy_e69b596ab6",
+  "probe:3ddf0d6bd2086dd8": "ev_mukbcij3_56d467cf78",
+  "probe:cb3bd0e8c318b9ec": "ev_mukbciq8_c2cdf001c4",
+  "probe:990fb3e94a4cb262": "ev_mukbgeeg_3f4c204a7b",
+  "probe:5ae70d282044ba98": "ev_mukbiya4_da03baa78c",
+  "probe:91dd14c2d620911a": "ev_mukbkb1w_aeab38e439",
+  "probe:aea6c2d28affb31d": "ev_mukbkb3m_f1f8fc1568"
  },
  "terminal": null,
  "finalRounds": 0,
@@ -452,7 +453,21 @@
   "ev_mukaw28g_62a481efd9",
   "ev_mukayltc_a87455694d",
   "ev_mukb028h_32bde5a4b2",
-  "ev_mukb02a8_6c251c1128"
+  "ev_mukb02a8_6c251c1128",
+  "ev_mukb5gaz_6f8d1caaa7",
+  "ev_mukb5ghg_514fedf86f",
+  "ev_mukb5ghi_b2c2b40ef8",
+  "ev_mukb5ghj_80b9ad8337",
+  "ev_mukb5gm7_9453c35421",
+  "ev_mukbci5j_9ad1c51e1b",
+  "ev_mukbci6o_0d11a2c9fa",
+  "ev_mukbcidy_e69b596ab6",
+  "ev_mukbcij3_56d467cf78",
+  "ev_mukbciq8_c2cdf001c4",
+  "ev_mukbgeeg_3f4c204a7b",
+  "ev_mukbiya4_da03baa78c",
+  "ev_mukbkb1w_aeab38e439",
+  "ev_mukbkb3m_f1f8fc1568"
  ],
  "failureHandled": false,
  "stallReason": "REGRESSION"
