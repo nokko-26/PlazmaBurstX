@@ -1,0 +1,127 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "ladders-work",
+    "tower-climb",
+    "coop-ladder",
+    "objective-gates-exit",
+    "tank-drivable",
+    "frame-cost"
+   ],
+   "rationale": "Mod fixes:\n- ladders move the climber by position: speed \u00d7 the wall-clock time since the last tick, then velocity zeroed, which holds at any frame rate;\n- the objective clock steps up to 3 s;\n- the tanks have 4\u00d7 health so they survive until the raiders arrive;\n- debug.sets() shows or hides the set pieces for the frame-cost experiment.\nStaging lint: 0 violations.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "Ladders climb steadily and objectives finish, even at 3 fps.",
+   "expectedEvidence": [
+    "report.tests.ladders.ok"
+   ],
+   "failureSignatures": [
+    "climb stalls"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "ladders-work",
+    "tower-climb",
+    "objective-gates-exit",
+    "tank-drivable"
+   ],
+   "rationale": "Bake it into the bundle.",
+   "tool": "pb3x.bake",
+   "params": {},
+   "predictedEffect": "The bundle carries the fixes.",
+   "expectedEvidence": [
+    "bake ok"
+   ],
+   "failureSignatures": [
+    "bake failed"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "objective-gates-exit"
+   ],
+   "rationale": "The objective test holds each console until the game reports it done (up to 20 s), instead of a fixed 6.5 s the probe guessed.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "play-06.js",
+    "path": "tools/harness/levels/play-06.js"
+   },
+   "predictedEffect": "The test measures the game's clock, not the probe's.",
+   "expectedEvidence": [
+    "held[].objectives"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "The discriminating experiment: at one spot, the frame time split into render and other, as the level is, then with the set pieces hidden, the lights off, and the enemies removed.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "perf-breakdown.js",
+    "path": "tools/harness/levels/perf-breakdown.js"
+   },
+   "predictedEffect": "The script is installed.",
+   "expectedEvidence": [
+    "file written"
+   ],
+   "failureSignatures": [],
+   "risk": "low",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "Run the experiment (read-only: it plays the level and measures). It decides between the hypotheses: AI and physics, against lamps, against set pieces.",
+   "tool": "pb3x.harness",
+   "params": {
+    "script": "levels/perf-breakdown.js",
+    "args": [
+     "06",
+     "8400",
+     "-700"
+    ],
+    "report": "levels/results/06-perf-breakdown.json",
+    "timeoutMs": 900000
+   },
+   "predictedEffect": "Removing the enemies cuts 'other' time the most, if the hypothesis holds.",
+   "expectedEvidence": [
+    "report.steps.noEnemies.otherMs << report.steps.asIs.otherMs"
+   ],
+   "failureSignatures": [
+    "render dominates",
+    "sets or lamps dominate"
+   ],
+   "risk": "low",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  }
+ ]
+}

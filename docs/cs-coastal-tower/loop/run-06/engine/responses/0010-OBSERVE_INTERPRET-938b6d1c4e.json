@@ -1,0 +1,81 @@
+{
+ "summary": "Cycle 3: the whole level is installed.\nNewly satisfied: three-chunks (all three objectives reachable, 0\u201315800 px), route-complete, look-dusk-palette and look-interior (the darker look is in the game), plus layers-held, cap-cover and coop-scaling-names.\nRegressed: boat-run, boat-returns and patrols-drive (the raiders' boat was flung to x -51213, a physics blow-up), and tank-drivable (both tanks destroyed in crossfire before the player got there).\nStill failing: ladders (engaged only for moments), objectives (32\u201359% after 6.5 s), the tower climb, frame cost 6.26 (up from about 2.5), and the guest's ladder climb.\nOne cause stands behind most of it: with 69 enemies and 10 patrol crew over 15800 px the game runs at about 3 fps in this browser (median 304 ms, worst about 2 s). Each frame then takes huge physics steps: a velocity set once a tick is lost to gravity, the objective clock (capped at 1 s a step) drops time, and bodies get flung.",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "The frame ratio rose from about 2.5 to 6.26 when enemies went from 33 to 69 and the level from 5800 to 15800 px. Frame cost grows with the whole level, not only with what's on screen, which points at simulation (AI, physics) more than drawing.",
+   "cites": [
+    "ev_muk49qtc_c136e178f7"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The ladder now engages (onLadder 1 in the tower trail) but loses hold between the huge physics steps of 300\u20132000 ms frames.",
+   "cites": [
+    "ev_muk46b6r_09cbbbb2d8"
+   ],
+   "residueIds": [
+    "ladders-work",
+    "tower-climb",
+    "coop-ladder"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The objectives count wall-clock time but cap each step at 1 s, and frames up to about 2 s lose time: 32\u201359% after 6.5 s.",
+   "cites": [
+    "ev_muk46b6r_09cbbbb2d8"
+   ],
+   "residueIds": [
+    "objective-gates-exit"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The tanks were at -21 and -3 hp after the test: unmanned, they died in the deck fighting before the raiders arrived.",
+   "cites": [
+    "ev_muk46b6r_09cbbbb2d8"
+   ],
+   "residueIds": [
+    "tank-drivable"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The raiders' boat ended at (-51213, 587372), flung out of the level: at 3 fps the explosions and contacts integrate over huge steps.",
+   "cites": [
+    "ev_muk46b6r_09cbbbb2d8"
+   ],
+   "residueIds": [
+    "boat-run"
+   ]
+  },
+  {
+   "kind": "HYPOTHESIS",
+   "text": "Most of the frame time is the enemies' AI and physics. Removing the enemies will cut 'other' (non-render) time far more than hiding the set pieces or turning off the lamps.",
+   "cites": [
+    "ev_muk49qtc_c136e178f7"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [
+  {
+   "residueId": "underpass-framing",
+   "verdict": "UNSURE",
+   "evidenceIds": [
+    "ev_muk46bka_ff9a513a83"
+   ],
+   "reason": "The boat never boarded this cycle, so there's no lane screenshot from the boat."
+  }
+ ],
+ "unknowns": [
+  "the split of frame time between rendering and simulation (the breakdown experiment will measure it)"
+ ]
+}
