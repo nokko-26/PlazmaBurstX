@@ -17458,7 +17458,8 @@ const botHelm = ( e )=>{ const c = opt( ()=>seatsOf( e )[ 0 ].owner_character );
 function teamBoat()
 {
 	const ents = opt( ()=>pb2Entity.entities ) || [];
-	const boats = ents.filter( ( e )=>isBoat( e ) && !e.team && !botHelm( e ) );
+	// (not one with a living bot anywhere aboard: a patrol whose helm is dead but whose gunner fights on is still theirs)
+	const boats = ents.filter( ( e )=>isBoat( e ) && !e.team && !seatsOf( e ).some( ( st )=>st && alive( st.owner_character ) && !isPlayer( st.owner_character ) ) );
 	const players = livingPlayers();
 	for ( const b of boats ) if ( seatsOf( b ).some( ( s )=>s && s.owner_character && isPlayer( s.owner_character ) ) ) return b;
 	if ( !boats.length ) return null;
@@ -17481,13 +17482,22 @@ function hostTick( dt )
 	if ( !host.template && players.length ) { const c = players[ 0 ]; host.template = { skin: opt( ()=>c.ragdoll.kN ), team: opt( ()=>c.ragdoll.team ), hmax: c.hmax || 150 }; }
 	// co-op strength, once the match has settled (its players connected)
 	if ( !host.scaled && clock() - host.since > 4 ) { host.scaled = true; coopScale( Math.max( 1, connections().length ) ); }
-	// checkpoints: lit by the first player to pass them
+	// checkpoints: lit by the first player to pass them where they are — a berth by a player on the water at or past it,
+	// one on foot by a player on its floor at it (or crossing it between two frames). By x alone, a player on the deck
+	// would light the berths and caps below it and come back among enemies they never met.
 	const cps = markers( 'checkpoint' ).sort( ( a, b )=>estate.get( a ).x - estate.get( b ).x );
+	const passes = ( s )=>( c )=>
+	{
+		const dy = Math.abs( c.y + 44 - s.y );
+		if ( s.style === 1 ) return dy < 260 && c.x >= s.x - 40;
+		const was = host.lastX.get( c );
+		return dy < 120 && ( Math.abs( c.x - s.x ) < 150 || ( was !== undefined && ( was - s.x ) * ( c.x - s.x ) <= 0 ) );
+	};
 	for ( const e of cps )
 	{
 		const s = estate.get( e );
 		if ( s.on ) continue;
-		if ( players.some( ( c )=>c.x >= s.x - 40 ) )
+		if ( players.some( passes( s ) ) )
 		{
 			s.on = 1; state.checkpoint = { x: s.x, y: s.y, style: s.style };
 			banner( 'Checkpoint', 2.2 );
@@ -17522,6 +17532,7 @@ function hostTick( dt )
 		const s = estate.get( e );
 		const at = ( c )=>{ const was = host.lastX.get( c ); return Math.abs( c.y - s.y ) < 140 && ( Math.abs( c.x - s.x ) < 70 || ( was !== undefined && ( was - s.x ) * ( c.x - s.x ) <= 0 ) ); };
 		s.locked = openObjectives > 0;
+		if ( !state.complete ) s.on = s.locked ? 2 : 0;                            // (guests see the lock through on)
 		if ( state.complete || !players.some( at ) ) continue;
 		if ( s.locked ) { if ( clock() - ( s.said || 0 ) > 3 ) { s.said = clock(); banner( 'The extraction opens when every objective is done (' + openObjectives + ' to go)', 2.5 ); } continue; }
 		state.complete = true; s.on = 1; host.completeAt = clock();
@@ -17536,7 +17547,9 @@ function hostTick( dt )
 		else if ( now - host.boatLostAt > BOAT_BACK )
 		{
 			host.boatLostAt = 0;
-			const cp = [ state.checkpoint, firstCheckpoint() ].concat( markers( 'checkpoint' ).map( ( e )=>estate.get( e ) ).filter( ( c )=>c.on && c.style === 1 ).sort( ( a, b )=>b.x - a.x ) ).find( ( c )=>c && c.style === 1 );
+			// (at the furthest berth reached; the first one before any)
+			const berths = markers( 'checkpoint' ).map( ( e )=>estate.get( e ) ).filter( ( c )=>c.style === 1 );
+			const cp = berths.filter( ( c )=>c.on ).sort( ( a, b )=>b.x - a.x )[ 0 ] || berths.sort( ( a, b )=>a.x - b.x )[ 0 ];
 			if ( cp ) newBoat( cp );
 		}
 	}
@@ -17672,7 +17685,7 @@ function autopilot()
 		s.crewed = true; s.emptyAt = 0;
 		// the nearest player
 		let tgt = null, best = Infinity;
-		for ( const c of players ) { const d = Math.abs( c.x - p[ 0 ] ); if ( d < best ) { best = d; tgt = c; } }
+		for ( const c of players ) { const d = Math.hypot( c.x - p[ 0 ], ( c.y - p[ 1 ] ) * 1.5 ); if ( d < best ) { best = d; tgt = c; } }
 		ctl.act_x = 0; ctl.act_y = 0; ctl.act_fall = 0;
 		if ( !tgt ) continue;
 		if ( !s.awake ) { if ( best > AP.wake ) continue; s.awake = true; }
@@ -17708,7 +17721,7 @@ function autopilot()
 // straight: shifted by speed × the time since the last tick (the wall clock: a slow machine takes big physics steps,
 // and a velocity set once a tick is lost to gravity between them), its velocity zeroed. The host moves everyone; a guest
 // moves its own character too, so its view doesn't wait for the host.
-const LAD = { half: 28, speed: 260, side: 150, pull: 8, below: 90 };
+const LAD = { half: 28, water: 55, speed: 260, side: 150, pull: 8, below: 90 };
 const onLadder = new WeakMap(), ladderT = new WeakMap(), ghosted = new WeakMap();
 // (a climber passes through nothing but its shaft; while it climbs its body and gun collide with nothing, so a gun held
 // out sideways can't snag a hatch's edge. Put back when it lets go.)
@@ -17739,6 +17752,9 @@ function setVel( ch, vx, vy )
 		opt( ()=>b.SetAwake( true ) );
 	}
 }
+// letting go of a ladder, however it happens: its clock forgotten (else the next climb's first step is a jump), the
+// climber solid again
+function letGo( ch ) { onLadder.delete( ch ); ladderT.delete( ch ); ghost( ch, false ); }
 function ladders()
 {
 	const list = markers( 'ladder' );
@@ -17747,13 +17763,14 @@ function ladders()
 	let n = 0;
 	for ( const ch of opt( ()=>pb2Character.characters ) || [] )
 	{
-		if ( !alive( ch ) || ( !host_ && ch !== mine ) ) { if ( onLadder.has( ch ) ) { onLadder.delete( ch ); ghost( ch, false ); } continue; }
+		if ( !alive( ch ) || ( !host_ && ch !== mine ) ) { if ( onLadder.has( ch ) ) letGo( ch ); continue; }
 		const ctl = ch.controller || controllerOf( ch );
-		if ( !ctl || !isPlayer( ch ) || opt( ()=>ch.ragdoll.driver_of ) ) { if ( onLadder.has( ch ) ) { onLadder.delete( ch ); ghost( ch, false ); } continue; }
+		if ( !ctl || !isPlayer( ch ) || opt( ()=>ch.ragdoll.driver_of ) ) { if ( onLadder.has( ch ) ) letGo( ch ); continue; }
 		const feet = ch.y + 44;
 		let L = onLadder.get( ch ) || null;
-		const inShaft = ( s )=>Math.abs( ch.x - s.x ) < LAD.half && feet > s.y - 40 && feet < ( s.toy === null ? s.y + 300 : s.toy ) + LAD.below;
-		if ( L && ( !estate.get( L ) || !inShaft( estate.get( L ) ) ) ) { onLadder.delete( ch ); ghost( ch, false ); L = null; }
+		// (a swimmer bobs and drifts: in the water a ladder catches from further off, and pulls them in)
+		const inShaft = ( s )=>Math.abs( ch.x - s.x ) < ( feet > -20 ? LAD.water : LAD.half ) && feet > s.y - 40 && feet < ( s.toy === null ? s.y + 300 : s.toy ) + LAD.below;
+		if ( L && ( !estate.get( L ) || !inShaft( estate.get( L ) ) ) ) { letGo( ch ); L = null; }
 		if ( !L )
 		{
 			if ( !ctl.act_y ) continue;
@@ -17767,9 +17784,9 @@ function ladders()
 		let vy = ( ctl.act_y || 0 ) * LAD.speed;
 		if ( vy < 0 && feet <= s.y ) vy = 0;                                        // (at the top: step off sideways)
 		if ( vy < 0 ) vy = Math.max( vy, ( s.y - feet ) / Math.max( step, 1e-3 ) );   // (and never past it)
-		if ( vy > 0 && feet >= bottom ) { onLadder.delete( ch ); ghost( ch, false ); continue; }   // (off the foot of it)
+		if ( vy > 0 && feet >= bottom ) { letGo( ch ); continue; }                   // (off the foot of it)
 		const vx = ctl.act_x ? ctl.act_x * LAD.side : clamp( ( s.x - ch.x ) * LAD.pull, -LAD.side, LAD.side );
-		if ( ctl.act_x && !ctl.act_y && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { onLadder.delete( ch ); ladderT.delete( ch ); ghost( ch, false ); continue; }
+		if ( ctl.act_x && !ctl.act_y && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { letGo( ch ); continue; }
 		ghost( ch, true );
 		opt( ()=>ch.ragdoll.Teleport( vx * step, vy * step ) );
 		setVel( ch, 0, 0 );
@@ -17830,10 +17847,22 @@ function cullFar()
 		const off = Math.abs( c.x - cam.position.x ) > hw || Math.abs( -c.y - cam.position.y ) > hh;
 		let ms = charMeshes.get( r );
 		if ( !ms ) { ms = Object.keys( r ).map( ( key )=>r[ key ] ).filter( ( v )=>v && v.isMesh ); charMeshes.set( r, ms ); }
-		if ( off ) { for ( const m of ms ) if ( m.visible ) { m.visible = false; hidByUs.add( m ); } culled.add( r ); n++; }
-		else if ( culled.has( r ) ) { for ( const m of ms ) if ( hidByUs.has( m ) ) { m.visible = true; hidByUs.delete( m ); } culled.delete( r ); }
+		if ( off ) { if ( !culled.has( r ) ) { culled.add( r ); culledList.add( r ); for ( const m of ms ) mask( m, false ); } n++; }
+		else if ( culled.has( r ) ) { culled.delete( r ); culledList.delete( r ); for ( const m of ms ) mask( m, true ); }
 	}
+	// (a character that died while culled leaves the list: its body is shown again)
+	culledList.forEach( ( r )=>{ if ( !( opt( ()=>pb2Character.characters ) || [] ).some( ( c )=>c && c.ragdoll === r ) ) { culled.delete( r ); culledList.delete( r ); for ( const m of charMeshes.get( r ) || [] ) mask( m, true ); } } );
 	state.culled = n;
+}
+// an object drawn or not by its layer mask — the engine sets visible for its own reasons (a severed limb, an effect
+// spent), and never its layers, so hiding by mask can't undo anything the engine did
+const maskWas = new WeakMap(), culledList = new Set();
+function mask( o, on )
+{
+	const l = o && o.layers;
+	if ( !l ) return;
+	if ( !on ) { if ( !maskWas.has( o ) ) { maskWas.set( o, l.mask ); l.mask = 0; } }
+	else if ( maskWas.has( o ) ) { l.mask = maskWas.get( o ); maskWas.delete( o ); }
 }
 const offCam = ( cam, x, y, extra = 0 )=>{ const k = Math.max( 1, cam.position.z ) / 820 * ( window.__shotZoom || 1 ); return Math.abs( x - cam.position.x ) > 604 * k + FAR.margin + extra || Math.abs( -y - cam.position.y ) > 340 * k + FAR.margin + extra; };
 function cullOwn( cam )
@@ -17847,7 +17876,7 @@ function cullOwn( cam )
 	const now = clock();
 	for ( const o of opt( ()=>pb2_mp.scene.children ) || [] )
 	{
-		if ( !o || o.userData.csOwn ) continue;
+		if ( !o || ( o.userData && o.userData.csOwn ) ) continue;
 		let E = extent.get( o );
 		if ( !E || now - E.at > 5 )
 		{
@@ -17858,8 +17887,8 @@ function cullOwn( cam )
 		}
 		if ( E.n < 3 || !( E.r < 1500 ) ) continue;
 		const m = o.matrixWorld.elements;
-		if ( offCam( cam, m[ 12 ], -m[ 13 ], 600 ) ) { if ( o.visible ) { o.visible = false; hidByUs.add( o ); } }
-		else if ( hidByUs.has( o ) ) { o.visible = true; hidByUs.delete( o ); }
+		const off = offCam( cam, m[ 12 ], -m[ 13 ], 600 );
+		if ( off !== hidByUs.has( o ) ) { if ( off ) hidByUs.add( o ); else hidByUs.delete( o ); o.traverse( ( d )=>{ if ( d.isMesh || d.isPoints || d.isLine ) mask( d, !off ); } ); }
 	}
 }
 const extent = new WeakMap();
@@ -18117,7 +18146,7 @@ function hookRender()
 	hookFn( XM, 'render', ( orig )=>function()
 	{
 		try { placeTowers(); placeBridge(); } catch ( e ) { err( 'placeTowers', e ); }
-		try { if ( state.level === '06' || markers( 'bridge' ).length ) cullFar(); } catch ( e ) { err( 'cullFar', e ); }
+		try { if ( markers( 'bridge' ).length ) cullFar(); } catch ( e ) { err( 'cullFar', e ); }
 		return orig.apply( this, arguments );
 	} );
 }
@@ -18194,7 +18223,7 @@ function beaconVisual( e, scene, dt, t )
 	}
 	if ( B.grp.parent !== scene ) scene.add( B.grp );
 	B.grp.position.set( s.x, -s.y, 10 );
-	const col = s.kind === 'exit' ? ( s.on ? 0x40ff80 : s.locked ? 0xff3020 : 0x40c0ff ) : ( s.on ? 0x40ff80 : 0xffb030 );
+	const col = s.kind === 'exit' ? ( s.on === 1 ? 0x40ff80 : s.on === 2 ? 0xff3020 : 0x40c0ff ) : ( s.on ? 0x40ff80 : 0xffb030 );
 	setColor( B.lamp.material, col );
 	setColor( B.halo.material, col, HALF * ( 0.6 + 0.4 * Math.sin( t * 4 ) ) );
 }
@@ -18216,9 +18245,9 @@ function ladderVisual( e, scene )
 	if ( !G || G.len !== len )
 	{
 		if ( G ) ladderDispose( e );
-		const grp = new THREE.Group(), m = unlitMat( 0xb89a3a ), dark = unlitMat( 0x3a3630 );
+		const grp = new THREE.Group(), m = unlitMat( 0x9a8540 ), dark = unlitMat( 0x5a5448 );
 		for ( const dx of [ -16, 16 ] ) { const r = new THREE.Mesh( new THREE.BoxBufferGeometry( 4, len, 4 ), m ); r.position.set( dx, -len / 2, 0 ); grp.add( r ); }
-		for ( let y = 12; y < len; y += 24 ) { const r = new THREE.Mesh( new THREE.BoxBufferGeometry( 32, 3, 3 ), dark ); r.position.set( 0, -y, 0 ); grp.add( r ); }
+		for ( let y = 14; y < len; y += 30 ) { const r = new THREE.Mesh( new THREE.BoxBufferGeometry( 32, 3, 3 ), dark ); r.position.set( 0, -y, 0 ); grp.add( r ); }
 		mergeStatic( grp, new Set() );
 		grp.userData.csOwn = true;
 		G = { grp, len, mats: [ m, dark ] };
@@ -18386,14 +18415,14 @@ function buildBridge( L )
 	for ( const [ rx0, rx1, bg ] of L.rooms || [] )
 	{
 		const red = bg === 'bg_sec', bay = bg === 'bg_bay';
-		cyl( 6, rx0 + 10, rx1 - 10, Ce + 16, -84, M.rust ); cyl( 4, rx0 + 10, rx1 - 10, Ce + 30, -78, M.steel );
-		B( rx0 + 20, Ce + 6, rx1 - 20, Ce + 10, -76, -72, glow( red ? 0xff3020 : bay ? 0xd8b030 : 0xffd9a0, red ? 0.9 : 0.55 ) );
+		cyl( 6, rx0 + 10, rx1 - 10, Ce + 16, -20, M.rust ); cyl( 4, rx0 + 10, rx1 - 10, Ce + 30, -14, M.steel );
+		B( rx0 + 20, Ce + 6, rx1 - 20, Ce + 10, -12, -8, glow( red ? 0xff3020 : bay ? 0xd8b030 : 0xffd9a0, red ? 0.9 : 0.55 ) );
 		for ( let x = rx0 + 60; x < rx1 - 80; x += 150 + rnd() * 90 )
 		{
 			const k = rnd();
-			if ( k < 0.4 ) { const h = 90 + rnd() * 50; B( x, Fl - h, x + 50, Fl, -96, -70, M.dark ); B( x + 8, Fl - h + 10, x + 42, Fl - h + 18, -69, -68, glow( 0x9fd0ff, 0.35 ) ); }
-			else if ( k < 0.7 ) { B( x, Fl - 60, x + 70, Fl, -96, -72, M.steel ); B( x + 10, Fl - 110, x + 60, Fl - 72, -90, -86, glow( red ? 0xff5040 : 0x80e0ff, 0.7 ) ); }
-			else { B( x, Fl - 40, x + 60, Fl, -96, -74, M.rust ); B( x + 10, Fl - 76, x + 50, Fl - 40, -94, -76, M.rust ); }
+			if ( k < 0.4 ) { const h = 90 + rnd() * 50; B( x, Fl - h, x + 50, Fl, -24, -8, M.dark ); B( x + 8, Fl - h + 10, x + 42, Fl - h + 18, -7, -6, glow( 0x9fd0ff, 0.35 ) ); }
+			else if ( k < 0.7 ) { B( x, Fl - 60, x + 70, Fl, -24, -8, M.steel ); B( x + 10, Fl - 110, x + 60, Fl - 72, -22, -18, glow( red ? 0xff5040 : 0x80e0ff, 0.7 ) ); }
+			else { B( x, Fl - 40, x + 60, Fl, -24, -8, M.rust ); B( x + 10, Fl - 76, x + 50, Fl - 40, -22, -10, M.rust ); }
 		}
 	}
 	// the hanging containers' cables and hooks
@@ -18902,7 +18931,7 @@ function level06()
 		for ( const sx of [ -1, 1 ] ) if ( !( c === L.legs[ 0 ] && sx < 0 ) && !( c === L.legs[ L.legs.length - 1 ] && sx > 0 ) ) B.entity( c + sx * ( L.cap.half + 20 ), L.cap.top - 70, 'pb2Entity.TYPE_CS_LADDER', { toy: S( L.bed - 20 ) } );
 		B.entity( c + L.shaft, R - 60, 'pb2Entity.TYPE_CS_LADDER', { toy: S( L.cap.top ) } );
 		B.lamp( c - 300, L.cap.top - 90, '0xffc890', 0.45, 4 ); B.lamp( c + 300, L.cap.top - 90, '0xffc890', 0.45, 4 );
-		B.entity( c + 250, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
+		B.entity( c - L.cap.half + 50, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );   // (by the ladder you come up: clear of the posts)
 		// (cover on the cap: a crate to crouch behind and a machinery block, clear of the shaft and the ladders)
 		B.wall( c - 40, L.cap.top - 60, 50, 60, 'box_blue' );
 		B.wall( c + 120, L.cap.top - 70, 50, 70, 'plant' );
@@ -18950,7 +18979,7 @@ function level06()
 	B.lamp( ( T.x0 + T.x1 ) / 2, T.roof - 160, '0xff3020', 0.5, 6 );
 	// the command room's console: the middle objective
 	B.entity( T.x0 + 300, T.l2, 'pb2Entity.TYPE_CS_OBJECTIVE', { style_id: '2' } );
-	B.entity( T.x0 + 150, R, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
+	B.entity( T.x0 + 60, R, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
 	// the set pieces: the bridge's legs, soffit, cranes, the tower's crown, the hills
 	B.entity( ( bx0 + bx1 ) / 2, 0, 'pb2Entity.TYPE_CS_BRIDGE', { style_id: String( L.style ) } );
 	// the raiders: on the dock, their boat moored off it (a berth here), a rifle and a pistol
@@ -18994,7 +19023,7 @@ function level06()
 	B.cs( 8200, R, 'skin_cs_lite', 'gun_rl', 'cs_post', 'CS Rocketeer', -1 );
 	B.cs( 9050, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
 	B.cs( 9700, R, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy [2+]', -1 );
-	B.cs( T.x0 + 120, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Tower guard', -1 );
+	B.cs( T.x0 + 460, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Tower guard', -1 );
 	B.cs( T.x1 - 180, R, 'skin_cs_lite', 'gun_real_shotgun', 'cs_post', 'CS Tower guard [2+]', -1 );
 	B.cs( T.x1 - 220, T.l2, 'skin_cs_boss', 'gun_oicw', 'cs_post', 'CS Commander', -1 );
 	B.cs( T.x0 + 160, T.l2, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Command guard', -1 );
@@ -19057,8 +19086,8 @@ function level06()
 	// the extraction: the hilltop above the bunker, a CS-4 Ranger (the raiders' ride out) beside it
 	B.entity( H.exit, hills[ 2 ][ 2 ], 'pb2Entity.TYPE_CS_EXIT', { style_id: '1' } );
 	B.entity( 15420, hills[ 2 ][ 2 ] - 80, 'pb2Entity.TYPE_TANK', { style_id: '4', side: '1' } );
-	B.entity( 14000, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
-	B.entity( 14900, L.floor, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
+	B.entity( 13760, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
+	B.entity( 14800, L.floor, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
 	B.call( 'pb2GameWorld.FinalizeWorld', true );
 	return B.out;
 }

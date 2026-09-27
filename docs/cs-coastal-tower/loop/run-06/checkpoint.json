@@ -1,7 +1,7 @@
 {
- "phase": "ACT",
- "seq": 21,
- "cycle": 8,
+ "phase": "OBSERVE",
+ "seq": 22,
+ "cycle": 9,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
@@ -54,6 +54,9 @@
    "7bf01c140875a575",
    "49945993ba0646e5",
    "0a86473e94b5aaa5",
+   "d7fae43b34bfc37d",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
    "d7fae43b34bfc37d"
   ],
   "hypotheses": [
@@ -65,10 +68,10 @@
   ]
  },
  "budgetSpent": {
-  "engineCalls": 21,
-  "actions": 37,
-  "cycles": 8,
-  "cost": 37,
+  "engineCalls": 22,
+  "actions": 40,
+  "cycles": 9,
+  "cost": 40,
   "startedAt": 1790529166395
  },
  "done": [
@@ -108,7 +111,10 @@
   "act_a56590cdf7dc47a4775b",
   "act_596863409879a43407d9",
   "act_bb25b9483b9dbd8f387e",
-  "act_1ffc216d86e710ea81a8"
+  "act_1ffc216d86e710ea81a8",
+  "act_4166006cb8a243b38f97",
+  "act_c597dca1fadb13f78e47",
+  "act_ddf017d7bbeb2bc30dc7"
  ],
  "lastProbeIds": {
   "probe:d22e87edb3fa10bb": "ev_muk6vyy0_a4d1cdd46b",
@@ -126,72 +132,62 @@
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_7c865102a0dabba48824",
-   "tool": "process.run",
-   "targets": [
-    "editor-views"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk6vykl_eb5a9f2c28",
-   "expectedEvidence": [
-    "json.count >= 12 in shots-index"
-   ],
-   "failureSignatures": [
-    "exitCode != 0"
-   ]
-  },
-  {
-   "id": "act_a56590cdf7dc47a4775b",
+   "id": "act_4166006cb8a243b38f97",
    "tool": "file.write_from",
    "targets": [
+    "plays-clean",
     "frame-cost",
-    "look-structure",
     "ladders-work",
-    "coop-ladder"
+    "coop-ladder",
+    "look-structure",
+    "coop-two"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk6vyko_3504ef5bed",
+   "evidence": "ev_muk7g0bo_ea86805f8e",
    "expectedEvidence": [
-    "perf drawCalls < 350",
-    "metrics.distance.detailGrid <= 0.06"
+    "report.tests.frames.mod.error null"
    ],
    "failureSignatures": [
-    "draws unchanged"
+    "mod error"
    ]
   },
   {
-   "id": "act_596863409879a43407d9",
+   "id": "act_c597dca1fadb13f78e47",
    "tool": "pb3x.bake",
    "targets": [
+    "plays-clean",
     "frame-cost",
     "look-structure"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk6vysq_ec2df0f2eb",
+   "evidence": "ev_muk7g0i7_a42d19c80b",
    "expectedEvidence": [
     "bake ok"
    ],
    "failureSignatures": []
   },
   {
-   "id": "act_bb25b9483b9dbd8f387e",
-   "tool": "file.write_from",
+   "id": "act_6fc90dd11fe10262693b",
+   "tool": "file.patch",
    "targets": [
-    "ladders-work"
+    "look-structure",
+    "look-dusk-palette"
    ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk6vyss_75d856d2de",
+   "executed": false,
+   "problems": [
+    "targets already-satisfied residue look-dusk-palette"
+   ],
    "expectedEvidence": [
-    "report.tests.ladders.inWater.x ≈ ladder x"
+    "06 screenshots show lamp pools"
    ],
-   "failureSignatures": []
+   "failureSignatures": [
+    "play test times out while baking"
+   ]
   },
   {
-   "id": "act_1ffc216d86e710ea81a8",
+   "id": "act_ddf017d7bbeb2bc30dc7",
    "tool": "file.write_from",
    "targets": [
     "coop-ladder",
@@ -199,9 +195,9 @@
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk6vyst_2e13e7f93d",
+   "evidence": "ev_muk7g0i9_2067f5c302",
    "expectedEvidence": [
-    "report.guestTrail"
+    "report.guestLadder"
    ],
    "failureSignatures": []
   }
