@@ -5,14 +5,14 @@ sheet, packaged as PB3X mods. The sheet is the mood and the ideas, not a floor p
 tower on huge concrete pillars over the sea at night, with fights stacked on four tiers (water, docks,
 service level, upper platform), red CS banners, floodlights, wet steel and rock channels under it.
 
-Status: **approved; the assets are in, Phase 0 is blocked on a game login** (see *Blockers*).
+Status: **approved; the assets are in and Phase 0 is measured** (`metrics.md`); level 01 is next.
 
 | Piece | State |
 |---|---|
 | HD skies (6), textures (13), sounds (14) | done — `pb3x-extension/assets/`, built by `tools/assets/*.py`, listed in `CREDITS.md`, contact sheets in `shots/` |
-| Play harness (`tools/harness/`) | done up to the login: Chromium + the extension through the build proxy (see below) |
-| Phase 0 measurements (`metrics.md`) | blocked — the game needs an account |
-| Levels 01–07, mods | not started (they need the measurements) |
+| Play harness (`tools/harness/`) | done: logs in with an authentication file, starts maps, plays them with the game's own keys, measures, takes screenshots (§ 8) |
+| Phase 0 measurements (`metrics.md`) | done: character (rifle / bare), vehicles, skins, AI / weapons / engine internals; design rules in its § 2 |
+| Levels 01–07, mods | not started |
 
 ---
 
@@ -48,17 +48,18 @@ Before any geometry: a Playwright harness drives the real game with the extensio
 
 Every level dimension below is then re-derived from those numbers.
 
-## 3. Levels (provisional sizes, assuming the ~80 px soldier; confirmed in Phase 0)
+## 3. Levels (sizes re-derived from `metrics.md`: the soldier is 79 px, the view 1208 × 680 px)
 
-Heights are above the waterline. Gaps between tiers are joined by stairs, ladders, lifts and measured jumps.
+Heights are above the waterline. Gaps between tiers are joined by stairs, lifts, ramps and measured jumps (the
+engine has no ladders). Every jump, drop, ceiling and dive follows the design rules in `metrics.md` § 2.
 
 | # | Level | Tiers | Size (w × h px) | Core of it | Allies |
 |---|---|---|---|---|---|
 | 01 | **Approach** | water, shore | ~9,000 × 2,400 | Patrol Boat run through open swell toward the tower; rock islets with the new trees/grass/rocks; searchlights, a shore checkpoint, enemy boats | — |
-| 02 | **Water Channels** | water, cave | ~8,000 × 2,800 | Wide flooded rock channels (water ≥ 600 deep, ≥ 400 air under the rock), currents, light shafts, submerged route, air pockets, stealthy start | Proxy Girl |
-| 03 | **Main Docks** | water, dock (+220) | ~7,000 × 2,200 | Boat berths (≥ 600 each), cranes, container stacks, first big firefight, CS-4 Ranger | — |
+| 02 | **Water Channels** | water, cave | ~8,000 × 2,800 | Wide flooded rock channels (water ≥ 600 deep, ≥ 400 air under the rock), currents, light shafts, submerged route (air pockets ≤ 2,400 px apart: 12 s of swimming at 200 px/s), stealthy start | Proxy Girl |
+| 03 | **Main Docks** | water, dock (+220) | ~7,000 × 2,200 | Boat berths (≥ 600 each), pontoons and steps ≤ 80 px above the water where swimmers climb out, cranes, container stacks, first big firefight, CS-4 Ranger | — |
 | 04 | **Service Corridor → Central Pillars** | dock, service (+750) | ~6,500 × 3,200 | Tight flank corridor opening into tall pillar shafts, lifts, catwalks, vertical fights | Noir Lime |
-| 05 | **Maintenance Bay** | water, dock | ~6,000 × 2,600 | The Wraith in a dry dock (basin ≥ 2,700 × 450), overhead crane, sabotage objective, CS-2 Bastion | — |
+| 05 | **Maintenance Bay** | water, dock | ~6,000 × 2,600 | The Wraith in a dry dock (basin ≥ 2,700 × 560: its hull is 2,269 × 488), overhead crane, sabotage objective, CS-2 Bastion | — |
 | 06 | **UNDERHANG ★** | all four (+1,500 upper) | ~14,000 × 3,600 | The flagship and the biggest fights: one continuous space from the channels up to the platform — boat and Wraith lanes, Viper attack runs, Bastion/Ranger, wave events, the Wraith surfacing, extraction | Proxy Girl + Noir Lime (fewer in co-op) |
 | 07 | **Upper Platform** | upper, sky | ~8,000 × 3,000 | Sniper/AA deck in the storm, Viper duel, finale | Noir Lime |
 
@@ -134,20 +135,26 @@ Work lands on the branch `cs-coastal-tower`, not `main`.
 
 ## 7. Blockers
 
-- **The game needs a logged-in account.** `plazmaburst.net` is reachable now, but starting a game (offline or the
-  Level Editor) asks for authorisation (`pb2Web.JSRetryWithAuth`), and a new player can only sign up with an
-  invite code or a Patreon login. The harness needs a test account's login given to the environment as secrets
-  (e.g. `PB3_LOGIN` / `PB3_PASSWORD`) or a session cookie; without one, no measurement, playtest or screenshot
-  of a level is possible, and nothing is built on guessed numbers.
+- ~~The game needs a logged-in account.~~ Solved: the harness logs in with a Plazma Burst 3 authentication file
+  (the site's own "I have Plazma Burst 3 account" upload). The file is the account's password: it is never
+  committed, and the logged-in browser profile lives outside the repo (`/tmp/pb3x-profile`).
 - A game instance on a local PC (e.g. remote debugging on port 9335) isn't reachable from a cloud container.
 
 ## 8. The play harness (`tools/harness/`)
 
-`launch.js` opens the game in Chromium (`/opt/pw-browsers/chromium-1194`) as a Playwright persistent context with
-`--load-extension=pb3x-extension`, run under `xvfb-run` (extensions need a headed browser). The build container's
-proxy drops some of Chromium's connections (`ERR_TOO_MANY_RETRIES`), so every GET is fetched from Node with
-retries and cached in `/tmp/pb3x-cache`. `game.js` starts an offline game with a map script — the same way the
-mod's own live preview does (`pb2Web.RunGame` → `pb2Multiplayer.StartOffline`) — and waits until your character
-is in the world.
+- `launch.js` opens the game in Chromium (`/opt/pw-browsers/chromium-1194`) as a Playwright persistent context with
+  `--load-extension=pb3x-extension`, under `xvfb-run` (extensions need a headed browser).
+  - The build container's proxy drops some of Chromium's connections, and the site throttles bursts of script loads.
+    So every request is made from Node with retries, and static files are cached in `/tmp/pb3x-cache`.
+  - `mods: [...]` switches PB3X mods on for the profile.
+- `login.js` logs a profile in with an authentication file.
+- `game.js` starts an offline game with a map script, the way the mod's own live preview does
+  (`pb2Web.RunGame` → `pb2Multiplayer.StartOffline`).
+- `mapjs.js` writes map scripts (walls, water classes, characters, guns, entities), and `rigs.js` holds the Phase 0
+  rigs.
+- `labkit.js` runs in the page. It presses the game's own keys, reads the character, teleports it, and runs the
+  physics at a fixed step.
+- `shots.js` takes screenshots from set camera spots. It can pull the camera back for overviews.
+- `phase0/` holds the measurements (see `metrics.md` § 7).
 
-    NODE_PATH=/opt/node22/lib/node_modules xvfb-run -a -s "-screen 0 1600x900x24" node <script using launch/startMap>
+    NODE_PATH=/opt/node22/lib/node_modules xvfb-run -a -s "-screen 0 1600x900x24" node <script>

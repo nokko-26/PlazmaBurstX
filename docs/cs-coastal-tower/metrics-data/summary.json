@@ -1,0 +1,170 @@
+{
+ "bare": {
+  "slotAtStart": 0,
+  "height": 79.3,
+  "width": 21.9,
+  "crouchHeight": 60.5,
+  "run": {
+   "speed": 418.3,
+   "t95": 0.8
+  },
+  "sprint": {
+   "speed": 672.9,
+   "t95": 2,
+   "at1_5s": 591
+  },
+  "crouchWalk": {
+   "speed": 256.5,
+   "t95": 0.8
+  },
+  "jumpTap": {
+   "apex": 108.8,
+   "tApex": 0.7,
+   "airtime": 1.3,
+   "dist": -0.9,
+   "takeoffX": -10.3,
+   "landX": -11.2,
+   "speedAtTakeoff": null,
+   "headApex": 183.4
+  },
+  "jumpHold": {
+   "apex": 108.9,
+   "tApex": 0.7,
+   "airtime": 1.3,
+   "dist": 1,
+   "takeoffX": 0,
+   "landX": 1,
+   "speedAtTakeoff": -2,
+   "headApex": 183.4,
+   "hops": 3
+  },
+  "jumpAirControl": {
+   "apex": 109,
+   "tApex": 0.7,
+   "airtime": 1.3,
+   "dist": 115.4,
+   "takeoffX": 0.6,
+   "landX": 116,
+   "speedAtTakeoff": null,
+   "headApex": 183.2
+  },
+  "runJump": {
+   "apex": 109.2,
+   "tApex": 0.6,
+   "airtime": 1.3,
+   "dist": 568.2,
+   "takeoffX": -781,
+   "landX": -212.8,
+   "speedAtTakeoff": 410,
+   "headApex": 186.5
+  },
+  "sprintJump": {
+   "apex": 109.7,
+   "tApex": 0.6,
+   "airtime": 1.3,
+   "dist": 887.1,
+   "takeoffX": -575.5,
+   "landX": 311.6,
+   "speedAtTakeoff": 664,
+   "headApex": 186.7
+  },
+  "ledges": "40✓ 60✓ 80✓ 100✓ 120✓ 140✓ 160✓ 180✓ 200✓ 220✗ 240✗",
+  "maxLedge": 200,
+  "gaps": "120✓ 180✓ 240✓ 300✓ 360✓ 420✓ 480✓ 540✓ 600✓",
+  "maxGap": 600,
+  "falls": "150:150 250:150 300:150 350:150 400:150 450:107 550:100 650:81 750:69 900:-1†",
+  "swim": {
+   "idleDrift": 14.4,
+   "right": 216.2,
+   "up": 1.5,
+   "down": 201.8,
+   "airAtStart": 0.7079999999999997,
+   "firstDamage": 11.8,
+   "death": 15.5
+  }
+ },
+ "rifle": {
+  "slotAtStart": 2,
+  "height": 79.3,
+  "width": 44.5,
+  "crouchHeight": 60.5,
+  "run": {
+   "speed": 311.8,
+   "t95": 0.8
+  },
+  "sprint": {
+   "speed": 564.7,
+   "t95": 2,
+   "at1_5s": 486.5
+  },
+  "crouchWalk": {
+   "speed": 182,
+   "t95": 0.7
+  },
+  "jumpTap": {
+   "apex": 72.9,
+   "tApex": 0.5,
+   "airtime": 1,
+   "dist": -1.8,
+   "takeoffX": -7.4,
+   "landX": -9.2,
+   "speedAtTakeoff": null,
+   "headApex": 147.2
+  },
+  "jumpHold": {
+   "apex": 73,
+   "tApex": 0.5,
+   "airtime": 1,
+   "dist": 1.9,
+   "takeoffX": -1.9,
+   "landX": 0,
+   "speedAtTakeoff": null,
+   "headApex": 147.2,
+   "hops": 4
+  },
+  "jumpAirControl": {
+   "apex": 73.3,
+   "tApex": 0.5,
+   "airtime": 1,
+   "dist": 91.8,
+   "takeoffX": -1.5,
+   "landX": 90.3,
+   "speedAtTakeoff": null,
+   "headApex": 147.2
+  },
+  "runJump": {
+   "apex": 73.2,
+   "tApex": 0.5,
+   "airtime": 1,
+   "dist": 325.8,
+   "takeoffX": -788,
+   "landX": -462.2,
+   "speedAtTakeoff": 304,
+   "headApex": 147.5
+  },
+  "sprintJump": {
+   "apex": 73.2,
+   "tApex": 0.5,
+   "airtime": 1,
+   "dist": 591.1,
+   "takeoffX": -578.1,
+   "landX": 13,
+   "speedAtTakeoff": 564,
+   "headApex": 144.2
+  },
+  "ledges": "40✓ 60✓ 80✓ 100✓ 120✓ 140✓ 160✓ 180✗ 200✗",
+  "maxLedge": 160,
+  "gaps": "120✓ 180✓ 240✓ 300✓ 360✓ 420✗",
+  "maxGap": 360,
+  "falls": "150:150 250:150 300:150 350:150 400:150 450:76 550:80 650:70 750:0†",
+  "swim": {
+   "idleDrift": 14.8,
+   "right": 215.7,
+   "up": -0.4,
+   "down": 202.3,
+   "airAtStart": 0.7019999999999997,
+   "firstDamage": 11.7,
+   "death": 15.4
+  }
+ }
+}
