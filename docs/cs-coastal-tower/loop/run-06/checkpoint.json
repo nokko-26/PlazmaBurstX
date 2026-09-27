@@ -1,7 +1,7 @@
 {
- "phase": "ACT",
- "seq": 25,
- "cycle": 10,
+ "phase": "OBSERVE",
+ "seq": 26,
+ "cycle": 11,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
@@ -63,7 +63,14 @@
    "7bf01c140875a575",
    "49945993ba0646e5",
    "0a86473e94b5aaa5",
-   "d7fae43b34bfc37d"
+   "d7fae43b34bfc37d",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
+   "08e8556dc6a8b8c4",
+   "d7fae43b34bfc37d",
+   "3f74bac72552f6be",
+   "7df6e9954840514f",
+   "a96169af9f604e74"
   ],
   "hypotheses": [
    "0eb01c3a31fa5b2d",
@@ -74,10 +81,10 @@
   ]
  },
  "budgetSpent": {
-  "engineCalls": 25,
-  "actions": 44,
-  "cycles": 10,
-  "cost": 44,
+  "engineCalls": 26,
+  "actions": 51,
+  "cycles": 11,
+  "cost": 51,
   "startedAt": 1790529166395
  },
  "done": [
@@ -124,69 +131,75 @@
   "act_10afbbecd8d74b3ec7d6",
   "act_79d6356b17f6f2edaf72",
   "act_bcc64d12ea2cb25d6a05",
-  "act_bef9fed34873fe97fb85"
+  "act_bef9fed34873fe97fb85",
+  "act_ed1683ba643b85e7c63b",
+  "act_3d547a12b7fbfb9c2fd4",
+  "act_cf6c2ac93787383f3906",
+  "act_df46052855e3bba571a2",
+  "act_82c273233ddeb677dd38",
+  "act_e0a117d8b3c5c4101ddf",
+  "act_8d6b0aacfde512f3a3f4"
  ],
  "lastProbeIds": {
-  "probe:d22e87edb3fa10bb": "ev_muk7yyj8_a8899f8864",
-  "probe:5e40829617afc91e": "ev_muk86gvv_af9e2d1515",
-  "probe:f0da2bbb4787153c": "ev_muk86gxf_8e745bb9dc",
-  "probe:7980a067bb842f7b": "ev_muk86h5f_7506eea33c",
-  "probe:3ddf0d6bd2086dd8": "ev_muk86haw_79ac5cb478",
-  "probe:cb3bd0e8c318b9ec": "ev_muk86hir_e7efe334ce",
-  "probe:990fb3e94a4cb262": "ev_muk89yq9_3967cec2cf",
-  "probe:5ae70d282044ba98": "ev_muk8cigf_dbe5eeb631",
-  "probe:91dd14c2d620911a": "ev_muk8dzx8_fa494df905",
-  "probe:aea6c2d28affb31d": "ev_muk8dzyw_a577d8e5d4"
+  "probe:d22e87edb3fa10bb": "ev_muk8j1r8_ab1a640dc0",
+  "probe:5e40829617afc91e": "ev_muk8ql2r_1fb5a66557",
+  "probe:f0da2bbb4787153c": "ev_muk8ql3x_4a545d3a05",
+  "probe:7980a067bb842f7b": "ev_muk8qlbs_8b0f10512b",
+  "probe:3ddf0d6bd2086dd8": "ev_muk8qlhg_edb8d89558",
+  "probe:cb3bd0e8c318b9ec": "ev_muk8qlot_7afb01a83b",
+  "probe:990fb3e94a4cb262": "ev_muk8uibg_498cc9af8c",
+  "probe:5ae70d282044ba98": "ev_muk8wk2o_0078b49ce5",
+  "probe:91dd14c2d620911a": "ev_muk8y09t_5c07d68ca8",
+  "probe:aea6c2d28affb31d": "ev_muk8y0bq_cdf6b08f01"
  },
  "terminal": null,
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_10afbbecd8d74b3ec7d6",
+   "id": "act_ed1683ba643b85e7c63b",
    "tool": "file.write_from",
    "targets": [
-    "frame-cost"
+    "frame-cost",
+    "coop-two"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk7yy8m_6cab7ac451",
+   "evidence": "ev_muk8fz56_34bf1c1198",
    "expectedEvidence": [
-    "perf drawCalls < 350"
+    "report.tests.*.ok"
    ],
-   "failureSignatures": [
-    "draws unchanged"
-   ]
+   "failureSignatures": []
   },
   {
-   "id": "act_79d6356b17f6f2edaf72",
+   "id": "act_3d547a12b7fbfb9c2fd4",
    "tool": "pb3x.bake",
    "targets": [
     "frame-cost"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk7yyfc_948fec05ad",
+   "evidence": "ev_muk8fzbr_865d9a0425",
    "expectedEvidence": [
     "bake ok"
    ],
    "failureSignatures": []
   },
   {
-   "id": "act_bcc64d12ea2cb25d6a05",
+   "id": "act_cf6c2ac93787383f3906",
    "tool": "file.write_from",
    "targets": [
-    "respawn-works"
+    "frame-cost"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk7yyfe_60f89d9247",
+   "evidence": "ev_muk8fzbs_946e972476",
    "expectedEvidence": [
-    "report.tests.respawn.standing"
+    "report.spots[*].player"
    ],
    "failureSignatures": []
   },
   {
-   "id": "act_bef9fed34873fe97fb85",
+   "id": "act_df46052855e3bba571a2",
    "tool": "file.write_from",
    "targets": [
     "coop-ladder",
@@ -194,29 +207,54 @@
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk7yyff_faab6bc2e5",
+   "evidence": "ev_muk8fzbu_5885801eff",
    "expectedEvidence": [
-    "report.guestLadder"
+    "report.guestLadder true"
    ],
    "failureSignatures": []
   },
   {
-   "id": "act_4da1fc13550fc0c0e375",
+   "id": "act_82c273233ddeb677dd38",
+   "tool": "file.write_from",
+   "targets": [
+    "frame-cost"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk8fzbv_e1df925e27",
+   "expectedEvidence": [
+    "report.movedCount"
+   ],
+   "failureSignatures": []
+  },
+  {
+   "id": "act_e0a117d8b3c5c4101ddf",
+   "tool": "file.write_from",
+   "targets": [
+    "frame-cost"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk8fzbv_cda3764a0b",
+   "expectedEvidence": [],
+   "failureSignatures": []
+  },
+  {
+   "id": "act_8d6b0aacfde512f3a3f4",
    "tool": "pb3x.harness",
    "targets": [
     "frame-cost"
    ],
-   "executed": false,
-   "problems": [
-    "already executed (idempotency key act_4da1fc13550fc0c0e375)"
-   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk8j1mo_8298bc6cbe",
    "expectedEvidence": [
-    "report.steps"
+    "report.steps.allAsleep"
    ],
    "failureSignatures": []
   }
  ],
- "observeProbed": false,
+ "observeProbed": true,
  "seenEvidence": [
   "ev_muk2wozn_ef415f7a83",
   "ev_muk2wp2j_673ac71007",
