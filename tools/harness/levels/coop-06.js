@@ -103,8 +103,9 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		await page.waitForTimeout( 400 );
 		await ev( ()=>{ window.__watch.drive[ 1 ] = { x: 0, y: 0 }; } );
 		await page.waitForTimeout( 900 );
-		// (the feet: the lowest point of the body's atoms, whatever its pose)
-		const g1 = await ev( ()=>{ const ch = window.__guests[ 0 ].controller.character; if ( !ch ) return null; let bot = -Infinity; for ( const a of ch.ragdoll.local_atoms ) if ( a && a.x !== undefined && a.box2d_body ) bot = Math.max( bot, a.y + ( a.rad || 0 ) ); return { x: Math.round( ch.x ), feet: Math.round( bot ), y: Math.round( ch.y ) }; } );
+		// (the feet: the lowest point of the body's own parts, whatever its pose — not the break atoms, which sit still at a
+		// fixed point until the body breaks)
+		const g1 = await ev( ()=>{ const ch = window.__guests[ 0 ].controller.character; if ( !ch ) return null; let bot = -Infinity; const at = ch.ragdoll.local_atoms; for ( const k of [ 'b_pelvis', 'b_leg1', 'b_leg2', 'b_arm1', 'b_arm2', 'b_body', 'b_head_start', 'b_head_end' ] ) { const a = at[ pb2Ragdoll[ k ] ]; if ( a && a.x !== undefined ) bot = Math.max( bot, a.y + ( a.rad || 0 ) ); } return { x: Math.round( ch.x ), feet: Math.round( bot ), y: Math.round( ch.y ) }; } );
 		report.guestLadder = !!g1 && Math.abs( g1.feet - L.cap.top ) < 14 && g1.x < c1 + L.cap.half;
 		step( 'guest ladder', { g1, ok: report.guestLadder } );
 		await shot( 'ladder', { x: c1 + 200, y: -300, zoom: 1.2, frames: 20 } );

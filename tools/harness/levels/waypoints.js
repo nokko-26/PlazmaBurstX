@@ -35,14 +35,17 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			__lab.teleport( bait[ 0 ], bait[ 1 ] );
 			pb2_mp.DEBUG_AI_SHOW_WAY_POINTS_WITH_PARTICLES = pb2_mp.DEBUG_AI_DRAW_PATH_LINES = true;
 			// (each enemy remembered as it stands: names repeat)
-			window.__wpStart = pb2Character.characters.filter( ( c )=>c && c.hea > 0 && !c.controller.player_connection ).map( ( c )=>( { c, x: c.x, y: c.y } ) );
+			window.__wpStart = pb2Character.characters.filter( ( c )=>c && c.hea > 0 && !c.controller.player_connection ).map( ( c )=>( { c, x: c.x, y: c.y, crew: !!c.ragdoll.driver_of } ) );
 			return window.__wpStart.length;
 		}, BAIT[ LEVEL ] );
 		await page.waitForTimeout( 20000 );
 		out.enemies = start;
-		out.moved = await page.evaluate( ()=>window.__wpStart.map( ( { c, x, y } )=>( { name: String( ( c.ragdoll.name || {} ).text || '' ), from: [ Math.round( x ), Math.round( y ) ],
-			to: c.hea > 0 && !c.is_being_removed ? [ Math.round( c.x ), Math.round( c.y ) ] : 'dead', moved: Math.round( Math.hypot( c.x - x, c.y - y ) ) } ) ) );
-		out.movedCount = out.moved.filter( ( m )=>m.moved > 150 ).length;
+		out.moved = await page.evaluate( ( bait )=>window.__wpStart.map( ( { c, x, y, crew } )=>{ const alive = c.hea > 0 && !c.is_being_removed; const d0 = Math.hypot( x - bait[ 0 ], y - bait[ 1 ] ), d1 = Math.hypot( c.x - bait[ 0 ], c.y - bait[ 1 ] );
+			return { name: String( ( c.ragdoll.name || {} ).text || '' ), from: [ Math.round( x ), Math.round( y ) ], to: alive ? [ Math.round( c.x ), Math.round( c.y ) ] : 'dead', crew, moved: Math.round( Math.hypot( c.x - x, c.y - y ) ), closer: alive ? Math.round( d0 - d1 ) : 0, alive }; } ), BAIT[ LEVEL ] );
+		// (hunters walking to the player: alive, on foot — not a boat's crew — and more than 150 px closer to it; a fall
+		// into the sea or a body thrown by a blast isn't a hunter pathing)
+		out.movedCount = out.moved.filter( ( m )=>m.alive && !m.crew && m.closer > 150 ).length;
+		out.anyMoved = out.moved.filter( ( m )=>m.moved > 150 ).length;
 		for ( const [ name, x, y, zoom ] of SPOTS[ LEVEL ] ) { await shoot( page, path.join( OUT, LEVEL + '-waypoints-' + name + '.png' ), { x, y, zoom, frames: 40 } ); log( 'shot', name ); }
 	}
 	catch ( e ) { out.failed = e.message.slice( 0, 800 ); log( 'FAILED', out.failed ); }

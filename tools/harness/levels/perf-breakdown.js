@@ -44,6 +44,10 @@ async function measure( page, secs = 8 )
 		await openEditor( page );
 		await importLevel( page, LEVEL );
 		await playTest( page );
+		// (the player at the spot, unhurt: the soldiers around it wake as in play)
+		const { LABKIT } = require( '../labkit' );
+		await page.evaluate( LABKIT );
+		await page.evaluate( ( [ x, feet ] )=>{ const R = pb2Ragdoll.prototype, hurt = R._beb; R._beb = function( atom, dmg, ...rest ) { const ch = this.owner_character; if ( dmg > 0 && ch && ch.controller && ch.controller.player_connection ) dmg = 0; return hurt.call( this, atom, dmg, ...rest ); }; __lab.teleport( x, feet - 44 ); }, [ +( process.argv[ 5 ] || X - 100 ), +( process.argv[ 6 ] || -620 ) ] );
 		await page.waitForTimeout( 6000 );
 		out.steps.asIs = await measure( page ); log( 'as is', JSON.stringify( out.steps.asIs ) );
 		// the mod's set pieces (every mesh drawn with its dusk/tower shader, or its own unlit ones, outside the game's own)
@@ -54,6 +58,11 @@ async function measure( page, secs = 8 )
 		out.lamps = await page.evaluate( ()=>{ let n = 0; pb2_mp.scene.traverse( ( o )=>{ if ( o.isLight && o.visible ) { o.visible = false; o.__off = true; n++; } } ); return n; } );
 		out.steps.noLights = await measure( page ); log( 'no lights', out.lamps, JSON.stringify( out.steps.noLights ) );
 		await page.evaluate( ()=>{ pb2_mp.scene.traverse( ( o )=>{ if ( o.__off ) { o.visible = true; o.__off = false; } } ); } );
+		// every soldier asleep (their thinking gone; their bodies and drawing stay)
+		out.sleepAll = await page.evaluate( ()=>{ const d = window.__csTower.debug; return !!( d && d.sleepAll && d.sleepAll( true ) ); } );
+		await page.waitForTimeout( 1500 );
+		out.steps.allAsleep = await measure( page ); log( 'all asleep', JSON.stringify( out.steps.allAsleep ) );
+		await page.evaluate( ()=>{ const d = window.__csTower.debug; if ( d && d.sleepAll ) d.sleepAll( false ); } );
 		// the enemies: every character that isn't a player, removed
 		out.removed = await page.evaluate( ()=>{ let n = 0; for ( const c of pb2Character.characters.slice() ) if ( c && !( c.controller && c.controller.player_connection ) ) { try { c.ragdoll.remove(); n++; } catch ( e ) {} } return n; } );
 		await page.waitForTimeout( 2000 );

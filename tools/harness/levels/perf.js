@@ -9,7 +9,10 @@ const { MODS, openEditor, importLevel, playTest } = require( '../level' );
 const OUT = path.join( __dirname, 'results' );
 const LEVEL = process.argv[ 2 ] || '01';
 const SPOTS = { '01': [ [ 'start', 800, -300 ], [ 'arch B', 5300, -350 ], [ 'shore', 8400, -420 ] ],
-	'06': [ [ 'start', 4900, -250 ], [ 'tower span', 7500, -600 ], [ 'deck', 8400, -700 ], [ 'road', 6500, -950 ] ] };
+	'06': [ [ 'start', 1500, -250 ], [ 'tower span', 7500, -600 ], [ 'deck', 8400, -700 ], [ 'road', 6500, -950 ] ] };
+// (where the player stands at each spot, feet: the soldiers around it wake and fight as they do in play — measured with
+// the player elsewhere, the far ones would be asleep and the level cheaper than it is)
+const STAND = { '06': { start: [ 1250, -48 ], 'tower span': [ 7300, -330 ], deck: [ 8300, -620 ], road: [ 6600, -860 ] } };
 const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...a );
 
 // hold the camera on a spot for `secs` and measure
@@ -70,9 +73,19 @@ async function measure( page, x, y, secs = 8 )
 		await importLevel( page, LEVEL );
 		await playTest( page );
 		await page.waitForTimeout( 5000 );
+		if ( STAND[ LEVEL ] )
+		{
+			const { LABKIT } = require( '../labkit' );
+			await page.evaluate( LABKIT );
+			// (the player unhurt: this measures the frame, not the fight)
+			await page.evaluate( ()=>{ const R = pb2Ragdoll.prototype, hurt = R._beb; R._beb = function( atom, dmg, ...rest ) { const ch = this.owner_character; if ( dmg > 0 && ch && ch.controller && ch.controller.player_connection ) dmg = 0; return hurt.call( this, atom, dmg, ...rest ); }; } );
+		}
 		for ( const [ name, x, y ] of SPOTS[ LEVEL ] )
 		{
+			const at = STAND[ LEVEL ] && STAND[ LEVEL ][ name ];
+			if ( at ) { await page.evaluate( ( [ px, feet ] )=>{ const m = __lab.me(); if ( !m ) return; const v = m.ragdoll.driver_of; if ( v && v.ExcludeRagdoll ) v.ExcludeRagdoll( m.ragdoll, true ); __lab.teleport( px, feet - 44 ); }, at ); await page.waitForTimeout( 3000 ); }
 			out.spots[ name ] = await measure( page, x, y );
+			if ( at ) out.spots[ name ].player = at;
 			log( name, JSON.stringify( out.spots[ name ] ) );
 		}
 		out.mod = await page.evaluate( ()=>( { status: window.__csTower.status, error: window.__csTower.error } ) );

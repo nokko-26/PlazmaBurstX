@@ -490,7 +490,7 @@ function autopilot()
 // straight: shifted by speed × the time since the last tick (the wall clock: a slow machine takes big physics steps,
 // and a velocity set once a tick is lost to gravity between them), its velocity zeroed. The host moves everyone; a guest
 // moves its own character too, so its view doesn't wait for the host.
-const LAD = { half: 28, water: 55, speed: 260, side: 150, pull: 8, below: 90 };
+const LAD = { half: 28, water: 55, speed: 260, side: 150, pull: 8, below: 90, catchSpeed: 380, catchHalf: 70 };
 const onLadder = new WeakMap(), ladderT = new WeakMap(), ghosted = new WeakMap();
 // (a climber passes through nothing but its shaft; while it climbs its body and gun collide with nothing, so a gun held
 // out sideways can't snag a hatch's edge. Put back when it lets go.)
@@ -542,8 +542,10 @@ function ladders()
 		if ( L && ( !estate.get( L ) || !inShaft( estate.get( L ) ) ) ) { letGo( ch ); L = null; }
 		if ( !L )
 		{
-			if ( !ctl.act_y ) continue;
-			L = list.find( ( e )=>inShaft( estate.get( e ) ) ) || null;
+			// (falling fast through a shaft — through its hatches — the ladder is caught, as a rung would be)
+			const falling = ( opt( ()=>ch.box2d_body.GetLinearVelocity().y ) || 0 ) * 30 > LAD.catchSpeed;
+			if ( !ctl.act_y && !falling ) continue;
+			L = list.find( ( e )=>{ const s = estate.get( e ); return falling && !ctl.act_y ? Math.abs( ch.x - s.x ) < LAD.catchHalf && feet > s.y - 40 && feet < ( s.toy === null ? s.y + 300 : s.toy ) : inShaft( s ); } ) || null;
 			if ( !L ) continue;
 			onLadder.set( ch, L );
 		}
@@ -593,7 +595,7 @@ function sleepFar()
 		if ( !alive( c ) || isPlayer( c ) ) continue;
 		const k = c.controller;
 		if ( !k ) continue;
-		const near = !players.length || players.some( ( p )=>Math.abs( p.x - c.x ) < FAR.thinkX && Math.abs( p.y - c.y ) < FAR.thinkY );
+		const near = !state.sleepAll && ( !players.length || players.some( ( p )=>Math.abs( p.x - c.x ) < FAR.thinkX && Math.abs( p.y - c.y ) < FAR.thinkY ) );
 		if ( near ) asleep.delete( k ); else { asleep.add( k ); n++; }
 	}
 	state.asleep = n;
@@ -1702,9 +1704,9 @@ function level06()
 		B.wall( x, L.floor - h, w, h, m );
 	// the road deck: crane pedestals, container stacks, a utility module
 	for ( const cr of L.cranes ) B.wall( cr.x - 60, R - 100, 120, 100, 'plant' );
-	// (stacks of two, the upper one set back: climb the first, then the second)
-	for ( const [ x, y, w, h, m ] of [ [ 6300, R - 90, 240, 90, 'box_rust' ], [ 6360, R - 180, 180, 90, 'box_blue' ], [ 8480, R - 90, 240, 90, 'box_red' ], [ 8480, R - 180, 180, 90, 'box_rust' ], [ 5120, R - 130, 180, 130, 'plant' ],
-		[ 2900, R - 90, 240, 90, 'box_blue' ], [ 2960, R - 180, 180, 90, 'box_red' ], [ 11900, R - 90, 240, 90, 'box_rust' ], [ 11960, R - 180, 180, 90, 'box_blue' ], [ 4300, R - 130, 180, 130, 'plant' ] ] )
+	// (stacks of two, the upper one centred on the lower: a 90 px step up from either side, then another)
+	for ( const [ x, y, w, h, m ] of [ [ 6300, R - 90, 240, 90, 'box_rust' ], [ 6360, R - 180, 120, 90, 'box_blue' ], [ 8480, R - 90, 240, 90, 'box_red' ], [ 8540, R - 180, 120, 90, 'box_rust' ], [ 5120, R - 130, 180, 130, 'plant' ],
+		[ 2900, R - 90, 240, 90, 'box_blue' ], [ 2960, R - 180, 120, 90, 'box_red' ], [ 11900, R - 90, 240, 90, 'box_rust' ], [ 11960, R - 180, 120, 90, 'box_blue' ], [ 4300, R - 130, 180, 130, 'plant' ] ] )
 		B.wall( x, y, w, h, m );
 	for ( let x = bx0 + 300; x < bx1; x += 900 ) if ( x < T.x0 - 60 || x > T.x1 + 60 ) B.lamp( x, R - 130, '0xffb070', 0.45, 5 );
 	for ( let x = bx0 + 200; x < bx1; x += 900 ) B.lamp( x, SF + 40, '0xffb070', 0.6, 8 );          // (the soffit's lamps, over the lane)
@@ -1720,6 +1722,7 @@ function level06()
 		B.wall( x, T.l3 + T.slab, T.wall, T.doorTop - T.l3 - T.slab, 'shell' );
 	}
 	B.back( T.x0, T.roof, T.x1 - T.x0, R - T.roof, 'bg_tower' );
+	B.wall( T.x0, T.l3 - 40, 20, 40, 'slab' ); B.wall( T.x1 - 20, T.l3 - 40, 20, 40, 'slab' );   // (rails at the observation deck's open sides)
 	B.entity( T.shaft, T.roof - T.roofT - 60, 'pb2Entity.TYPE_CS_LADDER', { toy: S( R ) } );
 	B.lamp( ( T.x0 + T.x1 ) / 2, T.l2 + 60, '0xffd0a0', 0.5, 5 );
 	B.lamp( T.x0 + 200, T.l3 + 70, '0xff3020', 0.6, 5 ); B.lamp( T.x1 - 200, T.l3 + 70, '0xffd0a0', 0.4, 4 );
@@ -1741,17 +1744,17 @@ function level06()
 	// (sturdy: they wait out the fighting in the bay until the raiders get there)
 	B.entity( 8250, L.floor - 80, 'pb2Entity.TYPE_TANK', { style_id: '3', side: '-1', multiply_health: '4' } );
 	B.entity( 8620, L.floor - 80, 'pb2Entity.TYPE_TANK', { style_id: '4', side: '-1', multiply_health: '4' } );
-	B.gun( 5600, L.floor - 20, 'gun_real_shotgun' ); B.gun( 7200, R - 20, 'gun_rl' ); B.gun( 9500, L.cap.top - 20, 'gun_sniper' );
+	B.gun( 5440, L.floor - 20, 'gun_real_shotgun' ); B.gun( 7200, R - 20, 'gun_rl' ); B.gun( 9500, L.cap.top - 20, 'gun_sniper' );
 	// Civil Security: the pier caps and the containers (they shoot down at the lane), the rooms, the road, the tower
 	const cap = L.cap.top, fl = L.floor;
 	const [ c1, c2, c3 ] = L.legs;
 	B.cs( c1 - 200, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
 	B.cs( c1 + 260 + 80, cap, 'skin_cs_lite', 'gun_real_shotgun', 'cs_post', 'CS Trooper [2+]', -1 );
-	B.cs( L.hanging[ 1 ][ 0 ] + 100, L.containerTop, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
+	B.cs( L.hanging[ 5 ][ 0 ] + 100, L.containerTop, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );    // (bay 5700–7500)
 	B.cs( c2 - 200, cap, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy', -1 );
 	B.cs( c2 + 200, cap, 'skin_cs_lite', 'gun_rl', 'cs_post', 'CS Rocketeer', -1 );
 	B.cs( c2 + 40, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper [3+]', -1 );
-	B.cs( L.hanging[ 2 ][ 0 ] + 100, L.containerTop, 'skin_cs_lite', 'gun_gl', 'cs_post', 'CS Grenadier', -1 );
+	B.cs( L.hanging[ 6 ][ 0 ] + 100, L.containerTop, 'skin_cs_lite', 'gun_gl', 'cs_post', 'CS Grenadier', -1 );      // (bay 7500–9300)
 	B.cs( c3 - 200, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
 	B.cs( c3 + 200 + 150, cap, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman [2+]', -1 );
 	B.cs( 5500, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
@@ -1767,7 +1770,7 @@ function level06()
 	B.cs( 10300, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
 	B.cs( 5300, R - 130, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
 	B.cs( 6080, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
-	B.cs( 6450, R - 180, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman [2+]', -1 );
+	B.cs( 6420, R - 180, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman [2+]', -1 );
 	B.cs( 8200, R, 'skin_cs_lite', 'gun_rl', 'cs_post', 'CS Rocketeer', -1 );
 	B.cs( 9050, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
 	B.cs( 9700, R, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy [2+]', -1 );
@@ -1807,7 +1810,7 @@ function level06()
 	B.cs( 4100, fl, 'skin_cs_lite', 'gun_real_shotgun', 'cs_hunter', 'CS Trooper', -1 );
 	B.cs( 1600, R, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
 	B.cs( 2700, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
-	B.cs( 3040, R - 180, 'skin_cs_lite', 'gun_rl', 'cs_post', 'CS Rocketeer [2+]', -1 );
+	B.cs( 3020, R - 180, 'skin_cs_lite', 'gun_rl', 'cs_post', 'CS Rocketeer [2+]', -1 );
 	// the right chunk: caps 6 and 7, the containers, the deck and road, the bunker (both corridors, the basement: the
 	// third objective), the hilltop
 	B.cs( 10900, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
@@ -1819,7 +1822,7 @@ function level06()
 	B.cs( 12050, fl, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy', -1 );
 	B.cs( 12600, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
 	B.cs( 10850, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
-	B.cs( 12050, R - 180, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
+	B.cs( 12020, R - 180, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
 	B.cs( 13300, R, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy [3+]', -1 );
 	B.cs( 13900, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Bunker guard', -1 );
 	B.cs( 14250, cap, 'skin_cs_lite', 'gun_real_shotgun', 'cs_hunter', 'CS Bunker trooper', -1 );
@@ -1867,6 +1870,8 @@ state.loadLevel = loadLevel;
 state.levelIds = ()=>Object.keys( LEVELS );
 state.debug = { buildTower, towerMat, unlitMat, beamMat, glowMat,
 	// (the set pieces shown or hidden, for measuring what they cost: returns how many groups)
+	// (every soldier asleep, or back to the distance rule: for measuring what their thinking costs)
+	sleepAll( on ) { state.sleepAll = !!on; return true; },
 	sets( on ) { let n = 0; for ( const m of [ towers, bridges, ladderGfx, consoles, lights, beacons ] ) m.forEach( ( G )=>{ for ( const g of [ G.root, G.far, G.grp ] ) if ( g ) { g.visible = on; n++; } } ); return n; } };                  // (the set pieces' makers, for tests in the page)
 state.markers = ()=>[ ...marked ].map( ( e )=>Object.assign( {}, estate.get( e ), { body: bodyPos( e ) } ) );
 
