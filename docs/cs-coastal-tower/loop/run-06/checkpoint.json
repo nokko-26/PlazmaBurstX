@@ -1,7 +1,7 @@
 {
- "phase": "ACT",
- "seq": 11,
- "cycle": 3,
+ "phase": "OBSERVE",
+ "seq": 12,
+ "cycle": 4,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
@@ -29,17 +29,22 @@
    "80fe487f50efe234",
    "0a86473e94b5aaa5",
    "d7fae43b34bfc37d",
-   "f3874984c8c3eab4"
+   "f3874984c8c3eab4",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
+   "0a86473e94b5aaa5",
+   "7df6e9954840514f",
+   "c43296a90b88577b"
   ],
   "hypotheses": [
    "0eb01c3a31fa5b2d"
   ]
  },
  "budgetSpent": {
-  "engineCalls": 11,
-  "actions": 17,
-  "cycles": 3,
-  "cost": 17,
+  "engineCalls": 12,
+  "actions": 22,
+  "cycles": 4,
+  "cost": 22,
   "startedAt": 1790529166395
  },
  "done": [
@@ -59,7 +64,12 @@
   "act_3bc8ac023fe2299fdda6",
   "act_ac3a043db2dbc10c15f5",
   "act_4565d259431f329af286",
-  "act_9eb36c22c7f3067acdba"
+  "act_9eb36c22c7f3067acdba",
+  "act_6f75c0b8e3825491551e",
+  "act_422596db7db6e60ed432",
+  "act_adcb9ec29a93756de5ef",
+  "act_379e803ffbfe6d756b7d",
+  "act_4da1fc13550fc0c0e375"
  ],
  "lastProbeIds": {
   "probe:d22e87edb3fa10bb": "ev_muk3xset_aa51db88cf",
@@ -77,114 +87,89 @@
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_1128c42e615ffb641fbe",
+   "id": "act_6f75c0b8e3825491551e",
    "tool": "file.write_from",
    "targets": [
-    "three-chunks",
     "ladders-work",
-    "objective-gates-exit",
     "tower-climb",
-    "look-dusk-palette",
-    "look-structure",
-    "look-interior",
-    "coop-ladder"
+    "coop-ladder",
+    "objective-gates-exit",
+    "tank-drivable",
+    "frame-cost"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk3xs3d_d128bda994",
+   "evidence": "ev_muk4gw4k_e82a0dd231",
    "expectedEvidence": [
-    "json.route.objectives length 3",
-    "json.bounds.2 15800"
+    "report.tests.ladders.ok"
    ],
    "failureSignatures": [
-    "json.error"
+    "climb stalls"
    ]
   },
   {
-   "id": "act_c76734a086bbd8af3289",
+   "id": "act_422596db7db6e60ed432",
    "tool": "pb3x.bake",
    "targets": [
     "ladders-work",
-    "objective-gates-exit",
     "tower-climb",
-    "coop-ladder",
-    "look-dusk-palette"
+    "objective-gates-exit",
+    "tank-drivable"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk3xsa6_252945c363",
+   "evidence": "ev_muk4gwb7_58e77e6d6c",
    "expectedEvidence": [
-    "bake ok",
-    "state.onLadder > 0 during a climb"
+    "bake ok"
    ],
    "failureSignatures": [
     "bake failed"
    ]
   },
   {
-   "id": "act_3bc8ac023fe2299fdda6",
+   "id": "act_adcb9ec29a93756de5ef",
    "tool": "file.write_from",
    "targets": [
-    "three-chunks",
-    "route-complete"
+    "objective-gates-exit"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk3xsa8_9f75926fa4",
+   "evidence": "ev_muk4gwb8_5cde13773b",
    "expectedEvidence": [
-    "json.route.unreachable empty"
-   ],
-   "failureSignatures": [
-    "unreachable interior"
-   ]
-  },
-  {
-   "id": "act_ac3a043db2dbc10c15f5",
-   "tool": "file.write_from",
-   "targets": [
-    "objective-gates-exit",
-    "ladders-work",
-    "editor-views",
-    "look-dusk-palette"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk3xsaa_4ca977f528",
-   "expectedEvidence": [
-    "report.tests.objective.held length 3"
-   ],
-   "failureSignatures": [
-    "report.failed"
-   ]
-  },
-  {
-   "id": "act_4565d259431f329af286",
-   "tool": "file.write_from",
-   "targets": [
-    "coop-two",
-    "coop-ladder"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk3xsab_a579444410",
-   "expectedEvidence": [
-    "report.guestLadder"
+    "held[].objectives"
    ],
    "failureSignatures": []
   },
   {
-   "id": "act_9eb36c22c7f3067acdba",
+   "id": "act_379e803ffbfe6d756b7d",
    "tool": "file.write_from",
    "targets": [
-    "work-landed"
+    "frame-cost"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk3xsac_320f78ad57",
+   "evidence": "ev_muk4gwba_c5109dec08",
    "expectedEvidence": [
-    "json.uncommitted"
+    "file written"
    ],
    "failureSignatures": []
+  },
+  {
+   "id": "act_4da1fc13550fc0c0e375",
+   "tool": "pb3x.harness",
+   "targets": [
+    "frame-cost"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk4jfrn_919a96a628",
+   "expectedEvidence": [
+    "report.steps.noEnemies.otherMs << report.steps.asIs.otherMs"
+   ],
+   "failureSignatures": [
+    "render dominates",
+    "sets or lamps dominate"
+   ]
   }
  ],
  "observeProbed": false,
