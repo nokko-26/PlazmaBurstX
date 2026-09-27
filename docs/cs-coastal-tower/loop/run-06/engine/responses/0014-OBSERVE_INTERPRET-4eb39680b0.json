@@ -1,0 +1,85 @@
+{
+ "summary": "Cycle 5.\nNewly satisfied: objective-gates-exit. All three consoles completed (power, command room, basement), then the hilltop extraction cleared the level. Tank and respawn also passed.\nThe culling and sleep did nothing: the mod recorded 'cullFar: Cannot add property __csMeshes, object is not extensible'. The game's ragdolls are sealed, so no per-character property can be added. sleepFar's per-instance _bm assignment is subject to the same seal. The draw calls stayed at 1000\u20131590 (ratio 5.14). The recorded mod error also contradicts plays-clean.\nThe raiders' boat is wrecked at its berth in the opening minutes: cap 1's guards and the ledge guard can see the dock, and hunters come down. The probe then picked the wreck (it didn't check health), which had been flung out of the world.\nLadders engage (onLadder = 1) but stall where the climber crosses a slab's hatch, about 116 px above the cap and at the tower's floors. The held gun, about 50 px out to one side, catches on a 110 px hatch's edge.\nIn the water test the swimmer sank to feet 520 during the probe's 900 ms settle, below the water ladder's foot.",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "cullFar threw on every render ('object is not extensible'), so no character was ever hidden: draw calls stayed at 1012\u20131590.",
+   "cites": [
+    "ev_muk5awrr_c7970fecf4",
+    "ev_muk5ead7_b1908de924"
+   ],
+   "residueIds": [
+    "frame-cost",
+    "plays-clean"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "All three objectives reached 100, and the extraction completed after the last one.",
+   "cites": [
+    "ev_muk5awrr_c7970fecf4"
+   ],
+   "residueIds": [
+    "objective-gates-exit"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The shaft climb engaged (ladder 1) but stopped at feet -446 below the soffit hatch, and the tower climb stopped at the L2 slab: a snag at hatch edges.",
+   "cites": [
+    "ev_muk5awrr_c7970fecf4"
+   ],
+   "residueIds": [
+    "ladders-work",
+    "tower-climb"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The raiders' boat reported at (50931, 358242): a wreck flung out of the world. It was destroyed at the start, where cap 1's and the ledge's guards can see the dock.",
+   "cites": [
+    "ev_muk5awrr_c7970fecf4"
+   ],
+   "residueIds": [
+    "boat-run",
+    "boat-returns",
+    "patrols-drive"
+   ]
+  },
+  {
+   "kind": "HYPOTHESIS",
+   "text": "Keeping per-character state in WeakMaps and hooking pb2Controller.prototype._bm once makes the culling and the sleep work, cutting most of the characters' draw calls.",
+   "cites": [
+    "ev_muk5awrr_c7970fecf4"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  },
+  {
+   "kind": "HYPOTHESIS",
+   "text": "Making the climber a ghost while it climbs (its fixtures filtered to collide with nothing, restored when it lets go), with 140 px hatches, removes the snag.",
+   "cites": [
+    "ev_muk5awrr_c7970fecf4"
+   ],
+   "residueIds": [
+    "ladders-work",
+    "tower-climb"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [
+  {
+   "residueId": "underpass-framing",
+   "verdict": "UNSURE",
+   "evidenceIds": [
+    "ev_muk5ax71_36a43c4207"
+   ],
+   "reason": "The boat still hasn't been boarded in a test, so there's no lane shot from it."
+  }
+ ],
+ "unknowns": [
+  "whether disabling a climber's collisions has side effects (bullets hitting it; the host's view of guests)"
+ ]
+}

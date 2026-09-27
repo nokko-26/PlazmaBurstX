@@ -1,0 +1,101 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "frame-cost",
+    "plays-clean",
+    "ladders-work",
+    "tower-climb",
+    "boat-run",
+    "look-structure"
+   ],
+   "rationale": "Mod fixes:\n- culling and sleep keep their state in WeakMaps (the game's objects are sealed); the AI skip hooks pb2Controller.prototype._bm once;\n- climbers are ghosts while on a ladder (their fixtures collide with nothing, restored when they let go);\n- hatches are 140 px, and the tower shaft moved to 7780, off the shell wall;\n- water ladders reach the seabed;\n- a safe start: no ledge guard, cap 1's guards at its far end, the raiders' boat at 3\u00d7 health;\n- no fender row on the footings (the busy bottom row in the detail grid).\nStaging lint: 0 violations, nothing unreachable, 7 caps with cover.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "No mod error; far characters are culled (draw calls drop); climbs pass the hatches; the boat survives the start.",
+   "expectedEvidence": [
+    "report.tests.frames.mod.error null",
+    "perf drawCalls well under 1000"
+   ],
+   "failureSignatures": [
+    "another sealed-object error",
+    "climb still stalls"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost",
+    "plays-clean",
+    "ladders-work"
+   ],
+   "rationale": "Bake it into the bundle.",
+   "tool": "pb3x.bake",
+   "params": {},
+   "predictedEffect": "The bundle carries the fixes.",
+   "expectedEvidence": [
+    "bake ok"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "boat-run",
+    "boat-returns",
+    "patrols-drive",
+    "ladders-work",
+    "underpass-framing"
+   ],
+   "rationale": "Probe: board a living boat only (a wreck isn't boardable), and press W as soon as the swimmer is in the water (a swimmer left alone sinks).",
+   "tool": "file.write_from",
+   "params": {
+    "from": "play-06.js",
+    "path": "tools/harness/levels/play-06.js"
+   },
+   "predictedEffect": "The boat test boards a real boat, and the ladder test starts climbing at the surface.",
+   "expectedEvidence": [
+    "report.tests.boat.start"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "coop-ladder",
+    "coop-two"
+   ],
+   "rationale": "The co-op probe: the guest presses up as soon as it is in the water.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "coop-06.js",
+    "path": "tools/harness/levels/coop-06.js"
+   },
+   "predictedEffect": "The guest's ladder climb starts at the surface.",
+   "expectedEvidence": [
+    "report.guestLadder"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  }
+ ]
+}
