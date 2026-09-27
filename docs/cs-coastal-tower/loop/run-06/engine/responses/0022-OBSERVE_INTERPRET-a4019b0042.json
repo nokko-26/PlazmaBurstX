@@ -1,0 +1,50 @@
+{
+ "summary": "Cycle 9: 23 of 27 satisfied.\n- ladders-work passes: water \u2192 cap (capOk), cap \u2192 deck \u2192 road, and back down.\n- look-structure passes (detail grid 0.050): with the lamps baked and the rooms furnished, the middle band rose to 0.13\u20130.15.\n- The boat run passes again, with a lost boat replaced at the berth.\nrespawn-works failed only on the probe's 'standing' check: the player came back at the bunker checkpoint with its feet on that floor (-330), but guards there knocked it about, so its velocity was over 120.\nframe-cost: 3.14, with draws back up to 590\u2013774. A draw diagnostic shows the layer-mask cull has no effect: this game's renderer ignores object layers, so the far vehicles are drawn again (442 draws).\nCo-op: the guest climbed to -367 (trail), then cap 1's guards (beside that ladder; the co-op probe doesn't clear them) knocked it 128 px right into a sprawl.",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "The renderer ignores layer masks: after cycle 9 the far vehicles' groups are drawn again (240 + 202 far draws), where cycle 8's visible toggling removed them.",
+   "cites": [
+    "ev_muk7qfbc_83ad50e368"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The respawn put the player back at checkpoint (13760, -330) with feet at -330: it is standing on that floor.",
+   "cites": [
+    "ev_muk7niv2_963187906d"
+   ],
+   "residueIds": [
+    "respawn-works"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The detail grid is 0.050 with the middle row at 0.129/0.146/0.133.",
+   "cites": [
+    "ev_muk7nj3a_9226aa2c9f"
+   ],
+   "residueIds": [
+    "look-structure"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The guest's trail climbs to -367 at the ladder, then its pose sprawls (feet -80, y -278) 128 px to the right: a knock from cap 1's guards.",
+   "cites": [
+    "ev_muk7v0ku_c8771aa399"
+   ],
+   "residueIds": [
+    "coop-ladder"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [],
+ "unknowns": [
+  "the frame cost once the vehicles are culled by visible again, with the lamps baked"
+ ]
+}

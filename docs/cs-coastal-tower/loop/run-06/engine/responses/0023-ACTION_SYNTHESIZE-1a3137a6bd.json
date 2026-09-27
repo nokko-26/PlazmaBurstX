@@ -1,0 +1,115 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "Cull the vehicles' models by their top-level root's visible (layer masks are ignored by this renderer; the vehicle mods toggle their parts, never the roots, so a root restore can't undo anything they did). Characters are no longer culled: the engine hides their parts itself, and they're a small share once the far ones sleep. Staging lint: 0 violations.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "Draws return to about 200\u2013320 per frame.",
+   "expectedEvidence": [
+    "perf drawCalls < 350"
+   ],
+   "failureSignatures": [
+    "draws unchanged"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "Bake it into the bundle.",
+   "tool": "pb3x.bake",
+   "params": {},
+   "predictedEffect": "The bundle carries it.",
+   "expectedEvidence": [
+    "bake ok"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "respawn-works"
+   ],
+   "rationale": "Probe: 'standing' means alive with its feet on the checkpoint's floor (within 20 px), not a low speed that guards' fire can spoil.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "play-06.js",
+    "path": "tools/harness/levels/play-06.js"
+   },
+   "predictedEffect": "The respawn test judges where the player stands.",
+   "expectedEvidence": [
+    "report.tests.respawn.standing"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "coop-ladder",
+    "coop-two"
+   ],
+   "rationale": "Co-op probe: clear the guards within 800 px of the ladder first, as the solo test does (this checks the guest's climb, not the fight).",
+   "tool": "file.write_from",
+   "params": {
+    "from": "coop-06.js",
+    "path": "tools/harness/levels/coop-06.js"
+   },
+   "predictedEffect": "The guest's climb isn't knocked off by cap 1's guards.",
+   "expectedEvidence": [
+    "report.guestLadder"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "Measure what's left after the cull: frame time split into render and other, as the level is, then with the set pieces hidden, the lights off, and the enemies removed.",
+   "tool": "pb3x.harness",
+   "params": {
+    "script": "levels/perf-breakdown.js",
+    "args": [
+     "06",
+     "8400",
+     "-700"
+    ],
+    "report": "levels/results/06-perf-breakdown.json",
+    "timeoutMs": 900000
+   },
+   "predictedEffect": "Shows whether the rest is simulation (the enemies) or rendering.",
+   "expectedEvidence": [
+    "report.steps"
+   ],
+   "failureSignatures": [],
+   "risk": "low",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  }
+ ]
+}
