@@ -5,8 +5,14 @@ sheet, packaged as PB3X mods. The sheet is the mood and the ideas, not a floor p
 tower on huge concrete pillars over the sea at night, with fights stacked on four tiers (water, docks,
 service level, upper platform), red CS banners, floodlights, wet steel and rock channels under it.
 
-Status: **plan only — nothing built yet.** It waits for the go-ahead and for the game to be reachable from the
-build machine (see *Blockers*).
+Status: **approved; the assets are in, Phase 0 is blocked on a game login** (see *Blockers*).
+
+| Piece | State |
+|---|---|
+| HD skies (6), textures (13), sounds (14) | done — `pb3x-extension/assets/`, built by `tools/assets/*.py`, listed in `CREDITS.md`, contact sheets in `shots/` |
+| Play harness (`tools/harness/`) | done up to the login: Chromium + the extension through the build proxy (see below) |
+| Phase 0 measurements (`metrics.md`) | blocked — the game needs an account |
+| Levels 01–07, mods | not started (they need the measurements) |
 
 ---
 
@@ -128,6 +134,20 @@ Work lands on the branch `cs-coastal-tower`, not `main`.
 
 ## 7. Blockers
 
-- The build container's network policy blocks `plazmaburst.net` (and the CC0 asset sites), so the game can't
-  run, be measured or be screenshotted there. Network access has to be **Full** (then a new session).
+- **The game needs a logged-in account.** `plazmaburst.net` is reachable now, but starting a game (offline or the
+  Level Editor) asks for authorisation (`pb2Web.JSRetryWithAuth`), and a new player can only sign up with an
+  invite code or a Patreon login. The harness needs a test account's login given to the environment as secrets
+  (e.g. `PB3_LOGIN` / `PB3_PASSWORD`) or a session cookie; without one, no measurement, playtest or screenshot
+  of a level is possible, and nothing is built on guessed numbers.
 - A game instance on a local PC (e.g. remote debugging on port 9335) isn't reachable from a cloud container.
+
+## 8. The play harness (`tools/harness/`)
+
+`launch.js` opens the game in Chromium (`/opt/pw-browsers/chromium-1194`) as a Playwright persistent context with
+`--load-extension=pb3x-extension`, run under `xvfb-run` (extensions need a headed browser). The build container's
+proxy drops some of Chromium's connections (`ERR_TOO_MANY_RETRIES`), so every GET is fetched from Node with
+retries and cached in `/tmp/pb3x-cache`. `game.js` starts an offline game with a map script — the same way the
+mod's own live preview does (`pb2Web.RunGame` → `pb2Multiplayer.StartOffline`) — and waits until your character
+is in the world.
+
+    NODE_PATH=/opt/node22/lib/node_modules xvfb-run -a -s "-screen 0 1600x900x24" node <script using launch/startMap>
