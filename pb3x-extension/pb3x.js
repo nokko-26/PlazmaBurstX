@@ -17520,7 +17520,7 @@ function hostTick( dt )
 			const left = objs.filter( ( o )=>estate.get( o ).on < 100 ).length;
 			banner( OBJ.names[ s.style ] + ' — done' + ( left ? ' (' + left + ' to go)' : ': get to the extraction' ), 4 );
 			sfx( 's_corvette_alert', s.x, s.y, 0.7, 0.8 );
-			state.objectives = objs.map( ( o )=>estate.get( o ).on );
+			state.objectives = objs.map( ( o )=>estate.get( o ).on ); state.objHold = OBJ.hold;
 		}
 		else if ( here && clock() - ( s.said || 0 ) > 0.6 ) { s.said = clock(); banner( OBJ.verbs[ s.style ] + ' ' + s.on + '%', 0.9 ); }
 	}
@@ -17578,8 +17578,18 @@ function give( dc, ch )
 // it's lost), at the last checkpoint once that's one on foot past the boat (ashore: not back in the boat behind)
 function respawn()
 {
-	const T = host.template, cp = state.checkpoint || firstCheckpoint();
+	const T = host.template;
+	let cp = state.checkpoint || firstCheckpoint();
 	let boat = teamBoat();
+	// (a berth lit far ahead of a boat nobody's in: the players went on on foot — back at their furthest foot checkpoint
+	// short of that berth, not in the abandoned boat thousands of px behind)
+	const bx = ( bodyPos( boat ) || [ -Infinity ] )[ 0 ];
+	const manned = boat && seatsOf( boat ).some( ( st )=>st && st.owner_character && isPlayer( st.owner_character ) );
+	if ( boat && cp && cp.style === 1 && !manned && cp.x - bx > 300 )
+	{
+		const foot = markers( 'checkpoint' ).map( ( e )=>estate.get( e ) ).filter( ( c )=>c.on && c.style === 2 && c.x <= cp.x && c.x > bx ).sort( ( a, b )=>b.x - a.x )[ 0 ];
+		if ( foot ) { cp = { x: foot.x, y: foot.y, style: 2 }; boat = null; }
+	}
 	if ( boat && cp && cp.style === 2 && cp.x > ( bodyPos( boat ) || [ -Infinity ] )[ 0 ] ) boat = null;
 	if ( !boat && cp && cp.style === 1 ) boat = newBoat( cp );
 	const at = boat ? bodyPos( boat ) : cp ? [ cp.x, cp.y ] : null;
@@ -17685,7 +17695,8 @@ function autopilot()
 		s.crewed = true; s.emptyAt = 0;
 		// the nearest player
 		let tgt = null, best = Infinity;
-		for ( const c of players ) { const d = Math.hypot( c.x - p[ 0 ], ( c.y - p[ 1 ] ) * 1.5 ); if ( d < best ) { best = d; tgt = c; } }
+		// (only players within reach of the water — in it, on the caps, on the containers: not the deck above the soffit)
+		for ( const c of players ) { if ( Math.abs( c.y - p[ 1 ] ) >= 480 ) continue; const d = Math.hypot( c.x - p[ 0 ], ( c.y - p[ 1 ] ) * 1.5 ); if ( d < best ) { best = d; tgt = c; } }
 		ctl.act_x = 0; ctl.act_y = 0; ctl.act_fall = 0;
 		if ( !tgt ) continue;
 		if ( !s.awake ) { if ( best > AP.wake ) continue; s.awake = true; }
@@ -17721,7 +17732,8 @@ function autopilot()
 // straight: shifted by speed × the time since the last tick (the wall clock: a slow machine takes big physics steps,
 // and a velocity set once a tick is lost to gravity between them), its velocity zeroed. The host moves everyone; a guest
 // moves its own character too, so its view doesn't wait for the host.
-const LAD = { half: 28, water: 55, speed: 260, side: 150, pull: 8, below: 90, catchSpeed: 380, catchHalf: 70 };
+const ladderFoot = ( s )=>s.toy === null || s.toy <= s.y + 40 ? s.y + 300 : s.toy;
+const LAD = { half: 28, water: 55, grab: 60, speed: 260, side: 150, pull: 8, below: 90, catchSpeed: 380, catchHalf: 70 };
 const onLadder = new WeakMap(), ladderT = new WeakMap(), ghosted = new WeakMap();
 // (a climber passes through nothing but its shaft; while it climbs its body and gun collide with nothing, so a gun held
 // out sideways can't snag a hatch's edge. Put back when it lets go.)
@@ -17768,27 +17780,33 @@ function ladders()
 		if ( !ctl || !isPlayer( ch ) || opt( ()=>ch.ragdoll.driver_of ) ) { if ( onLadder.has( ch ) ) letGo( ch ); continue; }
 		const feet = ch.y + 44;
 		let L = onLadder.get( ch ) || null;
-		// (a swimmer bobs and drifts: in the water a ladder catches from further off, and pulls them in)
-		const inShaft = ( s )=>Math.abs( ch.x - s.x ) < ( feet > -20 ? LAD.water : LAD.half ) && feet > s.y - 40 && feet < ( s.toy === null ? s.y + 300 : s.toy ) + LAD.below;
-		if ( L && ( !estate.get( L ) || !inShaft( estate.get( L ) ) ) ) { letGo( ch ); L = null; }
+		// (a swimmer bobs and drifts: in the water a ladder catches from further off, and pulls them in. Taken, a ladder
+		// holds its climber anywhere over its hatch: the pull brings them to the middle)
+		const inShaft = ( s, w )=>Math.abs( ch.x - s.x ) < ( feet > -20 ? LAD.water : w ) && feet > s.y - 40 && feet < ladderFoot( s ) + LAD.below;
+		if ( L && ( !estate.get( L ) || !inShaft( estate.get( L ), LAD.catchHalf ) ) ) { letGo( ch ); L = null; }
 		if ( !L )
 		{
-			// (falling fast through a shaft — through its hatches — the ladder is caught, as a rung would be)
+			// (W takes a ladder at arm's length; S — down, over a hatch — anywhere over the hole, since a slow frame can
+			// carry a walker past the middle; and falling fast through a shaft, through its hatches, the ladder is caught
+			// whatever is held, as a rung would be)
 			const falling = ( opt( ()=>ch.box2d_body.GetLinearVelocity().y ) || 0 ) * 30 > LAD.catchSpeed;
 			if ( !ctl.act_y && !falling ) continue;
-			L = list.find( ( e )=>{ const s = estate.get( e ); return falling && !ctl.act_y ? Math.abs( ch.x - s.x ) < LAD.catchHalf && feet > s.y - 40 && feet < ( s.toy === null ? s.y + 300 : s.toy ) : inShaft( s ); } ) || null;
+			L = list.find( ( e )=>{ const s = estate.get( e ); return ( falling && Math.abs( ch.x - s.x ) < LAD.catchHalf && feet > s.y - 40 && feet < ladderFoot( s ) ) || ( !!ctl.act_y && inShaft( s, ctl.act_y > 0 ? LAD.grab : LAD.half ) ); } ) || null;
 			if ( !L ) continue;
 			onLadder.set( ch, L );
 		}
-		const s = estate.get( L ), bottom = s.toy === null ? s.y + 300 : s.toy;
+		const s = estate.get( L ), bottom = ladderFoot( s );
 		const now = clock(), step = clamp( now - ( ladderT.get( ch ) || now ), 0, 0.25 );
 		ladderT.set( ch, now );
 		let vy = ( ctl.act_y || 0 ) * LAD.speed;
 		if ( vy < 0 && feet <= s.y ) vy = 0;                                        // (at the top: step off sideways)
 		if ( vy < 0 ) vy = Math.max( vy, ( s.y - feet ) / Math.max( step, 1e-3 ) );   // (and never past it)
 		if ( vy > 0 && feet >= bottom ) { letGo( ch ); continue; }                   // (off the foot of it)
-		const vx = ctl.act_x ? ctl.act_x * LAD.side : clamp( ( s.x - ch.x ) * LAD.pull, -LAD.side, LAD.side );
-		if ( ctl.act_x && !ctl.act_y && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { letGo( ch ); continue; }
+		// (left / right step off only when the climber isn't moving along it — nothing held, or at the top: held together
+		// with up or down they'd carry a climber off the rungs mid-shaft, so there they're ignored)
+		const side = ctl.act_x && ( !ctl.act_y || vy === 0 );
+		const vx = side ? ctl.act_x * LAD.side : clamp( ( s.x - ch.x ) * LAD.pull, -LAD.side, LAD.side );
+		if ( side && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { letGo( ch ); continue; }
 		ghost( ch, true );
 		opt( ()=>ch.ragdoll.Teleport( vx * step, vy * step ) );
 		setVel( ch, 0, 0 );
@@ -17801,11 +17819,12 @@ function ladders()
 // A long level holds many Civil Security soldiers, and the engine draws and thinks for every one of them wherever they
 // are: in the Underhang the soldiers were two thirds of every frame's draw calls (measured: 1706 with them, 544
 // without), most of them off screen. So a soldier far from every player doesn't think (its controller skips its turn,
-// its inputs left at rest) until a player comes within FAR.think px, and one off the camera isn't drawn (its meshes
-// hidden just before each render, put back as it comes into view).
-const FAR = { thinkX: 2600, thinkY: 1500, margin: 320 };
+// its inputs left at rest) until a player comes within FAR.think px — about a screen and a half: measured, the awake
+// soldiers' thinking was ~40% of a busy frame.
+const FAR = { thinkX: 1700, thinkY: 800, margin: 320 };
 // (the game's objects are sealed: nothing is added to them — what we keep about them lives in these maps)
 const asleep = new WeakSet(), hidByUs = new WeakSet();
+const kindOff = new Set();                                                   // (set pieces hidden by kind, for measuring)
 function hookSleep()
 {
 	const P = opt( ()=>pb2Controller.prototype );
@@ -17833,8 +17852,8 @@ function sleepFar()
 }
 // The game draws every object wherever it is (its meshes are marked not to be frustum culled), so what's far off the
 // camera — our ladders, beacons, consoles and searchlights, and the vehicles' models — is hidden just before each render
-// and shown again as it comes into view (only what we hid is shown again). The soldiers are left to the engine: it shows
-// and hides their parts itself, and they're a small share once the far ones are asleep.
+// and shown again as it comes into view (only what we hid is shown again). The soldiers' parts the engine shows and hides
+// itself each frame, so theirs are hidden for the render only (hideFarChars, below).
 function cullFar()
 {
 	const cam = camera();
@@ -17846,8 +17865,8 @@ const offCam = ( cam, x, y, extra = 0 )=>{ const k = Math.max( 1, cam.position.z
 function cullOwn( cam )
 {
 	// ours: shown or hidden outright (a ladder by its middle, its half-length allowed for)
-	ladderGfx.forEach( ( G, e )=>{ const s = estate.get( e ); if ( s ) G.grp.visible = !offCam( cam, s.x, s.y + G.len / 2, G.len / 2 ); } );
-	for ( const m of [ consoles, beacons, lights ] ) m.forEach( ( G, e )=>{ const s = estate.get( e ), g = G.grp; if ( s && g ) g.visible = !offCam( cam, s.x, s.y, m === lights ? SL.len : 0 ); } );
+	ladderGfx.forEach( ( G, e )=>{ const s = estate.get( e ); if ( s ) G.grp.visible = !state.setsOff && !kindOff.has( ladderGfx ) && !offCam( cam, s.x, s.y + G.len / 2, G.len / 2 ); } );
+	for ( const m of [ consoles, beacons, lights ] ) m.forEach( ( G, e )=>{ const s = estate.get( e ), g = G.grp; if ( s && g ) g.visible = !state.setsOff && !kindOff.has( m ) && !offCam( cam, s.x, s.y, m === lights ? SL.len : 0 ); } );
 	// everything else that is a compact model at the top of the scene — a vehicle (the More vehicles mod draws each with
 	// groups of its own), a prop — by where it stands; the level's own geometry spans the level and is never touched,
 	// nor are single meshes (effects come and go on their own). Put back only if we hid it.
@@ -17873,6 +17892,38 @@ function cullOwn( cam )
 	}
 }
 const extent = new WeakMap();
+// The soldiers well off the camera, not drawn: the engine draws every character's parts wherever they are, and sets
+// their visibility itself each frame — so, for the render only, the parts of each character well off camera are hidden
+// and shown again straight after, and the engine never sees the difference. (Measured at the deck: all the soldiers'
+// parts hidden took ~55 ms off a ~570 ms frame.) A character's parts are what it, its ragdoll and its ragdoll's atoms
+// hold, looked up again every 2 s (a body can lose parts).
+const partsOf = new WeakMap();
+function charParts( ch )
+{
+	const now = clock();
+	let P = partsOf.get( ch );
+	if ( P && now - P.at < 2 ) return P.list;
+	const set = new Set(), scene = opt( ()=>pb2_mp.scene );
+	const scan = ( o )=>{ if ( !o ) return; for ( const k of Object.keys( o ) ) { let v; try { v = o[ k ]; } catch ( e ) { continue; } if ( v && v.isObject3D && v !== scene && !v.isCamera ) set.add( v ); } };
+	scan( ch ); scan( opt( ()=>ch.ragdoll ) );
+	for ( const a of opt( ()=>ch.ragdoll.local_atoms ) || [] ) scan( a );
+	P = { list: [ ...set ], at: now };
+	partsOf.set( ch, P );
+	return P.list;
+}
+function hideFarChars( cam )
+{
+	const hid = [];
+	let n = 0;
+	for ( const ch of opt( ()=>pb2Character.characters ) || [] )
+	{
+		if ( !ch || !offCam( cam, ch.x, ch.y, 200 ) ) continue;
+		n++;
+		for ( const o of charParts( ch ) ) if ( o.visible ) { o.visible = false; hid.push( o ); }
+	}
+	state.charsOffCam = n;
+	return hid;
+}
 function waterUnder( x, y )
 {
 	const list = opt( ()=>pb2Shape.world_shapes_water ) || [];
@@ -18127,8 +18178,10 @@ function hookRender()
 	hookFn( XM, 'render', ( orig )=>function()
 	{
 		try { placeTowers(); placeBridge(); } catch ( e ) { err( 'placeTowers', e ); }
-		try { if ( markers( 'bridge' ).length ) cullFar(); } catch ( e ) { err( 'cullFar', e ); }
-		return orig.apply( this, arguments );
+		let hid = null;
+		try { if ( markers( 'bridge' ).length ) { cullFar(); const cam = camera(); if ( cam && !state.charsDrawnAll ) hid = hideFarChars( cam ); } } catch ( e ) { err( 'cullFar', e ); }
+		try { return orig.apply( this, arguments ); }
+		finally { if ( hid ) for ( const o of hid ) o.visible = true; }
 	} );
 }
 function towerDispose( e )
@@ -18181,6 +18234,7 @@ function searchlightDispose( e )
 	const L = lights.get( e );
 	if ( !L ) return;
 	if ( L.grp.parent ) L.grp.parent.remove( L.grp );
+	L.grp.traverse( ( o )=>{ if ( o.geometry && o.geometry !== beamGeo() ) o.geometry.dispose(); if ( o.material ) o.material.dispose(); } );
 	if ( L.light ) opt( ()=>L.light.remove() );
 	lights.delete( e );
 }
@@ -18213,6 +18267,7 @@ function beaconDispose( e )
 	const B = beacons.get( e );
 	if ( !B ) return;
 	if ( B.grp.parent ) B.grp.parent.remove( B.grp );
+	B.grp.traverse( ( o )=>{ if ( o.geometry ) o.geometry.dispose(); if ( o.material ) o.material.dispose(); } );
 	beacons.delete( e );
 }
 
@@ -18222,7 +18277,7 @@ function ladderVisual( e, scene )
 {
 	const s = estate.get( e );
 	let G = ladderGfx.get( e );
-	const bottom = s.toy === null ? s.y + 300 : s.toy, len = Math.max( 40, bottom - s.y );
+	const bottom = ladderFoot( s ), len = Math.max( 40, bottom - s.y );
 	if ( !G || G.len !== len )
 	{
 		if ( G ) ladderDispose( e );
@@ -18259,7 +18314,7 @@ function consoleVisual( e, scene, dt, t )
 		const body = new THREE.Mesh( new THREE.BoxBufferGeometry( 50, 56, 30 ), unlitMat( 0x2c2e33 ) ); body.position.set( 0, 28, -20 );
 		const screen = new THREE.Mesh( new THREE.PlaneBufferGeometry( 38, 24 ), unlitMat( 0xff3020 ) ); screen.position.set( 0, 40, -4 );
 		const bar = new THREE.Mesh( new THREE.PlaneBufferGeometry( 38, 4 ), unlitMat( 0x40ff80 ) ); bar.position.set( 0, 22, -4 );
-		const beam = new THREE.Mesh( new THREE.CylinderBufferGeometry( 22, 22, 260, 16, 1, true ), beamMat( 0xff4030, 0.6 ) ); beam.position.set( 0, 150, -20 );
+		const beam = new THREE.Mesh( new THREE.CylinderBufferGeometry( 22, 22, 178, 16, 1, true ), beamMat( 0xff4030, 0.6 ) ); beam.position.set( 0, 109, -20 );   // (under every ceiling a console stands beneath)
 		grp.add( body ); grp.add( screen ); grp.add( bar ); grp.add( beam );
 		grp.userData.csOwn = true;
 		C = { grp, screen, bar, beam };
@@ -18277,6 +18332,7 @@ function consoleDispose( e )
 	const C = consoles.get( e );
 	if ( !C ) return;
 	if ( C.grp.parent ) C.grp.parent.remove( C.grp );
+	C.grp.traverse( ( o )=>{ if ( o.geometry ) o.geometry.dispose(); if ( o.material ) o.material.dispose(); } );
 	consoles.delete( e );
 }
 
@@ -18288,7 +18344,7 @@ function consoleDispose( e )
 // girders, pipes and lamps, the cables of the hanging containers, yellow railings, the cranes, the crown of the tower
 // numbered 4 with its orange CS banners, and the dusk hills far behind in the mist. Built once, merged into one mesh
 // per material. Nothing here collides: it's all behind the play plane (z < −150) or thin.
-const DUSK = { key: 0xe0b894, dir: [ -0.55, 0.5, 0.65 ], sky: 0x6a6272, haze: 0xa2949e };
+const DUSK = { key: 0x8a7466, dir: [ -0.55, 0.5, 0.65 ], sky: 0x6a6272, haze: 0xa2949e };
 function duskU( hazeAmt )
 {
 	return { moon: { value: new THREE.Color( DUSK.key ) }, moonDir: { value: new THREE.Vector3( DUSK.dir[ 0 ], DUSK.dir[ 1 ], DUSK.dir[ 2 ] ) }, sky: { value: new THREE.Color( DUSK.sky ) },
@@ -18335,9 +18391,11 @@ function buildBridge( L )
 	const U = duskU( 0.14 ), Uback = duskU( 0.32 );
 	const root = new THREE.Group(), far = new THREE.Group(), mats = [];
 	const mat = ( c, u = U )=>{ const m = towerMat( c, u ); mats.push( m ); return m; };
-	const M = { concrete: mat( 0x8a847c ), dark: mat( 0x4a4640 ), steel: mat( 0x6a655e ), rust: mat( 0x7a5a44 ), black: mat( 0x26241f ), yellow: mat( 0xb89a3a ), orange: mat( 0xb0582a ),
+	const M = { concrete: mat( 0x5a5650 ), dark: mat( 0x4a4640 ), steel: mat( 0x46423e ), rust: mat( 0x5a4436 ), black: mat( 0x26241f ), yellow: mat( 0xd8b440 ), orange: mat( 0xb0582a ),
 		back: mat( 0x5c5750, Uback ), backDark: mat( 0x3c3935, Uback ) };
 	const glows = {}, glow = ( c, o = 1 )=>glows[ c + '/' + o ] || ( glows[ c + '/' + o ] = mats[ mats.push( unlitMat( c, o, true ) ) - 1 ] );
+	// (a lamp's own face: warm and solid — additive glows stack to white)
+	const lamps = {}, lamp = ( c )=>lamps[ c ] || ( lamps[ c ] = mats[ mats.push( unlitMat( c ) ) - 1 ] );
 	// a box by its extents in game px (y down) and z (towards the camera)
 	const B = ( x0, y0, x1, y1, z0, z1, m, parent = root )=>
 	{
@@ -18366,7 +18424,7 @@ function buildBridge( L )
 			B( cx - 64, S, cx + 64, -30, -470, -300, M.concrete );                                  // (a column)
 			B( cx - 72, -150, cx + 72, -120, -478, -292, M.dark );                                  // (its collars)
 			B( cx - 72, -420, cx + 72, -390, -478, -292, M.dark );
-			for ( const y of [ -110, -260, -470 ] ) B( cx - sx * 50 - 10, y - 10, cx - sx * 50 + 10, y + 10, -296, -290, glow( 0xffc27a ) );
+			for ( const y of [ -110, -260, -470 ] ) B( cx - sx * 50 - 10, y - 10, cx - sx * 50 + 10, y + 10, -296, -290, lamp( 0xffb060 ) );
 			strut( cx, -470, cx + sx * 260, S + 4, -385, 22, M.steel );                             // (knee braces)
 			strut( cx, -470, cx - sx * 200, S + 4, -385, 18, M.steel );
 		}
@@ -18376,15 +18434,15 @@ function buildBridge( L )
 		}
 		B( c - 236, -310, c + 236, -290, -400, -370, M.steel );                                    // (a tie between the twins)
 		B( c - 460, S - 30, c + 460, S + 6, -500, -280, M.dark );                                   // (the pier head under the soffit)
-		glowLamp( c, -20, -560 );
+		glowLamp( c, -20, -186 );                                                                  // (in front of the footing's face)
 	}
-	function glowLamp( x, y, z ) { B( x - 40, y - 3, x + 40, y + 3, z - 2, z + 2, glow( 0xffc27a, 0.8 ) ); }
+	function glowLamp( x, y, z ) { B( x - 40, y - 3, x + 40, y + 3, z - 2, z + 2, lamp( 0xffb060 ) ); }
 	// the soffit: longitudinal girders behind the slab, cross beams, pipes, cable trays, lamps
 	B( x0, S - 40, x1, S + 26, -520, -150, M.dark );
 	B( x0, S + 20, x1, S + 34, -520, -150, M.steel );
 	for ( let x = x0 + 75; x < x1; x += 150 ) B( x - 7, S, x + 7, S + 48, -500, -150, M.steel );
 	cyl( 9, x0, x1, S + 40, -230, M.rust ); cyl( 13, x0, x1, S + 58, -310, M.steel ); cyl( 6, x0, x1, S + 34, -180, M.black );
-	for ( let x = x0 + 150; x < x1; x += 300 ) B( x - 26, S + 44, x + 26, S + 52, -174, -160, glow( 0xffd9a0 ) );
+	for ( let x = x0 + 150; x < x1; x += 300 ) B( x - 26, S + 44, x + 26, S + 52, -174, -160, lamp( 0xffc880 ) );
 	// the deck's side and the tower behind the rooms (depth, for the angled view)
 	B( x0, R, x1, S, -600, -170, M.back );
 	const T = L.tower;
@@ -18421,16 +18479,17 @@ function buildBridge( L )
 	for ( const cr of L.cranes )
 	{
 		const cx = cr.x, top = R - 700, dir = cr.dir;
-		for ( const dx of [ -28, 28 ] ) for ( const dz of [ -120, -64 ] ) B( cx + dx - 4, top, cx + dx + 4, R - 100, dz - 4, dz + 4, M.orange );
-		for ( let y = R - 100; y > top; y -= 60 ) { strut( cx - 28, y, cx + 28, y - 60, -120, 4, M.orange ); strut( cx - 28, y, cx + 28, y - 60, -64, 4, M.orange ); }
+		for ( const dx of [ -28, 28 ] ) for ( const dz of [ -120, -64 ] ) B( cx + dx - 4, top, cx + dx + 4, R - 100, dz - 4, dz + 4, M.steel );
+		for ( let y = R - 100; y > top; y -= 60 ) { strut( cx - 28, y, cx + 28, y - 60, -120, 4, M.steel ); strut( cx - 28, y, cx + 28, y - 60, -64, 4, M.steel ); }
 		B( cx - 70, R - 100, cx + 70, R, -150, -40, M.dark );                                       // (its base, behind the pedestal)
-		B( cx - 50, top - 70, cx + 50, top, -130, -50, M.orange );                                  // (the cab)
+		B( cx - 50, top - 70, cx + 50, top, -130, -50, M.dark );                                    // (the cab, a yellow trim)
+		B( cx - 50, top - 8, cx + 50, top, -131, -49, M.yellow );
 		B( cx - 44, top - 60, cx + 20, top - 34, -48, -46, glow( 0xffe0b0, 0.8 ) );
-		B( Math.min( cx, cx + dir * 760 ), top - 96, Math.max( cx, cx + dir * 760 ), top - 70, -110, -70, M.orange );   // (the jib)
-		B( Math.min( cx, cx - dir * 260 ), top - 92, Math.max( cx, cx - dir * 260 ), top - 70, -110, -70, M.orange );
+		B( Math.min( cx, cx + dir * 760 ), top - 96, Math.max( cx, cx + dir * 760 ), top - 70, -110, -70, M.steel );    // (the jib)
+		B( Math.min( cx, cx - dir * 260 ), top - 92, Math.max( cx, cx - dir * 260 ), top - 70, -110, -70, M.steel );
 		B( cx - dir * 260 - 40, top - 70, cx - dir * 200 + 40, top + 10, -120, -60, M.dark );        // (the counterweight)
 		strut( cx, top - 170, cx + dir * 760, top - 96, -90, 3, M.black ); strut( cx, top - 170, cx - dir * 260, top - 92, -90, 3, M.black );
-		B( cx - 8, top - 180, cx + 8, top - 96, -98, -82, M.orange );
+		B( cx - 8, top - 180, cx + 8, top - 96, -98, -82, M.steel );
 		const lx = cx + dir * 700, ly = cr.load;
 		strut( lx, top - 70, lx, ly - 70, -90, 3, M.black );
 		B( lx - 90, ly - 70, lx + 90, ly, -130, -50, M.rust );                                     // (its load: a container)
@@ -18442,9 +18501,15 @@ function buildBridge( L )
 	B( T.x0 + 20, rf - 30, T.x1 - 20, rf, -320, -40, M.dark );
 	B( T.x0 + 60, rf - 720, T.x1 - 60, rf - 700, -310, -70, M.dark );
 	const numMat = unlitMat( 0xffffff, 1, false, numberTex( 4 ), 0.75 ); numMat.transparent = false; numMat.depthWrite = true; mats.push( numMat );
-	const num = new THREE.Mesh( new THREE.PlaneBufferGeometry( 280, 280 ), numMat ); num.position.set( cx, -( rf - 470 ), -58 ); root.add( num );
-	const win = unlitMat( 0xffffff, 1, true, windowsTex(), 0.9 ); mats.push( win );
-	for ( const [ y0, y1 ] of [ [ rf - 300, rf - 190 ], [ rf - 170, rf - 60 ] ] ) { const p = new THREE.Mesh( new THREE.PlaneBufferGeometry( T.x1 - T.x0 - 200, y1 - y0 ), win ); p.position.set( cx, -( y0 + y1 ) / 2, -57 ); root.add( p ); }
+	const num = new THREE.Mesh( new THREE.PlaneBufferGeometry( 240, 240 ), numMat ); num.position.set( cx, -( rf - 170 ), -58 ); root.add( num );   // (low on the crown: in frame from the roof and the overview)
+	// (the windows tiled a texel a px, dim: a dark face with a few warm windows, as in the concept)
+	const win = unlitMat( 0xffffff, 1, true, windowsTex(), 0.33 ); mats.push( win );
+	for ( const [ y0, y1 ] of [ [ rf - 560, rf - 450 ], [ rf - 430, rf - 340 ] ] )
+	{
+		const w = T.x1 - T.x0 - 200, h = y1 - y0, g = new THREE.PlaneBufferGeometry( w, h ), uv = g.attributes.uv;
+		for ( let i = 0; i < uv.count; i++ ) uv.setXY( i, uv.getX( i ) * w / 256, uv.getY( i ) * h / 256 );
+		const p = new THREE.Mesh( g, win ); p.position.set( cx, -( y0 + y1 ) / 2, -57 ); root.add( p );
+	}
 	for ( const y of [ rf - 330, rf - 40 ] ) B( T.x0 + 60, y - 4, T.x1 - 60, y + 4, -58, -54, glow( 0xff3020, 0.9 ) );
 	const banMat = unlitMat( 0xffffff, 1, false, orangeBannerTex() ); banMat.transparent = false; banMat.depthWrite = true; mats.push( banMat );
 	const banners = [];
@@ -18489,8 +18554,10 @@ function placeBridge()
 	const cam = camera();
 	if ( !cam || !bridges.size ) return;
 	const cx = cam.position.x, cy = cam.position.y, camZ = Math.max( 1, cam.position.z );
+	const flat = ( cam.fov || 45 ) < 10;
 	bridges.forEach( ( G )=>
 	{
+		G.far.visible = !flat && !state.setsOff;
 		for ( const p of G.hills )
 		{
 			const k = ( camZ + p.userData.depth ) / camZ;
@@ -18774,10 +18841,10 @@ const L06 = {
 	watchtowers: [ 1450, 4880, 10150, 13550 ],
 	start: { dock: [ 1200, 1300 ], boat: 1560 },
 	// the cliff facility (left): the rock from the level's left edge to the bridge, cut into rooms
-	cliff: { x0: 0, x1: 1300, top: -1300, ledge: -330, dockBack: 1150, tunnel: [ 700, 1300, -490 ], facility: [ 300, 1300 ], shaft: 1000, ladder: 1200, power: 450 },
+	cliff: { x0: 0, x1: 1300, top: -1300, ledge: -330, dockBack: 1150, tunnel: [ 700, 1300, -505 ], facility: [ 300, 1300 ], shaft: 1000, ladder: 1200, power: 450 },
 	// the shore bunker (right): lower corridor (cap level), stairs up to the upper corridor (deck level), the basement
 	// under the sea, the hilltop
-	shore: { x0: 13700, x1: 15800, dock: [ 13550, 13700 ], lower: [ 13700, 14400, -490 ], stairs: 14400, upper: [ 13700, 15200 ], basement: [ 13900, 14700, 100, 300 ],
+	shore: { x0: 13700, x1: 15800, dock: [ 13550, 13700 ], lower: [ 13700, 14400, -505 ], stairs: 14400, upper: [ 13700, 15200 ], basement: [ 13900, 14700, 100, 300 ],
 		baseShaft: 14100, hillShaft: 15100, hill: [ [ 13700, 14400, -860 ], [ 14400, 14700, -940 ], [ 14700, 15800, -1020 ] ], exit: 15600, objective: 14550 },
 	hanging: []
 };
@@ -18810,9 +18877,9 @@ function level06()
 	B.surface( 'box_blue', 'mat_panel_tile', 'Container (blue)', '0x587c98', metal );
 	B.surface( 'box_red', 'mat_panel_tile', 'Container (red)', '0xa84436', metal );
 	B.surface( 'plant', 'mat_panel3_tile', 'Machinery', '0x8a8470', metal );
-	B.backSurface( 'bg_room', 'mat_plate1_bg', 'Deck rooms (behind)', '0x6e6a64' );
+	B.backSurface( 'bg_room', 'mat_plate2_bg', 'Deck rooms (behind)', '0x7a7268' );
 	B.backSurface( 'bg_sec', 'mat_plate2_bg', 'Security rooms (behind)', '0x6a4644' );
-	B.backSurface( 'bg_bay', 'mat_plate3_bg', 'Vehicle bay (behind)', '0x5e605e' );
+	B.backSurface( 'bg_bay', 'mat_plate2_bg', 'Vehicle bay (behind)', '0x6a6a64' );
 	B.backSurface( 'bg_tower', 'mat_plate2_bg', 'Tower (behind)', '0x5a5a60' );
 	// (no reflection: the mirror is a second drawing of the whole scene every frame — measured, it doubled the draw calls)
 	B.liquid( 'sea', { color: '0x1a2028', opacity: '0.92', reflection: '0' } );
@@ -18990,9 +19057,9 @@ function level06()
 	B.cs( c3 + 200 + 150, cap, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman [2+]', -1 );
 	B.cs( 5500, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
 	B.cs( 5850, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper [2+]', -1 );
-	B.cs( 6480, fl, 'skin_cs_heavy', 'gun_flame', 'cs_post', 'CS Heavy', -1 );
+	B.cs( 6480, fl, 'skin_cs_heavy', 'gun_flame', 'cs_hunter', 'CS Heavy', -1 );
 	B.cs( 6760, fl, 'skin_cs_lite', 'gun_real_shotgun', 'cs_post', 'CS Trooper [2+]', -1 );
-	B.cs( 7250, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
+	B.cs( 7250, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
 	B.cs( 7700, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper [3+]', -1 );
 	B.cs( 8420, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Tank crew', -1 );
 	B.cs( 8760, fl, 'skin_cs_lite', 'gun_real_shotgun', 'cs_hunter', 'CS Trooper [2+]', -1 );
@@ -19103,7 +19170,13 @@ state.debug = { buildTower, towerMat, unlitMat, beamMat, glowMat,
 	// (the set pieces shown or hidden, for measuring what they cost: returns how many groups)
 	// (every soldier asleep, or back to the distance rule: for measuring what their thinking costs)
 	sleepAll( on ) { state.sleepAll = !!on; return true; },
-	sets( on ) { let n = 0; for ( const m of [ towers, bridges, ladderGfx, consoles, lights, beacons ] ) m.forEach( ( G )=>{ for ( const g of [ G.root, G.far, G.grp ] ) if ( g ) { g.visible = on; n++; } } ); return n; } };                  // (the set pieces' makers, for tests in the page)
+	// (the wake window changed in the page: for measuring what it costs)
+	far( x, y ) { if ( x > 0 ) FAR.thinkX = x; if ( y > 0 ) FAR.thinkY = y; return Object.assign( {}, FAR ); },
+	// (every character drawn, off camera too, or back to hiding the far ones: for measuring what that saves)
+	charsDrawnAll( on ) { state.charsDrawnAll = !!on; return true; },
+	// (one kind of set piece shown or hidden: towers, bridges, ladders, consoles, lights, beacons)
+	setsOf( kind, on ) { const m = { towers, bridges, ladders: ladderGfx, consoles, lights, beacons }[ kind ]; let n = 0; if ( m ) { if ( on ) kindOff.delete( m ); else kindOff.add( m ); } if ( m ) m.forEach( ( G )=>{ for ( const g of [ G.root, G.far, G.grp ] ) if ( g ) { g.visible = on; n++; } } ); return n; },
+	sets( on ) { state.setsOff = !on; let n = 0; for ( const m of [ towers, bridges, ladderGfx, consoles, lights, beacons ] ) m.forEach( ( G )=>{ for ( const g of [ G.root, G.far, G.grp ] ) if ( g ) { g.visible = on; n++; } } ); return n; } };                  // (the set pieces' makers, for tests in the page)
 state.markers = ()=>[ ...marked ].map( ( e )=>Object.assign( {}, estate.get( e ), { body: bodyPos( e ) } ) );
 
 // ================================================================================================
@@ -19133,7 +19206,7 @@ function openMenu()
 		[ 'Checkpoint (berth)', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_CHECKPOINT', 0, 0, { style_id: '1' } ), 'Berth checkpoint (on the water: a lost boat is replaced here)' ) ],
 		[ 'Checkpoint (on foot)', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_CHECKPOINT', 0, 0, { style_id: '2' } ), 'Checkpoint (on the floor)' ) ],
 		[ 'Level exit', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_EXIT', 0, 0 ), 'Level exit (on the floor)' ) ],
-		[ 'Ladder', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_LADDER', 0, 0, { toy: '300' } ), 'Ladder (placed by its top; To Y is its foot)' ) ],
+		[ 'Ladder', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_LADDER', 0, 0 ), 'Ladder (placed by its top; To Y: the y of its foot, or none for 300 px down)' ) ],
 		[ 'Objective console', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_OBJECTIVE', 0, 0, { style_id: '2' } ), 'Objective (on the floor; Style ID 1 power, 2 command room, 3 basement)' ) ]
 	] );
 	const W = 330, H = 29, gap = 5, pad = 8;

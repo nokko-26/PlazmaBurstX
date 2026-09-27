@@ -1,7 +1,7 @@
 {
  "phase": "OBSERVE",
- "seq": 26,
- "cycle": 11,
+ "seq": 28,
+ "cycle": 12,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
@@ -17,6 +17,7 @@
    6,
    6,
    4,
+   3,
    3
   ],
   "actionSigs": [
@@ -70,20 +71,26 @@
    "d7fae43b34bfc37d",
    "3f74bac72552f6be",
    "7df6e9954840514f",
-   "a96169af9f604e74"
+   "a96169af9f604e74",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
+   "0a86473e94b5aaa5",
+   "3f74bac72552f6be"
   ],
   "hypotheses": [
    "0eb01c3a31fa5b2d",
    "ed918efbf9490595",
    "b026bbb39b5631c4",
    "944b60f670916d4c",
-   "cdf4933c371f0935"
+   "cdf4933c371f0935",
+   "0c074a212190000f",
+   "4c14fc7d8c12405d"
   ]
  },
  "budgetSpent": {
-  "engineCalls": 26,
-  "actions": 51,
-  "cycles": 11,
+  "engineCalls": 28,
+  "actions": 55,
+  "cycles": 12,
   "cost": 51,
   "startedAt": 1790529166395
  },
@@ -138,7 +145,11 @@
   "act_df46052855e3bba571a2",
   "act_82c273233ddeb677dd38",
   "act_e0a117d8b3c5c4101ddf",
-  "act_8d6b0aacfde512f3a3f4"
+  "act_8d6b0aacfde512f3a3f4",
+  "act_5ec72f482c7a2cb84355",
+  "act_b1304f4dfa98133f3a74",
+  "act_96593a9e3e004c833673",
+  "act_b37f0dcef3801f53fea9"
  ],
  "lastProbeIds": {
   "probe:d22e87edb3fa10bb": "ev_muk8j1r8_ab1a640dc0",
@@ -156,105 +167,76 @@
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_ed1683ba643b85e7c63b",
+   "id": "act_5ec72f482c7a2cb84355",
    "tool": "file.write_from",
    "targets": [
+    "ladders-work",
     "frame-cost",
-    "coop-two"
+    "enemies-path"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk8fz56_34bf1c1198",
+   "evidence": "ev_muk9xn6s_5aa969f5b9",
    "expectedEvidence": [
-    "report.tests.*.ok"
+    "tool.file.write_from with the new sha256"
    ],
-   "failureSignatures": []
+   "failureSignatures": [
+    "write error",
+    "sha unchanged"
+   ]
   },
   {
-   "id": "act_3d547a12b7fbfb9c2fd4",
+   "id": "act_b1304f4dfa98133f3a74",
    "tool": "pb3x.bake",
    "targets": [
-    "frame-cost"
+    "ladders-work",
+    "frame-cost",
+    "enemies-path"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk8fzbr_865d9a0425",
+   "evidence": "ev_muk9xndd_525b38343e",
    "expectedEvidence": [
-    "bake ok"
+    "tool.pb3x.bake ok"
    ],
-   "failureSignatures": []
+   "failureSignatures": [
+    "bake verify failed"
+   ]
   },
   {
-   "id": "act_cf6c2ac93787383f3906",
+   "id": "act_96593a9e3e004c833673",
    "tool": "file.write_from",
    "targets": [
-    "frame-cost"
+    "ladders-work"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk8fzbs_946e972476",
+   "evidence": "ev_muk9xndf_19dc317ffa",
    "expectedEvidence": [
-    "report.spots[*].player"
+    "tool.file.write_from with the new sha256"
    ],
-   "failureSignatures": []
+   "failureSignatures": [
+    "write error"
+   ]
   },
   {
-   "id": "act_df46052855e3bba571a2",
+   "id": "act_b37f0dcef3801f53fea9",
    "tool": "file.write_from",
    "targets": [
-    "coop-ladder",
-    "coop-two"
+    "enemies-path"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk8fzbu_5885801eff",
+   "evidence": "ev_muk9xndh_7192a8ff5e",
    "expectedEvidence": [
-    "report.guestLadder true"
+    "tool.file.write_from with the new sha256"
    ],
-   "failureSignatures": []
-  },
-  {
-   "id": "act_82c273233ddeb677dd38",
-   "tool": "file.write_from",
-   "targets": [
-    "frame-cost"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk8fzbv_e1df925e27",
-   "expectedEvidence": [
-    "report.movedCount"
-   ],
-   "failureSignatures": []
-  },
-  {
-   "id": "act_e0a117d8b3c5c4101ddf",
-   "tool": "file.write_from",
-   "targets": [
-    "frame-cost"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk8fzbv_cda3764a0b",
-   "expectedEvidence": [],
-   "failureSignatures": []
-  },
-  {
-   "id": "act_8d6b0aacfde512f3a3f4",
-   "tool": "pb3x.harness",
-   "targets": [
-    "frame-cost"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk8j1mo_8298bc6cbe",
-   "expectedEvidence": [
-    "report.steps.allAsleep"
-   ],
-   "failureSignatures": []
+   "failureSignatures": [
+    "write error"
+   ]
   }
  ],
- "observeProbed": true,
+ "observeProbed": false,
  "seenEvidence": [
   "ev_muk2wozn_ef415f7a83",
   "ev_muk2wp2j_673ac71007",
@@ -409,7 +391,24 @@
   "ev_muk89yq9_3967cec2cf",
   "ev_muk8cigf_dbe5eeb631",
   "ev_muk8dzx8_fa494df905",
-  "ev_muk8dzyw_a577d8e5d4"
+  "ev_muk8dzyw_a577d8e5d4",
+  "ev_muk8fz56_34bf1c1198",
+  "ev_muk8fzbr_865d9a0425",
+  "ev_muk8fzbs_946e972476",
+  "ev_muk8fzbu_5885801eff",
+  "ev_muk8fzbv_e1df925e27",
+  "ev_muk8fzbv_cda3764a0b",
+  "ev_muk8j1mo_8298bc6cbe",
+  "ev_muk8j1r8_ab1a640dc0",
+  "ev_muk8ql2r_1fb5a66557",
+  "ev_muk8ql3x_4a545d3a05",
+  "ev_muk8qlbs_8b0f10512b",
+  "ev_muk8qlhg_edb8d89558",
+  "ev_muk8qlot_7afb01a83b",
+  "ev_muk8uibg_498cc9af8c",
+  "ev_muk8wk2o_0078b49ce5",
+  "ev_muk8y09t_5c07d68ca8",
+  "ev_muk8y0bq_cdf6b08f01"
  ],
  "failureHandled": false
 }

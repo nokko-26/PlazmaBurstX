@@ -99,8 +99,10 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		const key = ( type, code )=>ev( ( [ t, c ] )=>__lab.key( t, c ), [ type, code ] );
 		const hold = async ( code, ms )=>{ await key( 'keydown', code ); await page.waitForTimeout( ms ); await key( 'keyup', code ); };
 		// put the player at (x, feet) standing, and let it settle
-		// (out of any vehicle first; teleported twice, a moment apart, so a vehicle's momentum can't carry it off)
-		const put = async ( x, feet, settle = 700 )=>{ await ev( ( [ x, y ] )=>{ const m = __lab.me(), v = m && m.ragdoll.driver_of; if ( v && v.ExcludeRagdoll ) v.ExcludeRagdoll( m.ragdoll, true ); __lab.teleport( x, y ); }, [ x, feet - 44 ] ); await page.waitForTimeout( 80 ); await ev( ( [ x, y ] )=>{ __lab.teleport( x, y ); }, [ x, feet - 44 ] ); await page.waitForTimeout( settle ); return me(); };
+		// (out of any vehicle first; teleported twice, a moment apart, and every body the character has stilled — its
+		// ragdoll's and its own: a teleport keeps a boat's momentum, which carried a swimmer 470 px past a ladder)
+		const still = ()=>ev( ()=>{ const m = __lab.me(); if ( !m ) return; const bodies = ( m.ragdoll.local_atoms || [] ).filter( Boolean ).map( ( a )=>a.box2d_body ); for ( const k of [ 'box2d_body', 'gy', 'lS' ] ) bodies.push( m[ k ] ); for ( const b of bodies ) { if ( !b || typeof b.SetLinearVelocity !== 'function' ) continue; try { b.SetLinearVelocity( new b2Vec2( 0, 0 ) ); } catch ( e ) {} } } );
+		const put = async ( x, feet, settle = 700 )=>{ await ev( ( [ x, y ] )=>{ const m = __lab.me(), v = m && m.ragdoll.driver_of; if ( v && v.ExcludeRagdoll ) v.ExcludeRagdoll( m.ragdoll, true ); __lab.teleport( x, y ); }, [ x, feet - 44 ] ); await still(); await page.waitForTimeout( 80 ); await ev( ( [ x, y ] )=>{ __lab.teleport( x, y ); }, [ x, feet - 44 ] ); await still(); await page.waitForTimeout( settle ); return me(); };
 		const L = await ev( ()=>window.__csTower.layouts[ '06' ] );
 		// (a mechanics test clears the guards around where it happens first — a player would have fought them: this pass
 		// tests the ladder, the console, the tank, not the fight; patrol crews stay)
@@ -156,7 +158,8 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			if ( !start ) return { ok: false, why: 'could not board', boatAt: rb, me: await me() };
 			// (the patrols as they start: how far each gets from there)
 			await ev( ()=>{ window.__patrols = pb2Entity.entities.filter( ( e )=>e && e.type === pb2Entity.TYPE_BOAT && !e.is_being_removed && !Array.from( e.gO || [] ).some( ( s )=>s && s.owner_character === __lab.me() ) ).map( ( e )=>( { e, x0: e.box2d_bodies[ 0 ].GetPosX() * 30, max: 0 } ) ); } );
-			const patrolTick = ()=>ev( ()=>{ for ( const p of window.__patrols ) if ( !p.e.is_being_removed && p.e.box2d_bodies && p.e.box2d_bodies[ 0 ] ) p.max = Math.max( p.max, Math.abs( p.e.box2d_bodies[ 0 ].GetPosX() * 30 - p.x0 ) ); } );
+			// (a patrol counts while it's afloat and crewed — someone alive aboard; a wreck a blast throws isn't driving)
+			const patrolTick = ()=>ev( ()=>{ for ( const p of window.__patrols ) if ( !p.e.is_being_removed && p.e.hea > 0 && p.e.box2d_bodies && p.e.box2d_bodies[ 0 ] && Array.from( p.e.gO || [] ).some( ( s )=>s && s.owner_character && s.owner_character.hea > 0 ) ) p.max = Math.max( p.max, Math.abs( p.e.box2d_bodies[ 0 ].GetPosX() * 30 - p.x0 ) ); } );
 			await shot( 'boat-aboard' );
 			await ev( ()=>{ window.__watch.gunner = true; } );
 			await key( 'keydown', 'KeyD' );
@@ -201,22 +204,46 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		await test( 'ladders', async ()=>
 		{
 			const out = {};
-			// out of the water beside cap 1's right end, up, then left onto the cap
-			let p = await put( c1 + L.cap.half + 20, 30, 150 );
-			out.inWater = p;
-			out.cleared = await clear( c1, L.cap.top, 800 );
-			await key( 'keydown', 'KeyW' );
-			for ( let i = 0; i < 20; i++ ) { await page.waitForTimeout( 200 ); const q = await me(); if ( q && q.feet <= L.cap.top - 20 ) break; }
-			out.climbedTo = await me();
+			const lx = c1 + L.cap.half + 20;          // (the water ladder at cap 1's right end)
+			// W held until the feet are over the ladder's top (or 4 s): the trail kept — x, feet, on the ladder
+			const upTo = async ( topFeet, trail )=>{ for ( let i = 0; i < 20; i++ ) { await page.waitForTimeout( 200 ); const q = await me(); if ( q ) trail.push( [ q.x, q.feet, q.ladder ] ); if ( q && q.feet <= topFeet ) break; } };
 			// (at the top: W let go, A — off the ladder onto the cap, as a player does)
-			await key( 'keyup', 'KeyW' ); await key( 'keydown', 'KeyA' ); await page.waitForTimeout( 450 ); await key( 'keyup', 'KeyA' );
-			await page.waitForTimeout( 700 );
-			out.onCap = await me();
-			const capOk = out.onCap && Math.abs( out.onCap.feet - L.cap.top ) < 12 && out.onCap.x < c1 + L.cap.half;
+			const offLeft = async ()=>{ await key( 'keyup', 'KeyW' ); await key( 'keydown', 'KeyA' ); await page.waitForTimeout( 450 ); await key( 'keyup', 'KeyA' ); await page.waitForTimeout( 700 ); return me(); };
+			const onCap = ( q )=>!!q && Math.abs( q.feet - L.cap.top ) < 12 && q.x < c1 + L.cap.half;
+			out.cleared = await clear( c1, L.cap.top, 800 );
+			// out of the water: put beside the ladder, W held
+			out.inWater = await put( lx, 30, 150 );
+			out.waterTrail = [];
+			await key( 'keydown', 'KeyW' );
+			await upTo( L.cap.top - 20, out.waterTrail );
+			out.climbedTo = await me();
+			out.onCap = await offLeft();
+			const direct = onCap( out.onCap );
 			await shot( 'ladder-cap' );
+			// and as a player comes to it: swimming in from 130 px off (A until beside it, then W — tried again from
+			// where they are if it isn't taken, as a player would)
+			await put( lx + 130, 30, 400 );
+			out.swimTrail = [];
+			for ( let tries = 0; tries < 3; tries++ )
+			{
+				let q = await me();
+				const dir = q.x > lx ? 'KeyA' : 'KeyD';
+				await key( 'keydown', dir );
+				for ( let i = 0; i < 30 && q && Math.abs( q.x - lx ) > 30; i++ ) { await page.waitForTimeout( 100 ); q = await me(); if ( q ) out.swimTrail.push( [ q.x, q.feet, q.ladder ] ); }
+				await key( 'keyup', dir );
+				await key( 'keydown', 'KeyW' );
+				await upTo( L.cap.top - 20, out.swimTrail );
+				q = await me();
+				if ( q && q.feet <= L.cap.top - 20 ) break;
+				await key( 'keyup', 'KeyW' ); await page.waitForTimeout( 300 );
+			}
+			out.swimOnCap = await offLeft();
+			const swimIn = onCap( out.swimOnCap );
+			const capOk = direct && swimIn;
 			// up the shaft: from the cap at the shaft, W held, through the deck to the road, then off to the right
-			p = await put( c1 + L.shaft, L.cap.top, 800 );
+			await put( c1 + L.shaft, L.cap.top, 800 );
 			await clear( c1, L.floor, 900 );
+			await clear( c1, L.road, 700 );
 			await key( 'keydown', 'KeyW' );
 			const samples = [];
 			for ( let i = 0; i < 16; i++ ) { await page.waitForTimeout( 300 ); const q = await me(); samples.push( q.feet ); if ( q.feet <= L.road - 25 ) break; }
@@ -227,13 +254,36 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			out.onRoad = await me();
 			out.shaftSamples = samples;
 			const roadOk = out.onRoad && Math.abs( out.onRoad.feet - L.road ) < 12;
-			// back down: from the road over the hatch, S held, down to the deck floor or the cap
-			await put( c1 + L.shaft, L.road, 600 );
-			await key( 'keydown', 'KeyS' ); await page.waitForTimeout( 1800 ); await key( 'keyup', 'KeyS' );
-			await page.waitForTimeout( 900 );
+			// back down, as a player does it: on the road beside the hatch, S held, walked onto it (A let go once the
+			// ladder has them), ridden down through the deck to its foot on the cap. The ladder has to take them over
+			// the hatch and keep them: no free fall — off the ladder above its foot, or faster than a climb
+			await put( c1 + L.shaft + 110, L.road, 700 );
+			out.downFrom = await me();
+			await key( 'keydown', 'KeyS' ); await key( 'keydown', 'KeyA' );
+			const dt = [];
+			let took = null, aHeld = true, t0 = Date.now(), prev = null, fastest = 0, offAbove = 0;
+			for ( let i = 0; i < 50; i++ )
+			{
+				await page.waitForTimeout( 150 );
+				const q = await me(), t = Date.now();
+				if ( !q ) continue;
+				dt.push( [ q.x, q.feet, q.ladder ] );
+				if ( q.ladder && took === null ) { took = { x: q.x, feet: q.feet, ms: t - t0 }; await key( 'keyup', 'KeyA' ); aHeld = false; }
+				if ( aHeld && t - t0 > 4000 ) { await key( 'keyup', 'KeyA' ); aHeld = false; }
+				if ( prev && q.feet > prev.feet ) fastest = Math.max( fastest, ( q.feet - prev.feet ) / ( ( t - prev.t ) / 1000 ) );
+				if ( !q.ladder && q.feet > L.road + 30 && q.feet < L.cap.top - 30 ) offAbove++;
+				prev = { feet: q.feet, t };
+				if ( took !== null && q.feet >= L.cap.top - 5 ) break;
+			}
+			await key( 'keyup', 'KeyS' ); if ( aHeld ) await key( 'keyup', 'KeyA' );
+			await page.waitForTimeout( 700 );
 			out.down = await me();
-			const downOk = out.down && out.down.feet > L.floor - 20;
-			return { ok: capOk && roadOk && downOk, capOk, roadOk, downOk, ...out };
+			out.downTrail = dt.filter( ( t, i )=>i % 2 === 0 );
+			Object.assign( out, { took, offAbove, fastest: Math.round( fastest ) } );
+			// (taken before they'd dropped far; never off it between the road and the cap; never faster than a
+			// climb allows — 260 px/s, and a slow frame's step — and down at its foot, standing on the cap)
+			const downOk = !!took && took.feet < L.road + 80 && offAbove === 0 && fastest < 700 && !!out.down && Math.abs( out.down.feet - L.cap.top ) < 12;
+			return { ok: capOk && roadOk && downOk, capOk, direct, swimIn, roadOk, downOk, ...out };
 		} );
 
 		// ---- the objectives: the extraction locked; each console held (power, command room, basement); then open ----
@@ -247,17 +297,22 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			for ( const [ name, x, feet ] of [ [ 'power-room', L.cliff.power, L.floor ], [ 'command-room', T.x0 + 300, T.l2 ], [ 'basement', H.objective, H.basement[ 3 ] ] ] )
 			{
 				await clear( x, feet, 800 );
+				const t0 = Date.now();
 				await put( x, feet, 400 );
 				// (held until the console reports done, up to 20 s: the game's own clock decides, not the probe's)
-				for ( let i = 0; i < 40; i++ ) { await page.waitForTimeout( 500 ); const o = await ev( ()=>window.__csTower.objectives ); if ( o && o.filter( ( v )=>v >= 100 ).length > held.length ) break; }
+				let doneAt = null;
+				for ( let i = 0; i < 40; i++ ) { await page.waitForTimeout( 500 ); const o = await ev( ()=>window.__csTower.objectives ); if ( o && o.filter( ( v )=>v >= 100 ).length > held.length ) { doneAt = Date.now(); break; } }
 				await shot( name );
-				held.push( { name, banner: await ev( ()=>window.__csTower.lastBanner ), objectives: await ev( ()=>window.__csTower.objectives ) } );
+				held.push( { name, secs: doneAt ? +( ( doneAt - t0 ) / 1000 ).toFixed( 1 ) : null, banner: await ev( ()=>window.__csTower.lastBanner ), objectives: await ev( ()=>window.__csTower.objectives ) } );
 			}
 			const objectives = await ev( ()=>window.__csTower.objectives );
 			await put( H.exit, top, 1500 );
 			const complete = await ev( ()=>window.__csTower.complete );
 			await shot( 'extraction' );
-			return { ok: lockedFirst && !!objectives && objectives.length === 3 && objectives.every( ( v )=>v >= 100 ) && complete, lockedFirst, bannerLocked, objectives, held, complete };
+			// (and each took its hold: a console done sooner than the level's hold time, less the probe's own step, isn't held)
+			const holdSecs = await ev( ()=>window.__csTower.objHold );
+			const heldFull = !!holdSecs && held.every( ( h )=>h.secs !== null && h.secs >= holdSecs - 0.6 );
+			return { ok: lockedFirst && !!objectives && objectives.length === 3 && objectives.every( ( v )=>v >= 100 ) && complete && heldFull, lockedFirst, bannerLocked, objectives, held, holdSecs, heldFull, complete };
 		} );
 
 		// ---- the tower: from the lobby up its shaft to the command room, then on to the observation deck ----
@@ -318,13 +373,13 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			// (god mode off, dropped from 1,800 px above the road: that kills)
 			await ev( ()=>{ window.__watch.god = false; } );
 			await put( 6000, L.road - 1800, 100 );
-			let gone = false, back = null;
+			let gone = false, back = null, goneAt = null, backAt = null;
 			for ( let i = 0; i < 40; i++ )
 			{
 				await page.waitForTimeout( 500 );
 				const m = await me();
-				if ( !m || m.dead ) gone = true;
-				else if ( gone ) { back = m; break; }
+				if ( !m || m.dead ) { if ( !gone ) goneAt = Date.now(); gone = true; }
+				else if ( gone ) { back = m; backAt = Date.now(); break; }
 			}
 			await ev( ()=>{ window.__watch.god = true; } );
 			if ( back ) { await page.waitForTimeout( 1500 ); back = await me(); }
@@ -334,7 +389,10 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			const cpNow = await ev( ()=>window.__csTower.checkpoint );
 			const now = back ? await me() : null;
 			const standing = !!now && !now.dead && !!cpNow && Math.abs( now.feet - cpNow.y ) < 20;
-			return { ok: gone && !!back && standing, gone, back, standing, checkpoint: cp, respawns: await ev( ()=>window.__csTower.respawns ) };
+			// (back within 8 s, at the checkpoint — within 150 px of it — not somewhere else that happens to be level)
+			const secs = goneAt && backAt ? +( ( backAt - goneAt ) / 1000 ).toFixed( 1 ) : null;
+			const atCheckpoint = !!now && !!cpNow && Math.abs( now.x - cpNow.x ) <= 150;
+			return { ok: gone && !!back && standing && secs !== null && secs <= 8 && atCheckpoint, gone, back, now, standing, secs, atCheckpoint, checkpoint: cp, used: cpNow, respawns: await ev( ()=>window.__csTower.respawns ) };
 		} );
 
 		// ---- frame times, errors ----
