@@ -1,0 +1,951 @@
+{
+ "callId": "0018-OBSERVE_INTERPRET-ddc0fdd268",
+ "mode": "OBSERVE_INTERPRET",
+ "task": "Identify what actually happened in the new evidence, connect observations to residues, detect contradictions/regressions, list remaining unknowns, diagnose causes, and propose evidence-backed state changes (every transition and claim must cite evidence ids). For semantic contracts, give a judgement citing the probe evidence.",
+ "outputSchema": {
+  "type": "object",
+  "required": [
+   "summary",
+   "claims",
+   "transitions"
+  ],
+  "props": {
+   "summary": {
+    "type": "string"
+   },
+   "claims": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "required": [
+      "kind",
+      "text",
+      "cites"
+     ],
+     "props": {
+      "kind": {
+       "type": "string",
+       "enum": [
+        "INFERENCE",
+        "HYPOTHESIS",
+        "PLAN",
+        "JUDGEMENT"
+       ]
+      },
+      "text": {
+       "type": "string",
+       "min": 1
+      },
+      "cites": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "residueIds": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   },
+   "transitions": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "required": [
+      "residueId",
+      "to",
+      "evidenceIds",
+      "reason"
+     ],
+     "props": {
+      "residueId": {
+       "type": "string"
+      },
+      "to": {
+       "type": "string",
+       "enum": [
+        "UNTESTED",
+        "UNKNOWN",
+        "SUPPORTED",
+        "CONTRADICTED",
+        "SATISFIED",
+        "INVALIDATED"
+       ]
+      },
+      "evidenceIds": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "reason": {
+       "type": "string",
+       "min": 1
+      }
+     }
+    }
+   },
+   "judgements": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "required": [
+      "residueId",
+      "verdict",
+      "evidenceIds",
+      "reason"
+     ],
+     "props": {
+      "residueId": {
+       "type": "string"
+      },
+      "verdict": {
+       "type": "string",
+       "enum": [
+        "PASS",
+        "FAIL",
+        "UNSURE"
+       ]
+      },
+      "evidenceIds": {
+       "type": "array",
+       "min": 1,
+       "items": {
+        "type": "string"
+       }
+      },
+      "reason": {
+       "type": "string",
+       "min": 1
+      }
+     }
+    }
+   },
+   "unknowns": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   }
+  }
+ },
+ "context": {
+  "intent": {
+   "desiredBehaviors": [
+    "The Level Editor's CS Tower menu loads '06 · Underhang' as an ordinary editor map, and 'Play as tester' runs it without map errors.",
+    "The raiders start in the water lane under the bridge with a CS Patrol Boat and can drive it along the whole underpass, from the left cliff to the right shore, passing every foundation.",
+    "The bridge legs stand on foundations: each is a pitstop fight point with docks level with the boat's deck, a leg platform above the boat channel, CS defenders and a respawn checkpoint.",
+    "Stairs and hatches link every layer (water, foundations, leg platforms, the deck interior, the road deck and roof, the tower) without a stuck spot.",
+    "The deck interior is a run of rooms under the road deck: work rooms, red-lit security rooms and a vehicle bay holding CS tanks that the raiders can drive.",
+    "There are three objectives, taken in any order: the cliff facility's power (left), the command room in the tower numbered 4 (centre), and the bunker basement (right shore). Once all three are done the extraction on the right hilltop opens.",
+    "CS enemies hold every layer. Enemies named [2+], [3+] or [4+] scale the fight up for co-op with 2 to 4 players, and CS patrol boats drive the lane by autopilot."
+   ],
+   "emergentProperties": [
+    "From the boat in the underpass, the soffit, the legs, the hanging containers and the lit deck interior frame the view: the top of the bridge is dressed, but the fight is under it.",
+    "Each foundation reads as a distinct fight with cover, height and a flank, and the route between foundations offers both water and foot options."
+   ],
+   "hardConstraints": [
+    "Every size follows docs/cs-coastal-tower/metrics.md § 2: ceilings ≥ 100 px over walkways and ≥ 170 px where people fight; stair risers ≤ 30 and treads ≥ 30; required gaps ≤ 300 px; required drops ≤ 400 px; docks level with the boat deck (48 px up); ≥ 240 px clear round a berth checkpoint; nothing a swimmer can get under that ends at a wall; a way out of the water at every foundation.",
+    "The boat lane is ≥ 290 px clear above the water under any span it passes, and the water is ≥ 60 px deep everywhere a boat goes.",
+    "The level is built only from the Level Editor's own objects plus the cs-coastal-tower mod's entities, so it stays editable and saveable.",
+    "The work lands on the branch cs-coastal-tower; nothing secret (the .auth file, passwords, session codes) is committed or printed.",
+    "The page never crashes, and the level adds no uncaught page errors."
+   ],
+   "preferences": [
+    "Middle chunk first, then the left, then the right.",
+    "Palette: dusk and grey steel with warm sodium lamps and red CS security lighting, as in the concept images.",
+    "Deterministic checks over judgement wherever possible."
+   ],
+   "prohibitedOutcomes": [
+    "A hand-painted look.",
+    "A route the player must take that needs a jump past the design rules.",
+    "A boat that gets stuck, or can't leave a berth.",
+    "Enemies placed where they can't be reached or fought."
+   ],
+   "qualityThresholds": [
+    "The frame cost stays within 1.5× the editor's starting map's frame cost.",
+    "The static linter reports zero rule violations, and every objective is reachable on foot from the start or from a dock.",
+    "Screenshots from ≥ 4 angles per chunk, including the editor's Alt 2.5D angled view, are saved in docs/cs-coastal-tower/shots/06/.",
+    "Measured against the matching concept image, the screenshots share its structure (a dark water band at the bottom, a soffit and deck band above it) and keep a colour distance within limits set before the comparison."
+   ],
+   "resources": [
+    "mods/cs-coastal-tower.user.js (level builder, set-piece entities); tools/harness (the real game in Chromium, with the extension)",
+    "docs/cs-coastal-tower/concept/*.webp (concept images: whole, per chunk, side views, deck interior)",
+    "docs/cs-coastal-tower/metrics.md (measured character and vehicle numbers, the design rules)"
+   ],
+   "ambiguities": [
+    "The CS banner colour (default: red and orange CS banners with the white emblem, as in the concepts).",
+    "Whether the tanks are drivable (default: yes, the CS-4 Ranger and CS-2 Bastion via the More vehicles mod).",
+    "The basement objective (default: sabotage a generator, then leave).",
+    "The 4×4's role (default: the extraction vehicle on the hilltop)."
+   ],
+   "references": [
+    "docs/cs-coastal-tower/PLAN.md",
+    "docs/cs-coastal-tower/levels/01-approach.md"
+   ],
+   "objective": "Level 06 · Underhang of the CS Coastal Tower campaign: an open, playable, AAA-feeling side-view level under a Civil Security sea bridge whose centre carries the tower numbered 4. It plays in the real PB3 game through the cs-coastal-tower mod, in the game's own style: editor walls with textures, lamps and mod 3D set pieces, not a painted look."
+  },
+  "cycle": 7,
+  "delta": {
+   "size": 7,
+   "open": [
+    {
+     "id": "ladders-work",
+     "status": "CONTRADICTED",
+     "priority": 82,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "frame-cost",
+     "status": "CONTRADICTED",
+     "priority": 65,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "editor-views",
+     "status": "CONTRADICTED",
+     "priority": 60,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "coop-two",
+     "status": "CONTRADICTED",
+     "priority": 58,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "look-structure",
+     "status": "CONTRADICTED",
+     "priority": 52,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "underpass-framing",
+     "status": "UNKNOWN",
+     "priority": 45,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "coop-ladder",
+     "status": "CONTRADICTED",
+     "priority": 56,
+     "actionable": false,
+     "blockedBy": [
+      "coop-two"
+     ]
+    }
+   ],
+   "contradicted": [
+    "ladders-work",
+    "frame-cost",
+    "editor-views",
+    "coop-two",
+    "look-structure",
+    "coop-ladder"
+   ],
+   "signature": "8992297fe0de"
+  },
+  "residues": [
+   {
+    "id": "level-builds",
+    "status": "SATISFIED",
+    "description": "The mod's level list includes 06 and its editor objects build without an exception into a level of walls, water and markers."
+   },
+   {
+    "id": "plays-clean",
+    "status": "SATISFIED",
+    "description": "Play as tester runs 06 with no map errors, no uncaught page errors and no error recorded by the mod."
+   },
+   {
+    "id": "design-rules",
+    "status": "SATISFIED",
+    "description": "No geometry in 06 breaks the design rules: every walkway ceiling is at least 100 px, stairs keep risers of 30 px or less, berths have 240 px clear, no underwater dead end sits under a wall, and every character stands on a floor clear of walls."
+   },
+   {
+    "id": "route-complete",
+    "status": "SATISFIED",
+    "description": "From the raiders' start every objective, the exit, every foot checkpoint and every vehicle is reachable with the measured moves, and every enemy is reachable or can be engaged within 1000 px."
+   },
+   {
+    "id": "lane-static",
+    "status": "SATISFIED",
+    "description": "The boat lane runs the whole underpass with at least 290 px of clearance above the water and 60 px of depth, from the start dock to the right headland."
+   },
+   {
+    "id": "ladders-work",
+    "description": "In the game players climb out of the water up a ladder onto a pier cap, climb a leg's shaft from the cap through the deck to the road, and climb back down.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 82,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.ladders.ok",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.ladders.capOk",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.ladders.roadOk",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.ladders.downOk",
+       "op": "truthy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk6hyug_20a288649d"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T19:01:08.673Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk6hyug_20a288649d"
+     ],
+     "why": "contract FAIL (cycle 7): failed report.tests.ladders.ok truthy undefined (got false); report.tests.ladders.capOk truthy undefined (got false)"
+    }
+   },
+   {
+    "id": "boat-run",
+    "status": "SATISFIED",
+    "description": "In the game the players' boat drives from the dock under all three pier caps to the right end of the underpass without sticking or being lost."
+   },
+   {
+    "id": "objective-gates-exit",
+    "status": "SATISFIED",
+    "description": "The extraction stays locked until the command-room console is held for its full time; holding it completes the objective and then the extraction clears the level."
+   },
+   {
+    "id": "tank-drivable",
+    "status": "SATISFIED",
+    "description": "A raider boards the CS-2 Bastion in the vehicle bay and drives it along the deck interior."
+   },
+   {
+    "id": "editor-views",
+    "description": "The level's screenshots are published: at least 12, of which at least 3 are the editor's Alt 2.5D angled views, plus flat editor views, overviews, the lane and eye-level shots, with a contact sheet.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 60,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.check",
+      "params": {
+       "script": "tools/harness/levels/shots-index.js",
+       "args": [
+        "06"
+       ]
+      }
+     },
+     "asserts": [
+      {
+       "path": "json.count",
+       "op": "gte",
+       "value": 12
+      },
+      {
+       "path": "json.altViews",
+       "op": "gte",
+       "value": 3
+      },
+      {
+       "path": "json.editorFlat",
+       "op": "gte",
+       "value": 1
+      },
+      {
+       "path": "json.overviews",
+       "op": "gte",
+       "value": 2
+      },
+      {
+       "path": "json.lane",
+       "op": "gte",
+       "value": 3
+      },
+      {
+       "path": "json.eyeLevel",
+       "op": "gte",
+       "value": 3
+      },
+      {
+       "path": "json.sheet",
+       "op": "truthy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk6hyvq_e6c64bbcbf"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T19:01:08.673Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk6hyvq_e6c64bbcbf"
+     ],
+     "why": "contract FAIL (cycle 7): failed json.count gte 12 (got 0); json.altViews gte 3 (got 0); json.editorFlat gte 1 (got 0); json.overviews gte 2 (got 0); json.lane gte 3 (got 0); json.eyeLevel gte 3 (got 0); json.sheet truthy undefined (got false)"
+    }
+   },
+   {
+    "id": "look-dusk-palette",
+    "status": "SATISFIED",
+    "description": "The pulled-back view of the middle shares the concept's dusk palette and tone: palette distance at most 24, warmth and luma within 20, saturation within 0.12, luma histogram overlap at least 0.55."
+   },
+   {
+    "id": "look-interior",
+    "status": "SATISFIED",
+    "description": "The deck interior at eye level carries the concept's warm/red interior light: palette distance to the concept's deck band at most 30, warmth within 25."
+   },
+   {
+    "id": "underpass-framing",
+    "description": "Seen from the boat in the underpass, the soffit, the legs, the hanging containers and the lit deck frame the view like the concept's middle span, not an empty sky.",
+    "required": true,
+    "status": "UNKNOWN",
+    "priority": 45,
+    "dependsOn": [
+     "boat-run"
+    ],
+    "contract": {
+     "kind": "semantic",
+     "probe": {
+      "tool": "pb3x.image",
+      "params": {
+       "image": "tools/harness/levels/results/06-lane-bay1.png",
+       "reference": "docs/cs-coastal-tower/concept/10-middle-side.webp",
+       "crop": [
+        0.25,
+        0.35,
+        0.75,
+        1
+       ]
+      }
+     },
+     "question": "Given the lane screenshot's measurements (and the screenshot itself, tools/harness/levels/results/06-lane-bay1.png), does the view from the boat show structure framing it (soffit band above, legs/footings, hanging containers, lamps) the way the concept's middle span does?"
+    },
+    "evidence": [
+     "ev_muk5sm23_a583f173c0",
+     "dk_muk6a8oa_237820b920"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T18:49:19.210Z",
+     "from": "UNKNOWN",
+     "to": "UNKNOWN",
+     "evidence": [
+      "ev_muk5sm23_a583f173c0",
+      "dk_muk6a8oa_237820b920"
+     ],
+     "why": "semantic judgement UNSURE (dk_muk6a8oa_237820b920): The boat test didn't board, so there's no lane shot from the boat."
+    }
+   },
+   {
+    "id": "frame-cost",
+    "description": "The level's frame time at its busiest spots stays within 1.5 times the editor's starting map's in the same browser.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 65,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/perf.js",
+       "args": [
+        "06"
+       ],
+       "report": "levels/results/06-perf.json",
+       "timeoutMs": 1500000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.failed",
+       "op": "falsy"
+      },
+      {
+       "path": "report.worstRatio",
+       "op": "lte",
+       "value": 1.5
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk6kuhz_003e1f6ea5"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T19:01:08.674Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk6kuhz_003e1f6ea5"
+     ],
+     "why": "contract FAIL (cycle 7): failed report.worstRatio lte 1.5 (got 4.14)"
+    }
+   },
+   {
+    "id": "enemies-path",
+    "status": "SATISFIED",
+    "description": "The hunters walk towards a player waiting in the deck interior: at least three enemies move more than 150 px in 20 s while the posts hold."
+   },
+   {
+    "id": "coop-two",
+    "description": "With two players the level loads, both get characters on the raiders' side, the [2+] enemies stay, and a guest who dies comes back.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 58,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/coop-06.js",
+       "args": [
+        "--players",
+        "2"
+       ],
+       "report": "levels/results/06-coop2-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.ok",
+       "op": "truthy"
+      },
+      {
+       "path": "report.guests",
+       "op": "gte",
+       "value": 1
+      },
+      {
+       "path": "report.coop.players",
+       "op": "eq",
+       "value": 2
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk6pg25_6f8ef6f50d"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T19:01:08.674Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk6pg25_6f8ef6f50d"
+     ],
+     "why": "contract FAIL (cycle 7): failed report.ok truthy undefined (got false)"
+    }
+   },
+   {
+    "id": "three-chunks",
+    "status": "SATISFIED",
+    "description": "The level spans the whole bridge from the left cliff facility to the right bunker shore (at least 14000 px wide) with three objectives reachable in any order."
+   },
+   {
+    "id": "work-landed",
+    "status": "SATISFIED",
+    "description": "The level, its instruments and screenshots are committed and pushed on the branch cs-coastal-tower."
+   },
+   {
+    "id": "respawn-works",
+    "status": "SATISFIED",
+    "description": "A player killed on the deck comes back within 8 s at the last checkpoint reached, standing on a floor."
+   },
+   {
+    "id": "boat-returns",
+    "status": "SATISFIED",
+    "description": "After its run east the players' boat drives back west at least 1500 px under the caps."
+   },
+   {
+    "id": "tower-climb",
+    "status": "SATISFIED",
+    "description": "From the tower lobby a player climbs the tower's shaft to the command room floor and on to the observation deck."
+   },
+   {
+    "id": "look-structure",
+    "description": "The pulled-back view of the middle has the concept's structure: brightness profile top to bottom within 30 levels on average, and edge detail spread over the frame like the concept's (detail-grid distance at most 0.06).",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 52,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.image",
+      "params": {
+       "image": "tools/harness/levels/results/06-overview-middle.png",
+       "reference": "docs/cs-coastal-tower/concept/10-middle-side.webp"
+      }
+     },
+     "asserts": [
+      {
+       "path": "metrics.distance.profile",
+       "op": "lte",
+       "value": 30
+      },
+      {
+       "path": "metrics.distance.detailGrid",
+       "op": "lte",
+       "value": 0.06
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk6hz3b_c7e22c895b"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T19:01:08.674Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk6hz3b_c7e22c895b"
+     ],
+     "why": "contract FAIL (cycle 7): failed metrics.distance.detailGrid lte 0.06 (got 0.067)"
+    }
+   },
+   {
+    "id": "cap-cover",
+    "status": "SATISFIED",
+    "description": "Every pier cap carries cover to fight from (at least one block 40-110 px tall standing on it) besides its ladders and neighbouring containers."
+   },
+   {
+    "id": "coop-ladder",
+    "description": "In a two-player match a guest climbs a pier cap's ladder out of the water onto the cap.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 56,
+    "dependsOn": [
+     "coop-two"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/coop-06.js",
+       "args": [
+        "--players",
+        "2"
+       ],
+       "report": "levels/results/06-coop2-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.guestLadder",
+       "op": "truthy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk6pg25_6f8ef6f50d"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T19:01:08.674Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk6pg25_6f8ef6f50d"
+     ],
+     "why": "contract FAIL (cycle 7): failed report.guestLadder truthy undefined (got false)"
+    }
+   },
+   {
+    "id": "layers-held",
+    "status": "SATISFIED",
+    "description": "Civil Security holds every layer of the middle: the pier caps, the hanging containers, the deck interior, the road deck, the tower and the water (crewed patrol boats)."
+   },
+   {
+    "id": "patrols-drive",
+    "status": "SATISFIED",
+    "description": "In the game the CS patrol boats move under their autopilot when the raiders come near (at least one moves 200 px or more)."
+   },
+   {
+    "id": "coop-scaling-names",
+    "status": "SATISFIED",
+    "description": "06 names enough enemies for co-op strength: at least 4 marked [2+] and 2 marked [3+]."
+   }
+  ],
+  "lastActions": [
+   {
+    "id": "act_ec9b9102b7d00eadd5a9",
+    "tool": "file.write_from",
+    "targets": [
+     "frame-cost",
+     "ladders-work",
+     "tower-climb",
+     "coop-ladder",
+     "boat-run"
+    ],
+    "executed": true,
+    "ok": true,
+    "evidence": "ev_muk6agmd_995ff320df",
+    "expectedEvidence": [
+     "perf drawCalls < 500",
+     "report.tests.ladders.roadOk"
+    ],
+    "failureSignatures": [
+     "draws unchanged",
+     "climb still falls back"
+    ]
+   },
+   {
+    "id": "act_f426351b830cedab17fb",
+    "tool": "pb3x.bake",
+    "targets": [
+     "frame-cost",
+     "ladders-work",
+     "tower-climb"
+    ],
+    "executed": true,
+    "ok": true,
+    "evidence": "ev_muk6agsm_f129b728e1",
+    "expectedEvidence": [
+     "bake ok"
+    ],
+    "failureSignatures": []
+   },
+   {
+    "id": "act_61705abb938d6f5fa510",
+    "tool": "file.write_from",
+    "targets": [
+     "boat-run",
+     "boat-returns",
+     "patrols-drive",
+     "underpass-framing"
+    ],
+    "executed": true,
+    "ok": true,
+    "evidence": "ev_muk6agsn_5f917cde76",
+    "expectedEvidence": [
+     "report.tests.boat.start"
+    ],
+    "failureSignatures": []
+   }
+  ],
+  "newEvidence": [
+   {
+    "id": "ev_muk6agmd_995ff320df",
+    "origin": "tool",
+    "producedBy": "act_ec9b9102b7d00eadd5a9",
+    "kind": "tool.file.write_from",
+    "tags": [
+     "action",
+     "target:frame-cost",
+     "target:ladders-work",
+     "target:tower-climb",
+     "target:coop-ladder",
+     "target:boat-run"
+    ],
+    "at": "2026-09-27T18:49:29.509Z",
+    "payload": "{\"ok\":true,\"params\":{\"from\":\"cs-coastal-tower.user.js\",\"path\":\"mods/cs-coastal-tower.user.js\"},\"result\":{\"bytes\":124862,\"from\":\"cs-coastal-tower.user.js\",\"path\":\"mods/cs-coastal-tower.user.js\",\"previous\":\"692d75df27b2d34359cdf1e286133aaed19a2b465719090ee71066c93685d88a\",\"sha256\":\"c90102c45c1b52e6231d3a7a37612cfadf9edfa833f903464e43a0188ae3008c\"},\"tool\":\"file.write_from\"}"
+   },
+   {
+    "id": "ev_muk6agsm_f129b728e1",
+    "origin": "tool",
+    "producedBy": "act_f426351b830cedab17fb",
+    "kind": "tool.pb3x.bake",
+    "tags": [
+     "action",
+     "target:frame-cost",
+     "target:ladders-work",
+     "target:tower-climb"
+    ],
+    "at": "2026-09-27T18:49:29.734Z",
+    "payload": "{\"ok\":true,\"params\":{},\"result\":{\"bake\":{\"argv\":[\"node\",\"tools/bake-mods.js\"],\"exitCode\":0,\"ms\":82,\"signal\":null,\"stderr\":\"\",\"stdout\":\"baked 1 mod(s): CS Coastal Tower -> pb3x-extension/pb3x.js\\n\",\"timedOut\":false},\"check\":{\"argv\":[\"node\",\"tools/bake-mods.js\",\"--check\"],\"exitCode\":0,\"ms\":87,\"signal\":null,\"stderr\":\"\",\"stdout\":\"checked 1 mod(s): CS Coastal Tower\\n\",\"timedOut\":false},\"ok\":true,\"syntax\":{\"argv\":[\"node\",\"--check\",\"pb3x-extension/pb3x.js\"],\"exitCode\":0,\"ms\":55,\"signal\":null,\"stderr\":\"\",\"stdout\":\"\",\"timedOut\":false}},\"tool\":\"pb3x.bake\"}"
+   },
+   {
+    "id": "ev_muk6agsn_5f917cde76",
+    "origin": "tool",
+    "producedBy": "act_61705abb938d6f5fa510",
+    "kind": "tool.file.write_from",
+    "tags": [
+     "action",
+     "target:boat-run",
+     "target:boat-returns",
+     "target:patrols-drive",
+     "target:underpass-framing"
+    ],
+    "at": "2026-09-27T18:49:29.736Z",
+    "payload": "{\"ok\":true,\"params\":{\"from\":\"play-06.js\",\"path\":\"tools/harness/levels/play-06.js\"},\"result\":{\"bytes\":23987,\"from\":\"play-06.js\",\"path\":\"tools/harness/levels/play-06.js\",\"previous\":\"c7dfc0a3284b42d13ad4173feccd2c4c88ef8f472487183caed4d78829371c9b\",\"sha256\":\"5166073452fa561b9f1640990783cb431274b37ab9fb3a1cdabd1fd3e9c3732f\"},\"tool\":\"file.write_from\"}"
+   },
+   {
+    "id": "ev_muk6agwf_5722afa380",
+    "origin": "probe",
+    "producedBy": "probe:d22e87edb3fa10bb",
+    "kind": "tool.pb3x.check",
+    "tags": [
+     "probe",
+     "probe:d22e87edb3fa10bb",
+     "cycle:7"
+    ],
+    "at": "2026-09-27T18:49:29.871Z",
+    "payload": "{\"ok\":true,\"params\":{\"args\":[\"06\"],\"script\":\"tools/harness/levels/lint.js\"},\"result\":{\"argv\":[\"node\",\"/home/user/PlazmaBurstX/tools/harness/levels/lint.js\",\"06\"],\"exitCode\":0,\"json\":{\"berths\":[{\"left\":285,\"right\":11965,\"x\":1585},{\"left\":1700,\"right\":10550,\"x\":3000},{\"left\":3500,\"right\":8750,\"x\":4800},{\"left\":5300,\"right\":6950,\"x\":6600},{\"left\":7100,\"right\":5150,\"x\":8400},{\"left\":8900,\"right\":3350,\"x\":10200},{\"left\":10700,\"right\":1550,\"x\":12000}],\"boat\":{\"hull\":[1300,13550],\"lane\":[1515,13335],\"length\":11820,\"stopsLeft\":[[1150,-48,150,998],[1200,-48,100,748]],\"stopsRight\":[[13550,-48,150,748]],\"water\":[1300,13700],\"x\":1560},\"bounds\":[0,-1640,15800,950],\"capsWithCover\":7,\"counts\":{\"backs\":22,\"characters\":79,\"enemies\":68,\"entities\":56,\"floors\":278,\"guns\":73,\"ladders\":25,\"lamps\":74,\"movables\":0,\"objects\":499,\"stairSteps\":10,\"walls\":165,\"water\":1},\"enemies\":{\"byStrength\":{\"1\":44,\"2+\":17,\"3+\":7},\"crews\":10,\"total\":68},\"enemyLayers\":{\"cap\":17,\"container\":4,\"interior\":24,\"other\":2,\"road\":14,\"tower\":7},\"entityTypes\":{\"TYPE_BOAT\":6,\"TYPE_CS_BRIDGE\":1,\"TYPE_CS_CHECKPOINT\":17,\"TYPE_CS_EXIT\":1,\"TYPE_CS_LADDER\":25,\"TYPE_CS_OBJECTIVE\":3,\"TYPE_TANK\":3},\"layout\":{\"bed\":700,\"bridge\":[1300,13700],\"cap\":{\"half\":450,\"t\":30,\"top\":-330},\"ceil\":-820,\"cliff\":{\"dockBack\":1150,\"facility\":[300,1300],\"ladder\":1200,\"ledge\":-330,\"power\":450,\"shaft\":1000,\"top\":-1300,\"tunnel\":[700,1300,-490],\"x0\":0,\"x1\":1300},\"containerH\":90,\"containerTop\":-400,\"cranes\":[{\"dir\":-1,\"load\":-1180,\"x\":2250},{\"dir\":-1,\"load\":-1180,\"x\":5850},{\"dir\":1,\"load\":-1180,\"x\":9450},{\"dir\":1,\"load\":-1180,\"x\":13050}],\"ends\":[0,15800],\"floor\":-620,\"hanging\":[[2720,2920,-400],[3080,3280,-400],[4520,4720,-400],[4880,5080,-400],[6320,6520,-400],[6680,6880,-400],[8120,8320,-400],[8480,8680,-400],[9920,10120,-400],[10280,10480,-400],[11720,11920,-400],[12080,12280,-400]],\"hatch\":70,\"header\":40,\"legs\":[2100,3900,5700,7500,9300,11100,12900],\"partitions\":[1900,2800,3450,4350,5250,6150,6850,7050,7950,8850,9750,10650,11550,12450,13350],\"road\":-860,\"rooms\":[[1300,1900,\"bg_room\",\"Store\"],[1900,2800,\"bg_room\",\"Services\"],[2800,3450,\"bg_sec\",\"Security\"],[3450,4350,\"bg_room\",\"Services\"],[4350,5250,\"bg_room\",\"Store\"],[5250,6150,\"bg_room\",\"Services\"],[6150,6850,\"bg_sec\",\"Security\"],[6850,7050,\"bg_room\",\"Vestibule\"],[7050,7950,\"bg_tower\",\"Tower base\"],[7950,8850,\"bg_bay\",\"Vehicle bay\"],[8850,9750,\"bg_room\",\"Services\"],[9750,10650,\"bg_sec\",\"Security\"],[10650,11550,\"bg_room\",\"Services\"],[11550,12450,\"bg_sec\",\"Security\"],[12450,13350,\"bg_room\",\"Services\"],[13350,13700,\"bg_room\",\"Vestibule\"]],\"sea\":0,\"shaft\":-120,\"shore\":{\"baseShaft\":14100,\"basement\":[13900,14700,100,300],\"dock\":[13550,13700],\"exit\":15600,\"hill\":[[13700,14400,-860],[14400,14700,-940],[14700,15800,-1020]],\"hillShaft\":15100,\"lower\":[13700,14400,-490],\"objective\":14550,\"stairs\":14400,\"upper\":[13700,15200],\"x0\":13700,\"x1\":15800},\"soffit\":-580,\"start\":{\"boat\":1560,\"dock\":[1200,1300]},\"style\":6,\"tower\":{\"doorTop\":-1020,\"l2\":-1100,\"l3\":-1340,\"l3Open\":-1520,\"roof\":-1600,\"roof…(7542 chars; hash dc015762540a)"
+   },
+   {
+    "id": "ev_muk6hyug_20a288649d",
+    "origin": "probe",
+    "producedBy": "probe:5e40829617afc91e",
+    "kind": "tool.pb3x.harness",
+    "tags": [
+     "probe",
+     "probe:5e40829617afc91e",
+     "cycle:7"
+    ],
+    "at": "2026-09-27T18:55:19.721Z",
+    "payload": "{\"ok\":true,\"params\":{\"report\":\"levels/results/06-report.json\",\"script\":\"levels/play-06.js\",\"timeoutMs\":1800000},\"result\":{\"argv\":[\"xvfb-run\",\"-a\",\"-s\",\"-screen 0 1600x900x24\",\"node\",\"/home/user/PlazmaBurstX/tools/harness/levels/play-06.js\"],\"build\":{\"bundle\":\"312cdfcc465e42459059ffa1831e1bff2546fb89e78860c45287b3fd7bbf2f72\",\"mod\":\"c90102c45c1b52e6231d3a7a37612cfadf9edfa833f903464e43a0188ae3008c\"},\"exitCode\":0,\"ms\":349843,\"report\":{\"at\":\"2026-09-27T18:49:31.351Z\",\"entities\":{\"characters\":31,\"entities\":55},\"errors\":[],\"level\":\"06\",\"objects\":499,\"ok\":false,\"passed\":[\"editor\",\"boat\",\"objective\",\"tower\",\"tank\",\"respawn\",\"frames\"],\"shots\":[\"ed-flat-middle\",\"ed-alt-left\",\"ed-alt-right\",\"ed-alt-under\",\"ed-alt-tower\",\"ed-flat-whole\",\"play-start\",\"overview-middle\",\"overview-left\",\"overview-right\",\"overview-lane\",\"overview-cliff\",\"overview-bunker\",\"alt3d-left\",\"alt3d-right\",\"alt3d-under\",\"alt3d-tower\",\"boat-aboard\",\"lane-cap1\",\"lane-bay1\",\"lane-cap2\",\"lane-bay2\",\"lane-cap3\",\"ladder-cap\",\"ladder-shaft\",\"power-room\",\"command-room\",\"basement\",\"extraction\",\"tower-l2\",\"tower-l3\",\"tank\",\"eye-cap2\",\"eye-interior-security\",\"eye-interior-bay\",\"eye-road-tower\",\"eye-observation\",\"eye-cliff-facility\",\"eye-cliff-ledge\",\"eye-bunker-lower\",\"eye-bunker-stairs\",\"eye-hilltop\",\"respawned\"],\"tests\":{\"boat\":{\"boatDamageBlocked\":6349,\"lost\":false,\"ms\":63013,\"ok\":true,\"passedCaps\":[\"lane-cap1\",\"lane-bay1\",\"lane-cap2\",\"lane-bay2\",\"lane-cap3\"],\"patrols\":[{\"crew\":0,\"hea\":0,\"x\":-56984},{\"crew\":0,\"hea\":0,\"x\":41543},{\"crew\":0,\"hea\":0,\"x\":41103},{\"crew\":0,\"hea\":0,\"x\":36169},{\"crew\":0,\"hea\":0,\"x\":31253},{\"crew\":1,\"hea\":973,\"x\":11175}],\"patrolsMoved\":5,\"reached\":13306,\"replaced\":false,\"returned\":2131,\"start\":1511,\"stuck\":null,\"track\":[1645,3354,5754,7365,8193,9175,10043,10952,11922,12877]},\"editor\":{\"ms\":15210,\"ok\":true,\"views\":[{\"cam\":[7500,700,2344],\"rot\":[0,0],\"zoom\":0.42},{\"cam\":[6200,600,1969],\"rot\":[-0.12,0.42],\"zoom\":0.5},{\"cam\":[8800,600,1969],\"rot\":[-0.12,-0.42],\"zoom\":0.5},{\"cam\":[7500,300,1588],\"rot\":[0.22,0.3],\"zoom\":0.62},{\"cam\":[7500,1300,1641],\"rot\":[-0.2,-0.3],\"zoom\":0.6},{\"cam\":[7500,700,4103],\"rot\":[0,0],\"zoom\":0.24}]},\"frames\":{\"mapErrors\":0,\"median\":250.9,\"mod\":{\"error\":null,\"status\":\"ready\"},\"ms\":17,\"ok\":true,\"p95\":528.1,\"pageErrors\":0,\"samples\":1051,\"worst\":1065.6},\"ladders\":{\"capOk\":false,\"cleared\":3,\"climbedTo\":{\"dead\":false,\"feet\":-28,\"hea\":150,\"ladder\":0,\"vehicle\":false,\"x\":2175,\"y\":-73},\"down\":{\"dead\":false,\"feet\":-330,\"hea\":150,\"ladder\":0,\"vehicle\":false,\"x\":1980,\"y\":-381},\"downOk\":true,\"inWater\":{\"dead\":false,\"feet\":95,\"hea\":150,\"ladder\":0,\"vehicle\":false,\"x\":2388,\"y\":54},\"ms\":18245,\"ok\":false,\"onCap\":{\"dead\":false,\"feet\":140,\"hea\":150,\"ladder\":0,\"vehicle\":false,\"x\":2132,\"y\":110},\"onRoad\":{\"dead\":false,\"feet\":-860,\"hea\":150,\"ladder\":0,\"vehicle\":false,\"x\":2119,\"y\":-911},\"roadOk\":true,\"shaftSamples\":[-427,-493,-540,-647,-696,-796,-848,-919],\"shaftTop\":{\"dead\":false,\"feet\":-919,\"hea\":150,\"ladder\":1,\"vehicle\":false,\"x\":1980,\"y\":-964}},\"objective\":{\"bannerLocked\":\"…(8411 chars; hash f1c9314d93ee)"
+   },
+   {
+    "id": "ev_muk6hyvq_e6c64bbcbf",
+    "origin": "probe",
+    "producedBy": "probe:f0da2bbb4787153c",
+    "kind": "tool.pb3x.check",
+    "tags": [
+     "probe",
+     "probe:f0da2bbb4787153c",
+     "cycle:7"
+    ],
+    "at": "2026-09-27T18:55:19.766Z",
+    "payload": "{\"ok\":true,\"params\":{\"args\":[\"06\"],\"script\":\"tools/harness/levels/shots-index.js\"},\"result\":{\"argv\":[\"node\",\"/home/user/PlazmaBurstX/tools/harness/levels/shots-index.js\",\"06\"],\"exitCode\":0,\"json\":{\"altViews\":0,\"coop\":0,\"count\":0,\"dir\":\"docs/cs-coastal-tower/shots/06\",\"editorFlat\":0,\"eyeLevel\":0,\"lane\":0,\"level\":\"06\",\"names\":[],\"overviews\":0,\"sheet\":false},\"ms\":45,\"signal\":null,\"stderr\":\"\",\"stdout\":\"{\\\"level\\\":\\\"06\\\",\\\"dir\\\":\\\"docs/cs-coastal-tower/shots/06\\\",\\\"count\\\":0,\\\"names\\\":[],\\\"altViews\\\":0,\\\"editorFlat\\\":0,\\\"eyeLevel\\\":0,\\\"lane\\\":0,\\\"overviews\\\":0,\\\"coop\\\":0,\\\"sheet\\\":false}\\n\",\"timedOut\":false},\"tool\":\"pb3x.check\"}"
+   },
+   {
+    "id": "ev_muk6hz3b_c7e22c895b",
+    "origin": "probe",
+    "producedBy": "probe:7980a067bb842f7b",
+    "kind": "tool.pb3x.image",
+    "tags": [
+     "probe",
+     "probe:7980a067bb842f7b",
+     "cycle:7"
+    ],
+    "at": "2026-09-27T18:55:20.039Z",
+    "payload": "{\"ok\":true,\"params\":{\"image\":\"tools/harness/levels/results/06-overview-middle.png\",\"reference\":\"docs/cs-coastal-tower/concept/10-middle-side.webp\"},\"result\":{\"exitCode\":0,\"metrics\":{\"distance\":{\"dark\":0.037,\"detailGrid\":0.067,\"edges\":-0.007,\"lumaHistOverlap\":0.76,\"lumaMean\":8.3,\"palette\":21.8,\"profile\":26.6,\"saturation\":0.086,\"warmth\":13.3},\"image\":{\"dark\":0.064,\"detailGrid\":[0.115,0.164,0.034,0.097,0.114,0.1,0.175,0.218,0.202],\"edges\":0.136,\"hist\":[0.0295,0.0474,0.1309,0.0608,0.0815,0.0991,0.1207,0.2159,0.1122,0.0629,0.021,0.0092,0.0056,0.0027,0.0004,0.0002],\"luma\":{\"mean\":94.9,\"p5\":19.8,\"p50\":104.8,\"p95\":156.4,\"spread\":43.5},\"palette\":[{\"rgb\":[132,110,104],\"share\":0.262},{\"rgb\":[36,34,34],\"share\":0.247},{\"rgb\":[96,77,75],\"share\":0.22},{\"rgb\":[150,125,117],\"share\":0.17},{\"rgb\":[179,150,141],\"share\":0.1}],\"profile\":[120.1,102.6,101.8,100.4,43.6,106.4,102.6,81.3],\"saturation\":0.203,\"size\":[320,180],\"warmth\":21.9},\"reference\":{\"dark\":0.027,\"detailGrid\":[0.119,0.167,0.118,0.171,0.218,0.168,0.099,0.116,0.114],\"edges\":0.143,\"hist\":[0,0.0422,0.1767,0.1916,0.0861,0.0811,0.0956,0.0927,0.1259,0.1075,0.0004,0.0001,0,0,0,0],\"luma\":{\"mean\":86.6,\"p5\":33.7,\"p50\":81.2,\"p95\":150.1,\"spread\":40.3},\"palette\":[{\"rgb\":[148,138,137],\"share\":0.284},{\"rgb\":[41,38,37],\"share\":0.204},{\"rgb\":[110,101,102],\"share\":0.201},{\"rgb\":[58,54,51],\"share\":0.179},{\"rgb\":[75,65,59],\"share\":0.132}],\"profile\":[135.5,118.2,97.5,62.3,87.4,83.5,66.4,45],\"saturation\":0.117,\"size\":[320,118],\"warmth\":8.6}},\"stderr\":\"\"},\"tool\":\"pb3x.image\"}"
+   },
+   {
+    "id": "ev_muk6hz93_6cbc84adff",
+    "origin": "probe",
+    "producedBy": "probe:3ddf0d6bd2086dd8",
+    "kind": "tool.pb3x.image",
+    "tags": [
+     "probe",
+     "probe:3ddf0d6bd2086dd8",
+     "cycle:7"
+    ],
+    "at": "2026-09-27T18:55:20.247Z",
+    "payload": "{\"ok\":true,\"params\":{\"crop\":[0.05,0.36,0.95,0.6],\"image\":\"tools/harness/levels/results/06-eye-interior-security.png\",\"reference\":\"docs/cs-coastal-tower/concept/11-middle-deck-interior.webp\"},\"result\":{\"exitCode\":0,\"metrics\":{\"distance\":{\"dark\":0.12,\"detailGrid\":0.154,\"edges\":-0.154,\"lumaHistOverlap\":0.695,\"lumaMean\":9.2,\"palette\":18,\"profile\":28.5,\"saturation\":0.053,\"warmth\":6.1},\"image\":{\"dark\":0.124,\"detailGrid\":[0.144,0.049,0.033,0.052,0.041,0.065,0.092,0.095,0.104],\"edges\":0.075,\"hist\":[0.0119,0.138,0.1826,0.1037,0.1003,0.0868,0.0641,0.1445,0.1164,0.0421,0.0051,0.0006,0.0005,0.0001,0.0002,0.0032],\"luma\":{\"mean\":78.3,\"p5\":19.2,\"p50\":67.3,\"p95\":144.7,\"spread\":44.1},\"palette\":[{\"rgb\":[29,26,25],\"share\":0.278},{\"rgb\":[64,50,45],\"share\":0.248},{\"rgb\":[144,119,113],\"share\":0.218},{\"rgb\":[108,91,86],\"share\":0.152},{\"rgb\":[166,139,131],\"share\":0.103}],\"profile\":[113.8,105.2,90.6,48.7,28.4,44.9,98.8,96.3],\"saturation\":0.226,\"size\":[320,180],\"warmth\":19.6},\"reference\":{\"dark\":0.004,\"detailGrid\":[0.232,0.164,0.208,0.237,0.244,0.218,0.257,0.234,0.265],\"edges\":0.229,\"hist\":[0.0001,0.0689,0.3001,0.2519,0.108,0.0481,0.0467,0.0486,0.0525,0.0713,0.0011,0.0027,0,0,0,0],\"luma\":{\"mean\":69.1,\"p5\":30.6,\"p50\":54.8,\"p95\":148.9,\"spread\":37},\"palette\":[{\"rgb\":[55,45,42],\"share\":0.289},{\"rgb\":[38,34,34],\"share\":0.232},{\"rgb\":[74,61,55],\"share\":0.222},{\"rgb\":[151,142,137],\"share\":0.142},{\"rgb\":[114,102,92],\"share\":0.115}],\"profile\":[91.4,73.9,49.4,69.6,79.2,48.3,48.2,88.9],\"saturation\":0.173,\"size\":[320,42],\"warmth\":13.5}},\"stderr\":\"\"},\"tool\":\"pb3x.image\"}"
+   },
+   {
+    "id": "ev_muk6hzgp_00e463580b",
+    "origin": "probe",
+    "producedBy": "probe:cb3bd0e8c318b9ec",
+    "kind": "tool.pb3x.image",
+    "tags": [
+     "probe",
+     "probe:cb3bd0e8c318b9ec",
+     "cycle:7"
+    ],
+    "at": "2026-09-27T18:55:20.521Z",
+    "payload": "{\"ok\":true,\"params\":{\"crop\":[0.25,0.35,0.75,1],\"image\":\"tools/harness/levels/results/06-lane-bay1.png\",\"reference\":\"docs/cs-coastal-tower/concept/10-middle-side.webp\"},\"result\":{\"exitCode\":0,\"metrics\":{\"distance\":{\"dark\":0.047,\"detailGrid\":0.053,\"edges\":0.034,\"lumaHistOverlap\":0.602,\"lumaMean\":11.8,\"palette\":18.3,\"profile\":18.1,\"saturation\":0.061,\"warmth\":4.6},\"image\":{\"dark\":0.047,\"detailGrid\":[0.283,0.248,0.227,0.101,0.181,0.124,0.061,0.141,0.091],\"edges\":0.162,\"hist\":[0.0196,0.0543,0.0422,0.0978,0.223,0.1778,0.1565,0.1183,0.0548,0.0354,0.0129,0.0035,0.0019,0.0004,0.0004,0.0013],\"luma\":{\"mean\":87.2,\"p5\":24.7,\"p50\":84.5,\"p95\":147.1,\"spread\":34.8},\"palette\":[{\"rgb\":[83,70,68],\"share\":0.342},{\"rgb\":[103,91,95],\"share\":0.225},{\"rgb\":[131,112,109],\"share\":0.17},{\"rgb\":[46,43,46],\"share\":0.167},{\"rgb\":[162,139,130],\"share\":0.097}],\"profile\":[88.6,97.9,106.3,121.1,73.9,72.1,78.5,58.9],\"saturation\":0.192,\"size\":[320,180],\"warmth\":12.9},\"reference\":{\"dark\":0,\"detailGrid\":[0.197,0.209,0.21,0.107,0.034,0.155,0.098,0.038,0.104],\"edges\":0.128,\"hist\":[0,0.0122,0.2363,0.2607,0.0987,0.0805,0.1334,0.079,0.096,0.0019,0.0007,0.0004,0.0003,0,0,0],\"luma\":{\"mean\":75.4,\"p5\":36.6,\"p50\":63.1,\"p95\":132.9,\"spread\":32.5},\"palette\":[{\"rgb\":[129,119,119],\"share\":0.267},{\"rgb\":[43,40,38],\"share\":0.209},{\"rgb\":[64,56,51],\"share\":0.2},{\"rgb\":[90,80,78],\"share\":0.169},{\"rgb\":[52,50,50],\"share\":0.155}],\"profile\":[75.5,52.7,92.6,103.1,91.5,80.8,60.9,47.6],\"saturation\":0.131,\"size\":[320,153],\"warmth\":8.3}},\"stderr\":\"\"},\"tool\":\"pb3x.image\"}"
+   },
+   {
+    "id": "ev_muk6kuhz_003e1f6ea5",
+    "origin": "probe",
+    "producedBy": "probe:990fb3e94a4cb262",
+    "kind": "tool.pb3x.harness",
+    "tags": [
+     "probe",
+     "probe:990fb3e94a4cb262",
+     "cycle:7"
+    ],
+    "at": "2026-09-27T18:57:34.055Z",
+    "payload": "{\"ok\":true,\"params\":{\"args\":[\"06\"],\"report\":\"levels/results/06-perf.json\",\"script\":\"levels/perf.js\",\"timeoutMs\":1500000},\"result\":{\"argv\":[\"xvfb-run\",\"-a\",\"-s\",\"-screen 0 1600x900x24\",\"node\",\"/home/user/PlazmaBurstX/tools/harness/levels/perf.js\",\"06\"],\"build\":{\"bundle\":\"312cdfcc465e42459059ffa1831e1bff2546fb89e78860c45287b3fd7bbf2f72\",\"mod\":\"c90102c45c1b52e6231d3a7a37612cfadf9edfa833f903464e43a0188ae3008c\"},\"exitCode\":0,\"ms\":133530,\"report\":{\"baseline\":{\"drawCalls\":98,\"frames\":59,\"ms95\":233,\"msMean\":136,\"msMedian\":133,\"triangles\":3937},\"level\":\"06\",\"mod\":{\"error\":null,\"status\":\"ready\"},\"renderer\":\"ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)\",\"spots\":{\"deck\":{\"drawCalls\":761,\"frames\":17,\"ms95\":650,\"msMean\":471,\"msMedian\":550,\"triangles\":155980},\"road\":{\"drawCalls\":634,\"frames\":35,\"ms95\":250,\"msMean\":226,\"msMedian\":217,\"triangles\":146206},\"start\":{\"drawCalls\":677,\"frames\":25,\"ms95\":700,\"msMean\":332,\"msMedian\":267,\"triangles\":155139},\"tower span\":{\"drawCalls\":691,\"frames\":27,\"ms95\":367,\"msMean\":296,\"msMedian\":283,\"triangles\":153951}},\"viewport\":\"1600x900\",\"worstRatio\":4.14},\"reportFile\":\"levels/results/06-perf.json\",\"signal\":null,\"stderr\":\"\",\"stdout\":\"18:55:59 baseline (editor starting map) {\\\"frames\\\":59,\\\"msMean\\\":136,\\\"msMedian\\\":133,\\\"ms95\\\":233,\\\"drawCalls\\\":98,\\\"triangles\\\":3937}\\n18:56:48 start {\\\"frames\\\":25,\\\"msMean\\\":332,\\\"msMedian\\\":267,\\\"ms95\\\":700,\\\"drawCalls\\\":677,\\\"triangles\\\":155139}\\n18:57:04 tower span {\\\"frames\\\":27,\\\"msMean\\\":296,\\\"msMedian\\\":283,\\\"ms95\\\":367,\\\"drawCalls\\\":691,\\\"triangles\\\":153951}\\n18:57:18 deck {\\\"frames\\\":17,\\\"msMean\\\":471,\\\"msMedian\\\":550,\\\"ms95\\\":650,\\\"drawCalls\\\":761,\\\"triangles\\\":155980}\\n18:57:32 road {\\\"frames\\\":35,\\\"msMean\\\":226,\\\"msMedian\\\":217,\\\"ms95\\\":250,\\\"drawCalls\\\":634,\\\"triangles\\\":146206}\\n18:57:32 renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)\\n\",\"timedOut\":false},\"tool\":\"pb3x.harness\"}"
+   },
+   {
+    "id": "ev_muk6nev8_2d3f78ac93",
+    "origin": "probe",
+    "producedBy": "probe:5ae70d282044ba98",
+    "kind": "tool.pb3x.harness",
+    "tags": [
+     "probe",
+     "probe:5ae70d282044ba98",
+     "cycle:7"
+    ],
+    "at": "2026-09-27T18:59:33.764Z",
+    "payload": "{\"ok\":true,\"params\":{\"args\":[\"06\"],\"report\":\"levels/results/06-waypoints.json\",\"script\":\"levels/waypoints.js\",\"timeoutMs\":900000},\"result\":{\"argv\":[\"xvfb-run\",\"-a\",\"-s\",\"-screen 0 1600x900x24\",\"node\",\"/home/user/PlazmaBurstX/tools/harness/levels/waypoints.js\",\"06\"],\"build\":{\"bundle\":\"312cdfcc465e42459059ffa1831e1bff2546fb89e78860c45287b3fd7bbf2f72\",\"mod\":\"c90102c45c1b52e6231d3a7a37612cfadf9edfa833f903464e43a0188ae3008c\"},\"exitCode\":0,\"ms\":119704,\"report\":{\"enemies\":51,\"level\":\"06\",\"moved\":[{\"from\":[1859,-381],\"moved\":3,\"name\":\"CS Trooper\",\"to\":[1861,-380]},{\"from\":[3195,-451],\"moved\":0,\"name\":\"CS Marksman\",\"to\":[3195,-451]},{\"from\":[3726,-381],\"moved\":0,\"name\":\"CS Heavy\",\"to\":[3726,-381]},{\"from\":[4100,-381],\"moved\":0,\"name\":\"CS Rocketeer\",\"to\":[4100,-381]},{\"from\":[4620,-451],\"moved\":0,\"name\":\"CS Grenadier\",\"to\":[4620,-451]},{\"from\":[5500,-381],\"moved\":24,\"name\":\"CS Trooper\",\"to\":[5476,-381]},{\"from\":[5495,-731],\"moved\":681,\"name\":\"CS Trooper\",\"to\":[6175,-763]},{\"from\":[6480,-671],\"moved\":19,\"name\":\"CS Heavy\",\"to\":[6499,-671]},{\"from\":[7250,-671],\"moved\":42,\"name\":\"CS Trooper\",\"to\":[7292,-671]},{\"from\":[8420,-671],\"moved\":40,\"name\":\"CS Tank crew\",\"to\":[8460,-671]},{\"from\":[9000,-671],\"moved\":0,\"name\":\"CS Trooper\",\"to\":[9000,-671]},{\"from\":[10300,-671],\"moved\":0,\"name\":\"CS Trooper\",\"to\":[10300,-671]},{\"from\":[5300,-1041],\"moved\":505,\"name\":\"CS Marksman\",\"to\":[4812,-911]},{\"from\":[6080,-911],\"moved\":1276,\"name\":\"CS Trooper\",\"to\":[5074,-126]},{\"from\":[8200,-911],\"moved\":0,\"name\":\"CS Rocketeer\",\"to\":[8200,-911]},{\"from\":[9050,-911],\"moved\":0,\"name\":\"CS Trooper\",\"to\":[9050,-911]},{\"from\":[7220,-911],\"moved\":0,\"name\":\"CS Tower guard\",\"to\":[7220,-911]},{\"from\":[7680,-1151],\"moved\":0,\"name\":\"CS Commander\",\"to\":[7680,-1151]},{\"from\":[7260,-1151],\"moved\":0,\"name\":\"CS Command guard\",\"to\":[7260,-1151]},{\"from\":[7300,-1391],\"moved\":0,\"name\":\"CS Observer\",\"to\":[7300,-1391]},{\"from\":[6964,-47],\"moved\":1313,\"name\":\"Patrol 1 helm\",\"to\":[5651,-47]},{\"from\":[6964,-47],\"moved\":1313,\"name\":\"Patrol 1 gunner\",\"to\":[5651,-47]},{\"from\":[8864,-47],\"moved\":0,\"name\":\"Patrol 2 helm\",\"to\":[8864,-47]},{\"from\":[8864,-47],\"moved\":0,\"name\":\"Patrol 2 gunner\",\"to\":[8864,-47]},{\"from\":[4364,-47],\"moved\":815,\"name\":\"Patrol 0 helm\",\"to\":[5179,-47]},{\"from\":[4364,-47],\"moved\":815,\"name\":\"Patrol 0 gunner\",\"to\":[5179,-47]},{\"from\":[11964,-47],\"moved\":0,\"name\":\"Patrol 4 helm\",\"to\":[11964,-47]},{\"from\":[11964,-47],\"moved\":0,\"name\":\"Patrol 4 gunner\",\"to\":[11964,-47]},{\"from\":[520,-671],\"moved\":0,\"name\":\"CS Power guard\",\"to\":[520,-671]},{\"from\":[1263,-381],\"moved\":299,\"name\":\"CS Trooper\",\"to\":[1164,-99]},{\"from\":[2418,-381],\"moved\":0,\"name\":\"CS Trooper\",\"to\":[2418,-381]},{\"from\":[4150,-381],\"moved\":0,\"name\":\"CS Trooper\",\"to\":[4150,-381]},{\"from\":[3167,-451],\"moved\":0,\"name\":\"CS Grenadier\",\"to\":[3167,-451]},{\"from\":[1866,-467],\"moved\":21,\"name\":\"CS Trooper\",\"to\":[1878,-450]},{\"from\":[3100,-671],\"moved\":0,\"name\":\"CS Heavy\",\"to\":[3100,-671]},{\"from\":[4100,-671],\"moved\":545,\"name\":\"CS Trooper\",…(8503 chars; hash 8aacd445e845)"
+   },
+   {
+    "id": "ev_muk6pg25_6f8ef6f50d",
+    "origin": "probe",
+    "producedBy": "probe:91dd14c2d620911a",
+    "kind": "tool.pb3x.harness",
+    "tags": [
+     "probe",
+     "probe:91dd14c2d620911a",
+     "cycle:7"
+    ],
+    "at": "2026-09-27T19:01:08.621Z",
+    "payload": "{\"ok\":true,\"params\":{\"args\":[\"--players\",\"2\"],\"report\":\"levels/results/06-coop2-report.json\",\"script\":\"levels/coop-06.js\",\"timeoutMs\":1800000},\"result\":{\"argv\":[\"xvfb-run\",\"-a\",\"-s\",\"-screen 0 1600x900x24\",\"node\",\"/home/user/PlazmaBurstX/tools/harness/levels/coop-06.js\",\"--players\",\"2\"],\"build\":{\"bundle\":\"312cdfcc465e42459059ffa1831e1bff2546fb89e78860c45287b3fd7bbf2f72\",\"mod\":\"c90102c45c1b52e6231d3a7a37612cfadf9edfa833f903464e43a0188ae3008c\"},\"exitCode\":0,\"ms\":94852,\"report\":{\"coop\":{\"boats\":0,\"players\":2,\"removed\":7},\"errors\":[],\"guestBack\":true,\"guestLadder\":false,\"guests\":1,\"mod\":{\"error\":null,\"status\":\"ready\"},\"ok\":false,\"players\":2,\"scaled\":true,\"shots\":[\"start\",\"ladder\",\"respawn\"],\"steps\":[{\"connections\":1,\"name\":\"guests join\"},{\"guests\":[{\"character\":true,\"guest\":1,\"team\":true,\"x\":1526,\"y\":-46}],\"name\":\"guests\"},{\"2+\":19,\"3+\":0,\"4+\":0,\"all\":70,\"name\":\"strength\"},{\"g1\":{\"feet\":-193,\"x\":2628},\"name\":\"guest ladder\",\"ok\":false},{\"back\":{\"x\":2363,\"y\":-399},\"name\":\"guest back\",\"respawns\":2}],\"strength\":{\"2+\":19,\"3+\":0,\"4+\":0,\"all\":70}},\"reportFile\":\"levels/results/06-coop2-report.json\",\"signal\":null,\"stderr\":\"\",\"stdout\":\"19:00:05 guests join {\\\"connections\\\":1}\\n19:00:12 guests {\\\"guests\\\":[{\\\"guest\\\":1,\\\"character\\\":true,\\\"team\\\":true,\\\"x\\\":1526,\\\"y\\\":-46}]}\\n19:00:12 strength {\\\"2+\\\":19,\\\"3+\\\":0,\\\"4+\\\":0,\\\"all\\\":70}\\n19:00:19 guest ladder {\\\"g1\\\":{\\\"x\\\":2628,\\\"feet\\\":-193},\\\"ok\\\":false}\\n19:00:41 guest back {\\\"back\\\":{\\\"x\\\":2363,\\\"y\\\":-399},\\\"respawns\\\":2}\\n19:00:44 report: {\\\"ok\\\":false,\\\"guests\\\":1,\\\"coop\\\":{\\\"players\\\":2,\\\"removed\\\":7,\\\"boats\\\":0},\\\"strength\\\":{\\\"2+\\\":19,\\\"3+\\\":0,\\\"4+\\\":0,\\\"all\\\":70},\\\"guestLadder\\\":false,\\\"guestBack\\\":true,\\\"errors\\\":0}\\n\",\"timedOut\":false},\"tool\":\"pb3x.harness\"}"
+   },
+   {
+    "id": "ev_muk6pg3j_5a7aa620ff",
+    "origin": "probe",
+    "producedBy": "probe:aea6c2d28affb31d",
+    "kind": "tool.pb3x.check",
+    "tags": [
+     "probe",
+     "probe:aea6c2d28affb31d",
+     "cycle:7"
+    ],
+    "at": "2026-09-27T19:01:08.671Z",
+    "payload": "{\"ok\":true,\"params\":{\"script\":\"tools/harness/levels/git-state.js\"},\"result\":{\"argv\":[\"node\",\"/home/user/PlazmaBurstX/tools/harness/levels/git-state.js\"],\"exitCode\":0,\"json\":{\"branch\":\"cs-coastal-tower\",\"dirty\":[],\"head\":\"02e9e41deaed\",\"pushed\":true,\"remote\":\"02e9e41deaed\",\"uncommitted\":0},\"ms\":49,\"signal\":null,\"stderr\":\"\",\"stdout\":\"{\\\"branch\\\":\\\"cs-coastal-tower\\\",\\\"head\\\":\\\"02e9e41deaed\\\",\\\"remote\\\":\\\"02e9e41deaed\\\",\\\"pushed\\\":true,\\\"uncommitted\\\":0,\\\"dirty\\\":[]}\\n\",\"timedOut\":false},\"tool\":\"pb3x.check\"}"
+   }
+  ],
+  "semanticToJudge": [
+   {
+    "residueId": "underpass-framing",
+    "question": "Given the lane screenshot's measurements (and the screenshot itself, tools/harness/levels/results/06-lane-bay1.png), does the view from the boat show structure framing it (soffit band above, legs/footings, hanging containers, lamps) the way the concept's middle span does?",
+    "probeEvidence": "ev_muk6hzgp_00e463580b"
+   }
+  ]
+ }
+}

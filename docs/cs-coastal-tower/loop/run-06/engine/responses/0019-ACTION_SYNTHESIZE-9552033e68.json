@@ -1,0 +1,162 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "editor-views"
+   ],
+   "rationale": "Publish cycle 7's screenshots to docs/cs-coastal-tower/shots/06/ with a contact sheet: 42 shots, among them 4 editor Alt 2.5D views, 4 angled views of the rendered level, 2 flat editor views, overviews, 5 lane shots from the boat and eye-level shots of every chunk. They're republished whenever the look changes.",
+   "tool": "process.run",
+   "params": {
+    "argv": [
+     "python3",
+     "tools/harness/levels/publish-shots.py",
+     "06",
+     "ed-flat-middle",
+     "ed-flat-whole",
+     "ed-alt-left",
+     "ed-alt-right",
+     "ed-alt-under",
+     "ed-alt-tower",
+     "alt3d-left",
+     "alt3d-right",
+     "alt3d-under",
+     "alt3d-tower",
+     "overview-middle",
+     "overview-left",
+     "overview-right",
+     "overview-lane",
+     "overview-cliff",
+     "overview-bunker",
+     "lane-cap1",
+     "lane-bay1",
+     "lane-cap2",
+     "lane-bay2",
+     "lane-cap3",
+     "eye-cap2",
+     "eye-interior-security",
+     "eye-interior-bay",
+     "eye-road-tower",
+     "eye-observation",
+     "eye-cliff-facility",
+     "eye-cliff-ledge",
+     "eye-bunker-lower",
+     "eye-bunker-stairs",
+     "eye-hilltop",
+     "power-room",
+     "command-room",
+     "basement",
+     "extraction",
+     "tank",
+     "tower-l2",
+     "tower-l3",
+     "ladder-cap",
+     "ladder-shaft",
+     "boat-aboard",
+     "respawned"
+    ],
+    "timeoutMs": 180000
+   },
+   "predictedEffect": "shots/06 holds 42 JPEGs and sheet.jpg.",
+   "expectedEvidence": [
+    "json.count >= 12 in shots-index"
+   ],
+   "failureSignatures": [
+    "exitCode != 0"
+   ],
+   "risk": "low",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost",
+    "look-structure",
+    "ladders-work",
+    "coop-ladder"
+   ],
+   "rationale": "Mod:\n- culling reaches every compact model at the top of the scene (at least 3 meshes, under 1500 px): the More vehicles boats and tanks. The level's own geometry spans the level and single meshes (effects) are left alone; only what we hid is shown again;\n- the deck's rooms are furnished behind the play plane (cabinets, consoles with lit screens, ceiling pipes, strip lights: red in security, hazard-yellow in the bay);\n- the near hills are hazier, with fewer and softer pines;\n- the middle's right crane moves to 8900, inside the concept-like frame.\nStaging lint: 0 violations.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "Far draws disappear (under about 300 draws), and the detail grid moves toward the concept (middle up, bottom down).",
+   "expectedEvidence": [
+    "perf drawCalls < 350",
+    "metrics.distance.detailGrid <= 0.06"
+   ],
+   "failureSignatures": [
+    "draws unchanged"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost",
+    "look-structure"
+   ],
+   "rationale": "Bake it into the bundle.",
+   "tool": "pb3x.bake",
+   "params": {},
+   "predictedEffect": "The bundle carries it.",
+   "expectedEvidence": [
+    "bake ok"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "ladders-work"
+   ],
+   "rationale": "Probe: teleport twice, a moment apart, after leaving a vehicle, so its momentum can't carry the player off before a test.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "play-06.js",
+    "path": "tools/harness/levels/play-06.js"
+   },
+   "predictedEffect": "The water-ladder test starts at the ladder.",
+   "expectedEvidence": [
+    "report.tests.ladders.inWater.x \u2248 ladder x"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "coop-ladder",
+    "coop-two"
+   ],
+   "rationale": "The co-op probe re-teleports the guest after ejecting it and records a climb trail (x, feet, onLadder, act_y).",
+   "tool": "file.write_from",
+   "params": {
+    "from": "coop-06.js",
+    "path": "tools/harness/levels/coop-06.js"
+   },
+   "predictedEffect": "The guest's climb is either passing or diagnosable.",
+   "expectedEvidence": [
+    "report.guestTrail"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  }
+ ]
+}

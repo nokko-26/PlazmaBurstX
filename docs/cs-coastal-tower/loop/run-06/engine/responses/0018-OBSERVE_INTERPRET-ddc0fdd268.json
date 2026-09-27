@@ -1,0 +1,60 @@
+{
+ "summary": "Cycle 7: 20 of 27 satisfied.\n- The boat run passes: 1511 \u2192 13306 under all seven caps, back 2131 px west, 5 patrols moved under autopilot.\n- The tower climb reaches the command room and the observation deck.\n- The shaft climb reaches the road.\nThe mirror pass is gone: one render of the main scene per frame now. Draws fell from about 1400 to 630\u2013760 and the frame ratio is 4.14.\nA read-only diagnostic shows 442 of the remaining 678 draws are still more than 2500 px off camera: the More vehicles mod draws its boats and tanks with top-level groups of its own, not the entity's cF, so cullOwn never reached them.\nThe solo water-ladder test failed on a probe artifact: the player drifted 180 px under the cap right after leaving the boat, then was teleported.\nThe guest's ladder climb ended mid-ladder (feet -193, x +58 off the shaft) with no trail to say why.\nlook-structure: detail grid 0.067 against 0.06. The bottom band is too busy (the near hills' sharp pines, 0.20 against the concept's 0.10). The middle band is too plain (dark, empty deck rooms, 0.10 against 0.17\u20130.22). The top-right cell is empty (the right crane is outside the frame).",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "442 of 678 draws per frame are objects far off camera: vehicles drawn by More vehicles' own groups (and its unlit materials), which cullOwn doesn't reach.",
+   "cites": [
+    "ev_muk6kuhz_003e1f6ea5"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The boat run, its return, the patrols and the tower climb all pass in play.",
+   "cites": [
+    "ev_muk6hyug_20a288649d"
+   ],
+   "residueIds": [
+    "boat-run",
+    "boat-returns",
+    "patrols-drive",
+    "tower-climb"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "In the overview, the detail grid's bottom row (0.175, 0.218, 0.202) is double the concept's (0.099, 0.116, 0.114), and the middle row (0.097, 0.114, 0.1) is half of it (0.171, 0.218, 0.168).",
+   "cites": [
+    "ev_muk6hz3b_c7e22c895b"
+   ],
+   "residueIds": [
+    "look-structure"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The guest climbed partway (feet -193) and ended 58 px off the shaft. The next co-op run records a trail.",
+   "cites": [
+    "ev_muk6pg25_6f8ef6f50d"
+   ],
+   "residueIds": [
+    "coop-ladder"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [
+  {
+   "residueId": "underpass-framing",
+   "verdict": "PASS",
+   "evidenceIds": [
+    "ev_muk6hzgp_00e463580b"
+   ],
+   "reason": "The lane screenshot from the boat (06-lane-bay1.png) shows everything the concept frames the underpass with: the soffit's girders and lamps above, hanging containers on their cables with CS soldiers on them, the pier cap with yellow railings, ladders and guards, the twin columns with X-bracing, and the footing behind the lane. The measurements agree with the concept's middle span: palette distance 18.3, profile 18.1, detail grid 0.053, luma overlap 0.60."
+  }
+ ],
+ "unknowns": []
+}
