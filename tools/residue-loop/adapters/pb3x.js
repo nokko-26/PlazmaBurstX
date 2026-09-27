@@ -18,7 +18,10 @@ const readJson = ( f )=>{ try { return JSON.parse( fs.readFileSync( f, 'utf8' ) 
 const tools = {
 	// run a harness script in the real game and read the report it writes. The mod source's hash is recorded, so the
 	// evidence says exactly which build it observed.
-	'pb3x.harness': { readOnly: true, doc: '{ script: "levels/x.js", args: [], report: "levels/results/x.json", timeoutMs }', run( p, { root } )
+	'pb3x.harness': { readOnly: true, doc: '{ script: "levels/x.js", args: [], report: "levels/results/x.json", timeoutMs }',
+		// (as an action, the same run against a new build is a new run: the build is part of its identity)
+		fingerprint( p, { root } ) { const f = ( rel )=>{ const a = path.join( root, rel ); return fs.existsSync( a ) ? sha256( fs.readFileSync( a ) ) : '-'; }; return sha256( [ f( 'mods/cs-coastal-tower.user.js' ), f( 'pb3x-extension/pb3x.js' ), f( path.join( 'tools/harness', p.script || '' ) ) ].join() ); },
+		run( p, { root } )
 	{
 		const hdir = path.join( root, 'tools', 'harness' );
 		const reportFile = p.report ? inside( hdir, p.report ) : null;

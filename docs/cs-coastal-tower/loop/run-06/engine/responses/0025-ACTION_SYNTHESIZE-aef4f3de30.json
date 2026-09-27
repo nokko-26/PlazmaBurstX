@@ -1,0 +1,156 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "frame-cost",
+    "coop-two"
+   ],
+   "rationale": "Mod, with the review's remaining confirmed findings:\n- the road's container stacks climbable from either side (the upper one centred);\n- the middle's container posts on the middle's containers (the indices shifted when the level grew to seven legs);\n- the shotgun out of a hatch;\n- rails at the observation deck's open sides (a 480 px drop otherwise);\n- ladders catch a fast faller in their shaft (a road hatch over a deck hatch is a 530 px fall otherwise);\n- a debug sleepAll switch for the breakdown.\nStaging lint: 0 violations, nothing unreachable.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "No regressions; falls through hatches arrested.",
+   "expectedEvidence": [
+    "report.tests.*.ok"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "Bake it into the bundle.",
+   "tool": "pb3x.bake",
+   "params": {},
+   "predictedEffect": "The bundle carries it.",
+   "expectedEvidence": [
+    "bake ok"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "perf.js, honest (review finding): the player stands at each spot, unhurt, so the soldiers round it wake as in play. Measured from the start, the far ones slept and the level read cheaper than it is.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "perf.js",
+    "path": "tools/harness/levels/perf.js"
+   },
+   "predictedEffect": "The frame ratio is measured as a player gets it (likely higher).",
+   "expectedEvidence": [
+    "report.spots[*].player"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "coop-ladder",
+    "coop-two"
+   ],
+   "rationale": "Co-op probe: the feet are the lowest point of the body's own parts, not the break atoms.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "coop-06.js",
+    "path": "tools/harness/levels/coop-06.js"
+   },
+   "predictedEffect": "The guest on the cap reads as on the cap.",
+   "expectedEvidence": [
+    "report.guestLadder true"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "waypoints.js, strict (review finding): hunters pathing means alive, on foot and more than 150 px closer to the bait. Falls into the sea, bodies thrown by blasts and boat crews no longer count. This tightens the evidence behind a residue already satisfied (enemies-path), whose check the next observation re-runs.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "waypoints.js",
+    "path": "tools/harness/levels/waypoints.js"
+   },
+   "predictedEffect": "enemies-path is judged on real pathing.",
+   "expectedEvidence": [
+    "report.movedCount"
+   ],
+   "failureSignatures": [],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "The breakdown, honest: the player at the spot, and one more step before the enemies are removed, with every soldier asleep. That separates their thinking from their bodies and drawing.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "perf-breakdown.js",
+    "path": "tools/harness/levels/perf-breakdown.js"
+   },
+   "predictedEffect": "The script is installed.",
+   "expectedEvidence": [],
+   "failureSignatures": [],
+   "risk": "low",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "Run the breakdown on this build (the fingerprint makes it a new run).",
+   "tool": "pb3x.harness",
+   "params": {
+    "script": "levels/perf-breakdown.js",
+    "args": [
+     "06",
+     "8400",
+     "-700",
+     "8300",
+     "-620"
+    ],
+    "report": "levels/results/06-perf-breakdown.json",
+    "timeoutMs": 900000
+   },
+   "predictedEffect": "It shows where the frame time goes now.",
+   "expectedEvidence": [
+    "report.steps.allAsleep"
+   ],
+   "failureSignatures": [],
+   "risk": "low",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path"
+   }
+  }
+ ]
+}

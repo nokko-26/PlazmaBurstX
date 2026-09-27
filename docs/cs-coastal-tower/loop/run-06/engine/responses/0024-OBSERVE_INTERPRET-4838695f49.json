@@ -1,0 +1,41 @@
+{
+ "summary": "Cycle 10: 24 of 27 satisfied (respawn-works now passes: back standing at the bunker checkpoint).\nThe guest's ladder climb works: its trail runs from the water to -415 at the ladder, then it walks 278 px left onto cap 1 (ch.y -364). The probe's feet reading of -81 includes the ragdoll's break atoms, which sit still at a fixed point until the body breaks. It must use the body's own parts.\nThe breakdown action was refused as 'already executed': a harness run's idempotency key didn't include the build it measures. That framework gap is now fixed with a fingerprint of the mod, bundle and script.\nframe-cost: 4.76 with draws 329\u2013541. The review also confirmed that perf.js measures with the player left at the start, so the soldiers near each spot are asleep and the measure is optimistic; it must place the player at each spot.",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "The guest reached cap 1: the trail ends at -415 by the ladder, then it walked onto the cap (x 2298, ch.y -364, feet about -320). The -81 'feet' came from a break atom.",
+   "cites": [
+    "ev_muk8dzx8_fa494df905"
+   ],
+   "residueIds": [
+    "coop-ladder",
+    "coop-two"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The respawn test passes: back at checkpoint (13760, -330), standing on that floor.",
+   "cites": [
+    "ev_muk86gvv_af9e2d1515"
+   ],
+   "residueIds": [
+    "respawn-works"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "Draws are 329\u2013541 per frame at the perf spots and the frame ratio is 4.76, measured with the player far from the spots (optimistic).",
+   "cites": [
+    "ev_muk89yq9_3967cec2cf"
+   ],
+   "residueIds": [
+    "frame-cost"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [],
+ "unknowns": [
+  "how the frame time splits between the soldiers' thinking, their bodies and drawing, and the rest"
+ ]
+}
