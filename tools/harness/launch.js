@@ -26,6 +26,13 @@ async function launch( { profile = '/tmp/pb3x-profile', url = 'https://www.plazm
 	{
 		const req = route.request(), url = req.url();
 		if ( !/^https:/.test( url ) ) return route.continue();
+		// The game files a report with the site for every uncaught page error. Errors in a test run come from mods
+		// under development, not from the game: answer those here, so none reach the site's developers.
+		if ( /\/js-error-report\//.test( url ) )
+		{
+			console.log( 'ERROR-REPORT held back (the page hit an uncaught error; see PAGEERROR above)' );
+			return route.fulfill( { status: 200, contentType: 'text/html', body: '' } ).catch( ()=>{} );
+		}
 		const isGet = req.method() === 'GET';
 		const cacheable = isGet && ( !/\.php|\/sections\//.test( url ) || /web_style_by_version/.test( url ) );
 		const key = CACHE + '/' + crypto.createHash( 'sha1' ).update( url.replace( /(\.js\?\d+)&\d+$/, '$1' ) ).digest( 'hex' );

@@ -78,6 +78,26 @@ const LABKIT = String( function()
 			} );
 		},
 		wait( frames ) { return lab.run( [], frames ); },
+		// aim the mouse at a world point (the game reads its screen position each frame), and the trigger (M1)
+		aimAt( x, y )
+		{
+			const cam = pb2_mp.cS, cv = pb2_mp.renderer.domElement;
+			if ( !cam || !cv ) return;
+			const v = new THREE.Vector3( x, -y, 0 ).project( cam ), r = cv.getBoundingClientRect();
+			pb2_mp.screen_mouse_x = r.left + ( v.x + 1 ) / 2 * r.width;
+			pb2_mp.screen_mouse_y = r.top + ( 1 - v.y ) / 2 * r.height;
+		},
+		trigger( on ) { pb2Controls.hold_mouse1 = on ? 1 : 0; },
+		// the nearest living enemy within reach (someone not on your team), or null
+		nearestEnemy( reach = 1400 )
+		{
+			const me = lab.me();
+			if ( !me ) return null;
+			let best = null, bd = reach;
+			const team = ( c )=>c && c.ragdoll ? c.ragdoll.team : null;                  // (a character's team is its ragdoll's)
+			for ( const c of pb2Character.characters ) { if ( !c || c === me || !( c.hea > 0 ) || team( c ) === team( me ) ) continue; const d = Math.hypot( c.x - me.x, c.y - me.y ); if ( d < bd ) { bd = d; best = c; } }
+			return best;
+		},
 		// pick a weapon slot with its number key and wait until it is in hand
 		async slot( n ) { await lab.run( [ [ 0, 'down', 'Digit' + n ], [ 3, 'up', 'Digit' + n ] ], 90, ( f, s )=>f > 6 && s.slot === n ? 'stop' : null ); return lab.me().curwea_slot; },
 		free() { pb2_mp.DEBUG_FORCE_GSPEED = false; }

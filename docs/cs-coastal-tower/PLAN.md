@@ -5,14 +5,17 @@ sheet, packaged as PB3X mods. The sheet is the mood and the ideas, not a floor p
 tower on huge concrete pillars over the sea at night, with fights stacked on four tiers (water, docks,
 service level, upper platform), red CS banners, floodlights, wet steel and rock channels under it.
 
-Status: **approved; the assets are in and Phase 0 is measured** (`metrics.md`); level 01 is next.
+Status: **approved; the assets are in, Phase 0 is measured** (`metrics.md`) **and level 01 is built and verified**
+(`levels/01-approach.md`); level 02 is next.
 
 | Piece | State |
 |---|---|
 | HD skies (6), textures (13), sounds (14) | done — `pb3x-extension/assets/`, built by `tools/assets/*.py`, listed in `CREDITS.md`, contact sheets in `shots/` |
 | Play harness (`tools/harness/`) | done: logs in with an authentication file, starts maps, plays them with the game's own keys, measures, takes screenshots (§ 8) |
 | Phase 0 measurements (`metrics.md`) | done: character (rifle / bare), vehicles, skins, AI / weapons / engine internals; design rules in its § 2 |
-| Levels 01–07, mods | not started |
+| Level 01 · Approach, with the `cs-coastal-tower` mod (v0.1) | done: `levels/01-approach.md`; screenshots in `shots/01/` |
+| Levels 02–07 | not started (02 is next) |
+| Mods `cs-weather-terrain`, `cs-postfx`, `cs-skies` | not started |
 
 ---
 
@@ -156,5 +159,16 @@ Work lands on the branch `cs-coastal-tower`, not `main`.
   physics at a fixed step.
 - `shots.js` takes screenshots from set camera spots. It can pull the camera back for overviews.
 - `phase0/` holds the measurements (see `metrics.md` § 7).
+- `level.js` opens the Level Editor, loads a level through the mod and plays it as tester. `levels/` holds each
+  level's passes:
+  - `play-01.js` is the route (god mode unless `--mortal`);
+  - `coop-01.js --players 2|3|4` is the co-op pass: stand-in guest connections that the engine and the mod treat
+    like joined players;
+  - `dock-01.js` checks the boat docks, backs off and lands you dry;
+  - `waypoints.js 01` shows the AI's paths and checks the hunters come;
+  - `perf.js 01` compares frame cost with the editor's starting map;
+  - `publish-shots.py` copies the screenshots to `shots/<level>/` with a contact sheet.
+- The game reports every uncaught page error to the site. The harness answers those reports itself, since in a
+  test run they come from our mods, not the game.
 
     NODE_PATH=/opt/node22/lib/node_modules xvfb-run -a -s "-screen 0 1600x900x24" node <script>

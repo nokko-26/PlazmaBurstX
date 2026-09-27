@@ -66,6 +66,10 @@ players, never a requirement.
 | Drop that is a deliberate hazard | ≥ 1,000 px | 750–900 already kills |
 | Longest dive between air | ≤ 12 s of swimming: ≤ 2,400 px of route | 16.7 s of air, less a margin, at ~200 px/s |
 | Edge a swimmer climbs out onto | ≤ 80 px above the water | 100 measured, less 20 |
+| Landing a boat docks against | level with its deck (Patrol Boat: 48 px up), sheer, solid to the bed | its bow is raked (224 px ahead of centre at the deck, 183 at the waterline): at 15 px it rode up and beached and couldn't back off; at 40 px it stopped short and left a gap (level 01) |
+| Clearance round a berth checkpoint (a replacement boat appears there) | ≥ 240 px each way to any wall | half the boat (215) plus a margin |
+| Nothing a swimmer can get under that ends at a wall | — | pinned under it pushing forward, with no air (level 01's first landing) |
+| A way out of the water that a docked boat can't cover | a hatch open to the sky behind the berth's face, reached under a slab (≥ 30 px air) | a swimmer can't climb onto a boat (not a wall: no ledge grab) and its bow covers the water at the berth (level 01) |
 | Screen | 1208 × 680 px of the world | the game camera: fov 45°, 821 px back; the window is letterboxed to 16:9 |
 
 **Where enemies walk** (code-read from the engine's path-finding; it has no hand-made nav mesh):
@@ -192,6 +196,28 @@ Grenades are given with `AddGrenades( type, n )`: 1 HE, 3 CS-Quarium shield, 5 s
   - Insert after the world pass (`XM.insertPass`).
   - Work in half intensity: the final pass doubles.
   - There is no tone mapping and no depth texture. Light shafts need their own depth pass.
+- **The game's page strips `Array.prototype`:** `every`, `reduceRight`, `findIndex`, `entries`, `keys`, `values`,
+  `flat`, `flatMap`, `at` and `findLast` are missing. `some`, `filter`, `map`, `reduce`, `find`, `includes`,
+  `forEach`, `fill`, `indexOf`, `sort`, `splice`, `Array.from` and `for … of` still work. Some engine lists (a
+  vehicle's seats `gO`) aren't real arrays: `Array.from` them first.
+- **Our own 3D** (found building level 01's set pieces):
+  - Only `ShaderMaterial`: the build has none of three.js's own materials, and a `MeshBasicMaterial` breaks the
+    shader compile (the page then files an error report to the site).
+  - The renderer uploads only `projectionMatrix`, `modelViewMatrix` and `modelMatrix`. `viewMatrix` and
+    `normalMatrix` stay zero, so a shader that uses them draws nothing. World-space normals come from
+    `mat3( modelMatrix ) * normal`.
+  - Shader compile errors are silent (the build's error checks are compiled out). Read a program's state with
+    `renderer.properties.get( material ).program` and `gl.getProgramParameter` / `getShaderInfoLog`.
+  - The renderer is made with a logarithmic depth buffer, but the game's own shaders write ordinary depth (camera
+    near 10, far 400,820), so ours must too: a shader writing log depth draws in front of every wall. The page's
+    `ShaderChunk` has no `logdepthbuf_*` chunks either, and a missing `#include` throws mid-render.
+  - A far backdrop drawn in perspective sits at eye height, not on the drawn waterline. The tower is re-placed
+    just before each render (a hook on `pb2_mp.XM.render`) so its base stays on the waterline.
+  - Built-in textures for walls and backgrounds: `ground_tile`, `lava_tile2`, `mat_cliff`, `mat_grass`,
+    `mat_panel_tile` (blue-grey panels: CS steel), `mat_panel2_tile` (beige), `mat_panel3_tile` (blue hex),
+    `mat_panel4_tile` (rust), `mat_panel8_tile`, `mat_plate1/2/3_bg`, `mat_sand`, `mat_slider_tile`, `mat_white`,
+    `metal_slice`, `pb2platform_texture`, `platform_texture`, `platform_texture_dark`,
+    `platform_texture_usurpation`, `rock_slice`.
 - **Textures** (for `cs-assets`):
   - A map can only name built-in textures or site Creations.
   - A mod can register one: a `lib[ name ]` symbol with `nominalBounds` and `draw( ctx )`, then
