@@ -1,0 +1,55 @@
+{
+ "objective": "Level 06 · Underhang of the CS Coastal Tower campaign: an open, playable, AAA-feeling side-view level under a Civil Security sea bridge whose centre carries the tower numbered 4. It plays in the real PB3 game through the cs-coastal-tower mod, in the game's own style: editor walls with textures, lamps and mod 3D set pieces, not a painted look.",
+ "desiredBehaviors": [
+  "The Level Editor's CS Tower menu loads '06 · Underhang' as an ordinary editor map, and 'Play as tester' runs it without map errors.",
+  "The raiders start in the water lane under the bridge with a CS Patrol Boat and can drive it along the whole underpass, from the left cliff to the right shore, passing every foundation.",
+  "The bridge legs stand on foundations: each is a pitstop fight point with docks level with the boat's deck, a leg platform above the boat channel, CS defenders and a respawn checkpoint.",
+  "Stairs and hatches link every layer (water, foundations, leg platforms, the deck interior, the road deck and roof, the tower) without a stuck spot.",
+  "The deck interior is a run of rooms under the road deck: work rooms, red-lit security rooms and a vehicle bay holding CS tanks that the raiders can drive.",
+  "There are three objectives, taken in any order: the cliff facility's power (left), the command room in the tower numbered 4 (centre), and the bunker basement (right shore). Once all three are done the extraction on the right hilltop opens.",
+  "CS enemies hold every layer. Enemies named [2+], [3+] or [4+] scale the fight up for co-op with 2 to 4 players, and CS patrol boats drive the lane by autopilot."
+ ],
+ "emergentProperties": [
+  "From the boat in the underpass, the soffit, the legs, the hanging containers and the lit deck interior frame the view: the top of the bridge is dressed, but the fight is under it.",
+  "Each foundation reads as a distinct fight with cover, height and a flank, and the route between foundations offers both water and foot options."
+ ],
+ "hardConstraints": [
+  "Every size follows docs/cs-coastal-tower/metrics.md § 2: ceilings ≥ 100 px over walkways and ≥ 170 px where people fight; stair risers ≤ 30 and treads ≥ 30; required gaps ≤ 300 px; required drops ≤ 400 px; docks level with the boat deck (48 px up); ≥ 240 px clear round a berth checkpoint; nothing a swimmer can get under that ends at a wall; a way out of the water at every foundation.",
+  "The boat lane is ≥ 290 px clear above the water under any span it passes, and the water is ≥ 60 px deep everywhere a boat goes.",
+  "The level is built only from the Level Editor's own objects plus the cs-coastal-tower mod's entities, so it stays editable and saveable.",
+  "The work lands on the branch cs-coastal-tower; nothing secret (the .auth file, passwords, session codes) is committed or printed.",
+  "The page never crashes, and the level adds no uncaught page errors."
+ ],
+ "preferences": [
+  "Middle chunk first, then the left, then the right.",
+  "Palette: dusk and grey steel with warm sodium lamps and red CS security lighting, as in the concept images.",
+  "Deterministic checks over judgement wherever possible."
+ ],
+ "prohibitedOutcomes": [
+  "A hand-painted look.",
+  "A route the player must take that needs a jump past the design rules.",
+  "A boat that gets stuck, or can't leave a berth.",
+  "Enemies placed where they can't be reached or fought."
+ ],
+ "qualityThresholds": [
+  "The frame cost stays within 1.5× the editor's starting map's frame cost.",
+  "The static linter reports zero rule violations, and every objective is reachable on foot from the start or from a dock.",
+  "Screenshots from ≥ 4 angles per chunk, including the editor's Alt 2.5D angled view, are saved in docs/cs-coastal-tower/shots/06/.",
+  "Measured against the matching concept image, the screenshots share its structure (a dark water band at the bottom, a soffit and deck band above it) and keep a colour distance within limits set before the comparison."
+ ],
+ "resources": [
+  "mods/cs-coastal-tower.user.js (level builder, set-piece entities); tools/harness (the real game in Chromium, with the extension)",
+  "docs/cs-coastal-tower/concept/*.webp (concept images: whole, per chunk, side views, deck interior)",
+  "docs/cs-coastal-tower/metrics.md (measured character and vehicle numbers, the design rules)"
+ ],
+ "ambiguities": [
+  "The CS banner colour (default: red and orange CS banners with the white emblem, as in the concepts).",
+  "Whether the tanks are drivable (default: yes, the CS-4 Ranger and CS-2 Bastion via the More vehicles mod).",
+  "The basement objective (default: sabotage a generator, then leave).",
+  "The 4×4's role (default: the extraction vehicle on the hilltop)."
+ ],
+ "references": [
+  "docs/cs-coastal-tower/PLAN.md",
+  "docs/cs-coastal-tower/levels/01-approach.md"
+ ]
+}

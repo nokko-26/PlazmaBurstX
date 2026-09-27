@@ -1,0 +1,701 @@
+{
+ "residues": [
+  {
+   "id": "level-builds",
+   "description": "The mod's level list includes 06 and its editor objects build without an exception into a level of walls, water and markers.",
+   "required": true,
+   "priority": 95,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.check",
+     "params": {
+      "script": "tools/harness/levels/lint.js",
+      "args": [
+       "06"
+      ]
+     }
+    },
+    "asserts": [
+     {
+      "path": "json.level",
+      "op": "eq",
+      "value": "06"
+     },
+     {
+      "path": "json.error",
+      "op": "falsy"
+     },
+     {
+      "path": "json.counts.walls",
+      "op": "gte",
+      "value": 40
+     },
+     {
+      "path": "json.counts.water",
+      "op": "gte",
+      "value": 1
+     }
+    ]
+   },
+   "rationale": "Everything else stands on the level existing as editor objects."
+  },
+  {
+   "id": "plays-clean",
+   "description": "Play as tester runs 06 with no map errors, no uncaught page errors and no error recorded by the mod.",
+   "required": true,
+   "priority": 90,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.harness",
+     "params": {
+      "script": "levels/play-06.js",
+      "report": "levels/results/06-report.json",
+      "timeoutMs": 1800000
+     }
+    },
+    "asserts": [
+     {
+      "path": "report.tests.frames.ok",
+      "op": "truthy"
+     },
+     {
+      "path": "report.tests.frames.mapErrors",
+      "op": "eq",
+      "value": 0
+     },
+     {
+      "path": "report.tests.frames.pageErrors",
+      "op": "eq",
+      "value": 0
+     },
+     {
+      "path": "report.failed",
+      "op": "falsy"
+     }
+    ]
+   },
+   "rationale": "Hard constraint: the page never crashes; the level adds no page errors.",
+   "dependsOn": [
+    "level-builds"
+   ]
+  },
+  {
+   "id": "design-rules",
+   "description": "No geometry in 06 breaks the design rules: every walkway ceiling is at least 100 px, stairs keep risers of 30 px or less, berths have 240 px clear, no underwater dead end sits under a wall, and every character stands on a floor clear of walls.",
+   "required": true,
+   "priority": 88,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.check",
+     "params": {
+      "script": "tools/harness/levels/lint.js",
+      "args": [
+       "06"
+      ]
+     }
+    },
+    "asserts": [
+     {
+      "path": "json.violationCount",
+      "op": "eq",
+      "value": 0
+     }
+    ]
+   },
+   "rationale": "metrics.md section 2, checked on every wall.",
+   "dependsOn": [
+    "level-builds"
+   ]
+  },
+  {
+   "id": "route-complete",
+   "description": "From the raiders' start every objective, the exit, every foot checkpoint and every vehicle is reachable with the measured moves, and every enemy is reachable or can be engaged within 1000 px.",
+   "required": true,
+   "priority": 86,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.check",
+     "params": {
+      "script": "tools/harness/levels/lint.js",
+      "args": [
+       "06"
+      ]
+     }
+    },
+    "asserts": [
+     {
+      "path": "json.route.unreachable",
+      "op": "len_lte",
+      "value": 0
+     },
+     {
+      "path": "json.route.objectives",
+      "op": "len_gte",
+      "value": 1
+     },
+     {
+      "path": "json.route.targets",
+      "op": "gte",
+      "value": 30
+     }
+    ]
+   },
+   "rationale": "No stuck spots; jumps makeable; enemies can be fought.",
+   "dependsOn": [
+    "level-builds"
+   ]
+  },
+  {
+   "id": "lane-static",
+   "description": "The boat lane runs the whole underpass with at least 290 px of clearance above the water and 60 px of depth, from the start dock to the right headland.",
+   "required": true,
+   "priority": 84,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.check",
+     "params": {
+      "script": "tools/harness/levels/lint.js",
+      "args": [
+       "06"
+      ]
+     }
+    },
+    "asserts": [
+     {
+      "path": "json.boat.lane.0",
+      "op": "lte",
+      "value": 4950
+     },
+     {
+      "path": "json.boat.lane.1",
+      "op": "gte",
+      "value": 10150
+     }
+    ]
+   },
+   "rationale": "The underpass is the level's spine.",
+   "dependsOn": [
+    "level-builds"
+   ]
+  },
+  {
+   "id": "ladders-work",
+   "description": "In the game players climb out of the water up a ladder onto a pier cap, climb a leg's shaft from the cap through the deck to the road, and climb back down.",
+   "required": true,
+   "priority": 82,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.harness",
+     "params": {
+      "script": "levels/play-06.js",
+      "report": "levels/results/06-report.json",
+      "timeoutMs": 1800000
+     }
+    },
+    "asserts": [
+     {
+      "path": "report.tests.ladders.ok",
+      "op": "truthy"
+     },
+     {
+      "path": "report.tests.ladders.capOk",
+      "op": "truthy"
+     },
+     {
+      "path": "report.tests.ladders.roadOk",
+      "op": "truthy"
+     },
+     {
+      "path": "report.tests.ladders.downOk",
+      "op": "truthy"
+     }
+    ]
+   },
+   "rationale": "Ladders are the only way onto the caps; the engine has none of its own.",
+   "dependsOn": [
+    "plays-clean"
+   ]
+  },
+  {
+   "id": "boat-run",
+   "description": "In the game the players' boat drives from the dock under all three pier caps to the right end of the underpass without sticking or being lost.",
+   "required": true,
+   "priority": 80,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.harness",
+     "params": {
+      "script": "levels/play-06.js",
+      "report": "levels/results/06-report.json",
+      "timeoutMs": 1800000
+     }
+    },
+    "asserts": [
+     {
+      "path": "report.tests.boat.ok",
+      "op": "truthy"
+     },
+     {
+      "path": "report.tests.boat.passedCaps",
+      "op": "len_gte",
+      "value": 5
+     }
+    ]
+   },
+   "rationale": "Vehicles fit and can leave.",
+   "dependsOn": [
+    "plays-clean",
+    "lane-static"
+   ]
+  },
+  {
+   "id": "objective-gates-exit",
+   "description": "The extraction stays locked until the command-room console is held for its full time; holding it completes the objective and then the extraction clears the level.",
+   "required": true,
+   "priority": 78,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.harness",
+     "params": {
+      "script": "levels/play-06.js",
+      "report": "levels/results/06-report.json",
+      "timeoutMs": 1800000
+     }
+    },
+    "asserts": [
+     {
+      "path": "report.tests.objective.ok",
+      "op": "truthy"
+     },
+     {
+      "path": "report.tests.objective.lockedFirst",
+      "op": "truthy"
+     },
+     {
+      "path": "report.tests.objective.complete",
+      "op": "truthy"
+     }
+    ]
+   },
+   "rationale": "Objectives in any order, then extraction.",
+   "dependsOn": [
+    "plays-clean"
+   ]
+  },
+  {
+   "id": "tank-drivable",
+   "description": "A raider boards the CS-2 Bastion in the vehicle bay and drives it along the deck interior.",
+   "required": true,
+   "priority": 70,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.harness",
+     "params": {
+      "script": "levels/play-06.js",
+      "report": "levels/results/06-report.json",
+      "timeoutMs": 1800000
+     }
+    },
+    "asserts": [
+     {
+      "path": "report.tests.tank.ok",
+      "op": "truthy"
+     },
+     {
+      "path": "report.tests.tank.inside",
+      "op": "truthy"
+     }
+    ]
+   },
+   "rationale": "The deck interior's vehicle bay holds tanks the raiders can drive.",
+   "dependsOn": [
+    "plays-clean"
+   ]
+  },
+  {
+   "id": "editor-views",
+   "description": "The level's screenshots are published: at least 12, of which at least 3 are the editor's Alt 2.5D angled views, plus flat editor views, overviews, the lane and eye-level shots, with a contact sheet.",
+   "required": true,
+   "priority": 60,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.check",
+     "params": {
+      "script": "tools/harness/levels/shots-index.js",
+      "args": [
+       "06"
+      ]
+     }
+    },
+    "asserts": [
+     {
+      "path": "json.count",
+      "op": "gte",
+      "value": 12
+     },
+     {
+      "path": "json.altViews",
+      "op": "gte",
+      "value": 3
+     },
+     {
+      "path": "json.editorFlat",
+      "op": "gte",
+      "value": 1
+     },
+     {
+      "path": "json.overviews",
+      "op": "gte",
+      "value": 2
+     },
+     {
+      "path": "json.lane",
+      "op": "gte",
+      "value": 3
+     },
+     {
+      "path": "json.eyeLevel",
+      "op": "gte",
+      "value": 3
+     },
+     {
+      "path": "json.sheet",
+      "op": "truthy"
+     }
+    ]
+   },
+   "rationale": "Screenshots from 4+ angles per chunk, including the Alt view.",
+   "dependsOn": [
+    "plays-clean"
+   ]
+  },
+  {
+   "id": "look-dusk-palette",
+   "description": "The pulled-back view of the middle shares the concept's dusk palette and tone: palette distance at most 24, warmth and luma within 20, saturation within 0.12, luma histogram overlap at least 0.55.",
+   "required": true,
+   "priority": 55,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.image",
+     "params": {
+      "image": "tools/harness/levels/results/06-overview-middle.png",
+      "reference": "docs/cs-coastal-tower/concept/10-middle-side.webp"
+     }
+    },
+    "asserts": [
+     {
+      "path": "metrics.distance.palette",
+      "op": "lte",
+      "value": 24
+     },
+     {
+      "path": "metrics.distance.warmth",
+      "op": "gte",
+      "value": -20
+     },
+     {
+      "path": "metrics.distance.warmth",
+      "op": "lte",
+      "value": 20
+     },
+     {
+      "path": "metrics.distance.lumaMean",
+      "op": "gte",
+      "value": -20
+     },
+     {
+      "path": "metrics.distance.lumaMean",
+      "op": "lte",
+      "value": 20
+     },
+     {
+      "path": "metrics.distance.saturation",
+      "op": "gte",
+      "value": -0.12
+     },
+     {
+      "path": "metrics.distance.saturation",
+      "op": "lte",
+      "value": 0.12
+     },
+     {
+      "path": "metrics.distance.lumaHistOverlap",
+      "op": "gte",
+      "value": 0.55
+     }
+    ]
+   },
+   "rationale": "Limits set before comparing. For scale, level 01 (night) against the same concept: palette 29.0, warmth -32.1, saturation +0.19, overlap 0.66, so these limits reject a night look.",
+   "dependsOn": [
+    "plays-clean"
+   ]
+  },
+  {
+   "id": "look-interior",
+   "description": "The deck interior at eye level carries the concept's warm/red interior light: palette distance to the concept's deck band at most 30, warmth within 25.",
+   "required": true,
+   "priority": 50,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.image",
+     "params": {
+      "image": "tools/harness/levels/results/06-eye-interior-security.png",
+      "reference": "docs/cs-coastal-tower/concept/11-middle-deck-interior.webp",
+      "crop": [
+       0.05,
+       0.36,
+       0.95,
+       0.6
+      ]
+     }
+    },
+    "asserts": [
+     {
+      "path": "metrics.distance.palette",
+      "op": "lte",
+      "value": 30
+     },
+     {
+      "path": "metrics.distance.warmth",
+      "op": "gte",
+      "value": -25
+     },
+     {
+      "path": "metrics.distance.warmth",
+      "op": "lte",
+      "value": 25
+     }
+    ]
+   },
+   "rationale": "The concept's deck interior image.",
+   "dependsOn": [
+    "plays-clean"
+   ]
+  },
+  {
+   "id": "underpass-framing",
+   "description": "Seen from the boat in the underpass, the soffit, the legs, the hanging containers and the lit deck frame the view like the concept's middle span, not an empty sky.",
+   "required": true,
+   "priority": 45,
+   "contract": {
+    "kind": "semantic",
+    "probe": {
+     "tool": "pb3x.image",
+     "params": {
+      "image": "tools/harness/levels/results/06-lane-bay1.png",
+      "reference": "docs/cs-coastal-tower/concept/10-middle-side.webp",
+      "crop": [
+       0.25,
+       0.35,
+       0.75,
+       1
+      ]
+     }
+    },
+    "question": "Given the lane screenshot's measurements (and the screenshot itself, tools/harness/levels/results/06-lane-bay1.png), does the view from the boat show structure framing it (soffit band above, legs/footings, hanging containers, lamps) the way the concept's middle span does?"
+   },
+   "rationale": "The user: the top is seen from the boat in the underpass; the focus is under the bridge.",
+   "dependsOn": [
+    "boat-run"
+   ]
+  },
+  {
+   "id": "frame-cost",
+   "description": "The level's frame time at its busiest spots stays within 1.5 times the editor's starting map's in the same browser.",
+   "required": true,
+   "priority": 65,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.harness",
+     "params": {
+      "script": "levels/perf.js",
+      "args": [
+       "06"
+      ],
+      "report": "levels/results/06-perf.json",
+      "timeoutMs": 1500000
+     }
+    },
+    "asserts": [
+     {
+      "path": "report.failed",
+      "op": "falsy"
+     },
+     {
+      "path": "report.worstRatio",
+      "op": "lte",
+      "value": 1.5
+     }
+    ]
+   },
+   "rationale": "Quality threshold: frame rate holds.",
+   "dependsOn": [
+    "plays-clean"
+   ]
+  },
+  {
+   "id": "enemies-path",
+   "description": "The hunters walk towards a player waiting in the deck interior: at least three enemies move more than 150 px in 20 s while the posts hold.",
+   "required": true,
+   "priority": 62,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.harness",
+     "params": {
+      "script": "levels/waypoints.js",
+      "args": [
+       "06"
+      ],
+      "report": "levels/results/06-waypoints.json",
+      "timeoutMs": 900000
+     }
+    },
+    "asserts": [
+     {
+      "path": "report.failed",
+      "op": "falsy"
+     },
+     {
+      "path": "report.movedCount",
+      "op": "gte",
+      "value": 3
+     }
+    ]
+   },
+   "rationale": "Checklist: enemies path.",
+   "dependsOn": [
+    "plays-clean"
+   ]
+  },
+  {
+   "id": "coop-two",
+   "description": "With two players the level loads, both get characters on the raiders' side, the [2+] enemies stay, and a guest who dies comes back.",
+   "required": true,
+   "priority": 58,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.harness",
+     "params": {
+      "script": "levels/coop-06.js",
+      "args": [
+       "--players",
+       "2"
+      ],
+      "report": "levels/results/06-coop2-report.json",
+      "timeoutMs": 1800000
+     }
+    },
+    "asserts": [
+     {
+      "path": "report.ok",
+      "op": "truthy"
+     },
+     {
+      "path": "report.guests",
+      "op": "gte",
+      "value": 1
+     },
+     {
+      "path": "report.coop.players",
+      "op": "eq",
+      "value": 2
+     }
+    ]
+   },
+   "rationale": "Checklist: a co-op pass with 2+ players.",
+   "dependsOn": [
+    "plays-clean"
+   ]
+  },
+  {
+   "id": "three-chunks",
+   "description": "The level spans the whole bridge from the left cliff facility to the right bunker shore (at least 14000 px wide) with three objectives reachable in any order.",
+   "required": true,
+   "priority": 30,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.check",
+     "params": {
+      "script": "tools/harness/levels/lint.js",
+      "args": [
+       "06"
+      ]
+     }
+    },
+    "asserts": [
+     {
+      "path": "json.route.objectives",
+      "op": "len_gte",
+      "value": 3
+     },
+     {
+      "path": "json.bounds.2",
+      "op": "gte",
+      "value": 14000
+     },
+     {
+      "path": "json.route.unreachable",
+      "op": "len_lte",
+      "value": 0
+     }
+    ]
+   },
+   "rationale": "The intent's three objectives; the middle chunk comes first.",
+   "dependsOn": [
+    "route-complete"
+   ]
+  },
+  {
+   "id": "work-landed",
+   "description": "The level, its instruments and screenshots are committed and pushed on the branch cs-coastal-tower.",
+   "required": true,
+   "priority": 20,
+   "contract": {
+    "kind": "check",
+    "probe": {
+     "tool": "pb3x.check",
+     "params": {
+      "script": "tools/harness/levels/git-state.js"
+     }
+    },
+    "asserts": [
+     {
+      "path": "json.branch",
+      "op": "eq",
+      "value": "cs-coastal-tower"
+     },
+     {
+      "path": "json.uncommitted",
+      "op": "eq",
+      "value": 0
+     },
+     {
+      "path": "json.pushed",
+      "op": "truthy"
+     }
+    ]
+   },
+   "rationale": "Hard constraint: the work lands on cs-coastal-tower.",
+   "dependsOn": [
+    "editor-views"
+   ]
+  }
+ ],
+ "notes": "Compiled by the file-exchange stand-in (the session operator), not GEP Train. Deterministic contracts everywhere except the underpass framing. The play probe is listed first: the image probes read its screenshots."
+}

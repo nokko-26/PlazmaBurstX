@@ -23,7 +23,7 @@ const tools = {
 		const hdir = path.join( root, 'tools', 'harness' );
 		const reportFile = p.report ? inside( hdir, p.report ) : null;
 		if ( reportFile && fs.existsSync( reportFile ) ) fs.renameSync( reportFile, reportFile + '.prev' );   // never read a stale report
-		const out = spawn( [ 'xvfb-run', '-a', 'node', inside( hdir, p.script ), ...( p.args || [] ).map( String ) ], { cwd: hdir, timeoutMs: p.timeoutMs || 900000, env: HARNESS_ENV } );
+		const out = spawn( [ 'xvfb-run', '-a', '-s', '-screen 0 1600x900x24', 'node', inside( hdir, p.script ), ...( p.args || [] ).map( String ) ], { cwd: hdir, timeoutMs: p.timeoutMs || 900000, env: HARNESS_ENV } );
 		const mod = path.join( root, 'mods', 'cs-coastal-tower.user.js' ), bundle = path.join( root, 'pb3x-extension', 'pb3x.js' );
 		return { ...out, report: reportFile ? readJson( reportFile ) : null, reportFile: p.report || null,
 			build: { mod: fs.existsSync( mod ) ? sha256( fs.readFileSync( mod ) ) : null, bundle: fs.existsSync( bundle ) ? sha256( fs.readFileSync( bundle ) ) : null } };

@@ -1,0 +1,66 @@
+{
+ "summary": "Cycle 0, nothing installed yet. Every probe script is missing: lint.js, play-06.js, shots-index.js, coop-06.js and git-state.js each exit with MODULE_NOT_FOUND. perf.js and waypoints.js exist but have no spots for 06, so they fail after loading. The image probes find no screenshots. All 27 residues are open, and level-builds is the root blocker.",
+ "claims": [
+  {
+   "kind": "INFERENCE",
+   "text": "The linter isn't installed at tools/harness/levels/lint.js (the node loader can't find the module), so every lint-bound residue is contradicted by absence, not by the level.",
+   "cites": [
+    "ev_muk2wozn_ef415f7a83"
+   ],
+   "residueIds": [
+    "level-builds",
+    "design-rules",
+    "route-complete",
+    "lane-static"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "The play probe has no script to run, so the report is null.",
+   "cites": [
+    "ev_muk2wp2j_673ac71007"
+   ],
+   "residueIds": [
+    "plays-clean"
+   ]
+  },
+  {
+   "kind": "INFERENCE",
+   "text": "perf.js and waypoints.js know no spots or bait for level 06.",
+   "cites": [
+    "ev_muk2yanh_c50a414c6c",
+    "ev_muk2yui3_881df54913"
+   ],
+   "residueIds": [
+    "frame-cost",
+    "enemies-path"
+   ]
+  },
+  {
+   "kind": "PLAN",
+   "text": "Install the instruments (linter, play, co-op, shots index, git state, the perf and waypoints spots) together with the level and its bake, so the next observation measures the level itself.",
+   "cites": [
+    "ev_muk2wozn_ef415f7a83",
+    "ev_muk2wp2j_673ac71007"
+   ],
+   "residueIds": [
+    "level-builds"
+   ]
+  }
+ ],
+ "transitions": [],
+ "judgements": [
+  {
+   "residueId": "underpass-framing",
+   "verdict": "UNSURE",
+   "evidenceIds": [
+    "ev_muk2wp8q_3be378ca9e"
+   ],
+   "reason": "There's no lane screenshot yet: imgmetrics couldn't open 06-lane-bay1.png."
+  }
+ ],
+ "unknowns": [
+  "whether the ladder mechanism (the atoms' velocity set each tick) holds characters steadily in the real engine",
+  "the z-depth at which the bridge set pieces read correctly in the flat and angled views"
+ ]
+}

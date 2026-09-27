@@ -1,0 +1,226 @@
+{
+ "findings": [
+  {
+   "kind": "GAP",
+   "description": "Every residue can hold while a player who dies never comes back: the play probe runs in god mode, so the checkpoints and the mod's respawn are never exercised in 06's layered geometry (a cap, the deck, the tower).",
+   "material": true,
+   "residue": {
+    "id": "respawn-works",
+    "description": "A player killed on the deck comes back within 8 s at the last checkpoint reached, standing on a floor.",
+    "required": true,
+    "priority": 74,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.respawn.ok",
+       "op": "truthy"
+      }
+     ]
+    },
+    "rationale": "Checkpoints are the co-op and solo safety net."
+   }
+  },
+  {
+   "kind": "GAP",
+   "description": "boat-run only proves the boat goes east; 'vehicles fit and can leave' also needs it to back out of the lane's end and return west.",
+   "material": true,
+   "residue": {
+    "id": "boat-returns",
+    "description": "After its run east the players' boat drives back west at least 1500 px under the caps.",
+    "required": true,
+    "priority": 66,
+    "dependsOn": [
+     "boat-run"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.boat.returned",
+       "op": "gte",
+       "value": 1500
+      }
+     ]
+    },
+    "rationale": "Checklist: vehicles fit and can leave."
+   }
+  },
+  {
+   "kind": "GAP",
+   "description": "The command room is only reached through the tower's own ladder shaft, but the objective test teleports into it; the tower climb itself is never played.",
+   "material": true,
+   "residue": {
+    "id": "tower-climb",
+    "description": "From the tower lobby a player climbs the tower's shaft to the command room floor and on to the observation deck.",
+    "required": true,
+    "priority": 76,
+    "dependsOn": [
+     "ladders-work"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.tower.ok",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.tower.l2",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.tower.l3",
+       "op": "truthy"
+      }
+     ]
+    },
+    "rationale": "The centre objective must be reachable in play, not only on paper."
+   }
+  },
+  {
+   "kind": "GAP",
+   "description": "look-dusk-palette measures colour only: an image of mostly sky-coloured emptiness could pass it. The structure (bands top to bottom, where the detail is) must match too.",
+   "material": true,
+   "residue": {
+    "id": "look-structure",
+    "description": "The pulled-back view of the middle has the concept's structure: brightness profile top to bottom within 30 levels on average, and edge detail spread over the frame like the concept's (detail-grid distance at most 0.06).",
+    "required": true,
+    "priority": 52,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.image",
+      "params": {
+       "image": "tools/harness/levels/results/06-overview-middle.png",
+       "reference": "docs/cs-coastal-tower/concept/10-middle-side.webp"
+      }
+     },
+     "asserts": [
+      {
+       "path": "metrics.distance.profile",
+       "op": "lte",
+       "value": 30
+      },
+      {
+       "path": "metrics.distance.detailGrid",
+       "op": "lte",
+       "value": 0.06
+      }
+     ]
+    },
+    "rationale": "Closes a way to game the look residue."
+   }
+  },
+  {
+   "kind": "GAP",
+   "description": "The emergent property 'each foundation reads as a distinct fight with cover, height and a flank' has no residue: the caps as first built are flat slabs.",
+   "material": true,
+   "residue": {
+    "id": "cap-cover",
+    "description": "Every pier cap carries cover to fight from (at least one block 40-110 px tall standing on it) besides its ladders and neighbouring containers.",
+    "required": true,
+    "priority": 72,
+    "dependsOn": [
+     "design-rules"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.check",
+      "params": {
+       "script": "tools/harness/levels/lint.js",
+       "args": [
+        "06"
+       ]
+      }
+     },
+     "asserts": [
+      {
+       "path": "json.capsWithCover",
+       "op": "gte",
+       "value": 3
+      }
+     ]
+    },
+    "rationale": "Pitstop fight points need cover."
+   }
+  },
+  {
+   "kind": "GAP",
+   "description": "coop-two can pass while guests can't use the ladders (the ladder code moves characters on the host from their controllers' inputs; a guest's input path differs from the host's keyboard).",
+   "material": true,
+   "residue": {
+    "id": "coop-ladder",
+    "description": "In a two-player match a guest climbs a pier cap's ladder out of the water onto the cap.",
+    "required": true,
+    "priority": 56,
+    "dependsOn": [
+     "coop-two"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/coop-06.js",
+       "args": [
+        "--players",
+        "2"
+       ],
+       "report": "levels/results/06-coop2-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.guestLadder",
+       "op": "truthy"
+      }
+     ]
+    },
+    "rationale": "Co-op players need the ladders as much as the host."
+   }
+  },
+  {
+   "kind": "GAP",
+   "description": "Editor saveability: the level is built only from the editor's own templates plus registered mod entities, which the linter parses; no separate residue needed.",
+   "material": false
+  },
+  {
+   "kind": "GAP",
+   "description": "The hanging-container jump chain is an optional route; the linter proves the jumps are within the rules. Not material.",
+   "material": false
+  }
+ ]
+}

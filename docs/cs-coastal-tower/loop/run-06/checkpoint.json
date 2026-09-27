@@ -1,0 +1,247 @@
+{
+ "phase": "OBSERVE",
+ "seq": 6,
+ "cycle": 1,
+ "adversarialRounds": 3,
+ "invalidAnswers": 0,
+ "stall": {
+  "window": 3,
+  "deltas": [
+   27
+  ],
+  "actionSigs": [
+   "80fe487f50efe234",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
+   "0a86473e94b5aaa5",
+   "d7fae43b34bfc37d",
+   "6d830d548b54a54f",
+   "f3874984c8c3eab4",
+   "bb9262bf626b9bf5",
+   "aba2f50c650d42ea"
+  ],
+  "hypotheses": []
+ },
+ "budgetSpent": {
+  "engineCalls": 6,
+  "actions": 9,
+  "cycles": 1,
+  "cost": 9,
+  "startedAt": 1790529166395
+ },
+ "done": [
+  "act_eaaf37c0b6e26bf7ddbc",
+  "act_dd058ef4e1ccb52b76f8",
+  "act_7cd5fc25714d673dffe2",
+  "act_de42ef65216009c35c87",
+  "act_70a655d2f7aa833f7125",
+  "act_6bdf1c7932e611bae8a2",
+  "act_045d692afdfd026108e5",
+  "act_c7b13283a3a75f31be55",
+  "act_779739eae5fc0aca628a"
+ ],
+ "lastProbeIds": {
+  "probe:d22e87edb3fa10bb": "ev_muk2wozn_ef415f7a83",
+  "probe:5e40829617afc91e": "ev_muk2wp2j_673ac71007",
+  "probe:f0da2bbb4787153c": "ev_muk2wp45_330fcb6b73",
+  "probe:7980a067bb842f7b": "ev_muk2wp5y_280f99fc03",
+  "probe:3ddf0d6bd2086dd8": "ev_muk2wp7f_19a083f9df",
+  "probe:cb3bd0e8c318b9ec": "ev_muk2wp8q_3be378ca9e",
+  "probe:990fb3e94a4cb262": "ev_muk2yanh_c50a414c6c",
+  "probe:5ae70d282044ba98": "ev_muk2yui3_881df54913",
+  "probe:91dd14c2d620911a": "ev_muk2yuke_eb969c3ddc",
+  "probe:aea6c2d28affb31d": "ev_muk2yulh_50fde4e69d"
+ },
+ "terminal": null,
+ "finalRounds": 0,
+ "lastActions": [
+  {
+   "id": "act_eaaf37c0b6e26bf7ddbc",
+   "tool": "file.write_from",
+   "targets": [
+    "level-builds",
+    "design-rules",
+    "route-complete",
+    "lane-static",
+    "cap-cover",
+    "layers-held",
+    "coop-scaling-names",
+    "three-chunks"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk32tkg_383b4cc229",
+   "expectedEvidence": [
+    "lint probe exitCode 0 with json.level == '06'"
+   ],
+   "failureSignatures": [
+    "MODULE_NOT_FOUND",
+    "json.error set"
+   ]
+  },
+  {
+   "id": "act_dd058ef4e1ccb52b76f8",
+   "tool": "file.write_from",
+   "targets": [
+    "level-builds",
+    "plays-clean",
+    "ladders-work",
+    "objective-gates-exit",
+    "tower-climb",
+    "cap-cover",
+    "layers-held"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk32tki_fabcd0e31f",
+   "expectedEvidence": [
+    "json.violationCount == 0",
+    "json.route.unreachable empty"
+   ],
+   "failureSignatures": [
+    "json.error: level06 threw"
+   ]
+  },
+  {
+   "id": "act_7cd5fc25714d673dffe2",
+   "tool": "pb3x.bake",
+   "targets": [
+    "plays-clean"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk32tqq_d48e077a4a",
+   "expectedEvidence": [
+    "bake ok true"
+   ],
+   "failureSignatures": [
+    "bake exitCode != 0",
+    "syntax error"
+   ]
+  },
+  {
+   "id": "act_de42ef65216009c35c87",
+   "tool": "file.write_from",
+   "targets": [
+    "plays-clean",
+    "ladders-work",
+    "boat-run",
+    "boat-returns",
+    "objective-gates-exit",
+    "tower-climb",
+    "tank-drivable",
+    "respawn-works",
+    "patrols-drive",
+    "editor-views",
+    "look-dusk-palette",
+    "look-interior",
+    "look-structure"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk32tqr_28d460415f",
+   "expectedEvidence": [
+    "report.tests.* present"
+   ],
+   "failureSignatures": [
+    "report null",
+    "report.failed"
+   ]
+  },
+  {
+   "id": "act_70a655d2f7aa833f7125",
+   "tool": "file.write_from",
+   "targets": [
+    "coop-two",
+    "coop-ladder"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk32tqs_9d1249abcb",
+   "expectedEvidence": [
+    "report.guests >= 1"
+   ],
+   "failureSignatures": [
+    "report.failed"
+   ]
+  },
+  {
+   "id": "act_6bdf1c7932e611bae8a2",
+   "tool": "file.write_from",
+   "targets": [
+    "editor-views"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk32tqs_770f9e3c82",
+   "expectedEvidence": [
+    "json.count"
+   ],
+   "failureSignatures": [
+    "MODULE_NOT_FOUND"
+   ]
+  },
+  {
+   "id": "act_045d692afdfd026108e5",
+   "tool": "file.write_from",
+   "targets": [
+    "work-landed"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk32tqt_75c8572a59",
+   "expectedEvidence": [
+    "json.branch == cs-coastal-tower"
+   ],
+   "failureSignatures": [
+    "MODULE_NOT_FOUND"
+   ]
+  },
+  {
+   "id": "act_c7b13283a3a75f31be55",
+   "tool": "file.patch",
+   "targets": [
+    "frame-cost"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk32tqu_829a069da5",
+   "expectedEvidence": [
+    "report.worstRatio"
+   ],
+   "failureSignatures": [
+    "report.failed"
+   ]
+  },
+  {
+   "id": "act_779739eae5fc0aca628a",
+   "tool": "file.patch",
+   "targets": [
+    "enemies-path"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_muk32tqu_148c00083a",
+   "expectedEvidence": [
+    "report.movedCount"
+   ],
+   "failureSignatures": [
+    "report.failed"
+   ]
+  }
+ ],
+ "observeProbed": false,
+ "seenEvidence": [
+  "ev_muk2wozn_ef415f7a83",
+  "ev_muk2wp2j_673ac71007",
+  "ev_muk2wp45_330fcb6b73",
+  "ev_muk2wp5y_280f99fc03",
+  "ev_muk2wp7f_19a083f9df",
+  "ev_muk2wp8q_3be378ca9e",
+  "ev_muk2yanh_c50a414c6c",
+  "ev_muk2yui3_881df54913",
+  "ev_muk2yuke_eb969c3ddc",
+  "ev_muk2yulh_50fde4e69d"
+ ],
+ "failureHandled": false
+}

@@ -1,0 +1,32 @@
+{
+ "root": "../../../..",
+ "engineLabel": "file-exchange stand-in (not GEP Train): answered by the Claude Code session operator",
+ "policy": {
+  "commands": [
+   "node",
+   "xvfb-run",
+   "python3"
+  ],
+  "probeCommands": [
+   "node",
+   "python3"
+  ],
+  "actions": {
+   "maxRisk": "medium"
+  }
+ },
+ "budget": {
+  "cycles": 60,
+  "engineCalls": 400,
+  "actions": 200,
+  "wallMs": 172800000
+ },
+ "tools": [
+  "../../../../tools/residue-loop/adapters/pb3x.js"
+ ],
+ "evidenceChars": 3000,
+ "controller": {
+  "maxAdversarialRounds": 4,
+  "maxActionsPerCycle": 10
+ }
+}

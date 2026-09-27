@@ -1,0 +1,1620 @@
+[
+ {
+  "id": "level-builds",
+  "description": "The mod's level list includes 06 and its editor objects build without an exception into a level of walls, water and markers.",
+  "required": true,
+  "dependsOn": [],
+  "priority": 95,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.check",
+    "params": {
+     "script": "tools/harness/levels/lint.js",
+     "args": [
+      "06"
+     ]
+    }
+   },
+   "asserts": [
+    {
+     "path": "json.level",
+     "op": "eq",
+     "value": "06"
+    },
+    {
+     "path": "json.error",
+     "op": "falsy"
+    },
+    {
+     "path": "json.counts.walls",
+     "op": "gte",
+     "value": 40
+    },
+    {
+     "path": "json.counts.water",
+     "op": "gte",
+     "value": 1
+    }
+   ]
+  },
+  "rationale": "Everything else stands on the level existing as editor objects.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "b4a8d332b2b0e3eb4f8d460fda4bcc31bc3bd6cbb8ad48e2364c3b2c1d52b89c",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wozn_ef415f7a83"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.459Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.902Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "why": "contract FAIL (cycle 0): failed json.level eq \"06\" (got undefined); json.counts.walls gte 40 (got undefined); json.counts.water gte 1 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "plays-clean",
+  "description": "Play as tester runs 06 with no map errors, no uncaught page errors and no error recorded by the mod.",
+  "required": true,
+  "dependsOn": [
+   "level-builds"
+  ],
+  "priority": 90,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/play-06.js",
+     "report": "levels/results/06-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.tests.frames.ok",
+     "op": "truthy"
+    },
+    {
+     "path": "report.tests.frames.mapErrors",
+     "op": "eq",
+     "value": 0
+    },
+    {
+     "path": "report.tests.frames.pageErrors",
+     "op": "eq",
+     "value": 0
+    },
+    {
+     "path": "report.failed",
+     "op": "falsy"
+    }
+   ]
+  },
+  "rationale": "Hard constraint: the page never crashes; the level adds no page errors.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "8fc7bbe39402b7cdf89793165a12b86d1f9d9b62df26eb0460e0aa2606eeef16",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp2j_673ac71007"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.460Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.902Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.tests.frames.ok truthy undefined (got undefined); report.tests.frames.mapErrors eq 0 (got undefined); report.tests.frames.pageErrors eq 0 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "design-rules",
+  "description": "No geometry in 06 breaks the design rules: every walkway ceiling is at least 100 px, stairs keep risers of 30 px or less, berths have 240 px clear, no underwater dead end sits under a wall, and every character stands on a floor clear of walls.",
+  "required": true,
+  "dependsOn": [
+   "level-builds"
+  ],
+  "priority": 88,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.check",
+    "params": {
+     "script": "tools/harness/levels/lint.js",
+     "args": [
+      "06"
+     ]
+    }
+   },
+   "asserts": [
+    {
+     "path": "json.violationCount",
+     "op": "eq",
+     "value": 0
+    }
+   ]
+  },
+  "rationale": "metrics.md section 2, checked on every wall.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "a0e4596da54c90cbb4bbb7acc4782d2170d69b4c3a2791f27a9b9ef310d9adcf",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wozn_ef415f7a83"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.460Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.902Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "why": "contract FAIL (cycle 0): failed json.violationCount eq 0 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "route-complete",
+  "description": "From the raiders' start every objective, the exit, every foot checkpoint and every vehicle is reachable with the measured moves, and every enemy is reachable or can be engaged within 1000 px.",
+  "required": true,
+  "dependsOn": [
+   "level-builds"
+  ],
+  "priority": 86,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.check",
+    "params": {
+     "script": "tools/harness/levels/lint.js",
+     "args": [
+      "06"
+     ]
+    }
+   },
+   "asserts": [
+    {
+     "path": "json.route.unreachable",
+     "op": "len_lte",
+     "value": 0
+    },
+    {
+     "path": "json.route.objectives",
+     "op": "len_gte",
+     "value": 1
+    },
+    {
+     "path": "json.route.targets",
+     "op": "gte",
+     "value": 30
+    }
+   ]
+  },
+  "rationale": "No stuck spots; jumps makeable; enemies can be fought.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "091d9ae7bcd5a196540b7450bf97ab2405a42893a6e4b97600adde45dc691e2f",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wozn_ef415f7a83"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.460Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.902Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "why": "contract FAIL (cycle 0): failed json.route.unreachable len_lte 0 (got undefined); json.route.objectives len_gte 1 (got undefined); json.route.targets gte 30 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "lane-static",
+  "description": "The boat lane runs the whole underpass with at least 290 px of clearance above the water and 60 px of depth, from the start dock to the right headland.",
+  "required": true,
+  "dependsOn": [
+   "level-builds"
+  ],
+  "priority": 84,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.check",
+    "params": {
+     "script": "tools/harness/levels/lint.js",
+     "args": [
+      "06"
+     ]
+    }
+   },
+   "asserts": [
+    {
+     "path": "json.boat.lane.0",
+     "op": "lte",
+     "value": 4950
+    },
+    {
+     "path": "json.boat.lane.1",
+     "op": "gte",
+     "value": 10150
+    }
+   ]
+  },
+  "rationale": "The underpass is the level's spine.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "cc65fa4a24d450aa3045277bbf4301ba3b9e7b176b4b7df832c775b539c4e93d",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wozn_ef415f7a83"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.460Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.902Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "why": "contract FAIL (cycle 0): failed json.boat.lane.0 lte 4950 (got undefined); json.boat.lane.1 gte 10150 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "ladders-work",
+  "description": "In the game players climb out of the water up a ladder onto a pier cap, climb a leg's shaft from the cap through the deck to the road, and climb back down.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 82,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/play-06.js",
+     "report": "levels/results/06-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.tests.ladders.ok",
+     "op": "truthy"
+    },
+    {
+     "path": "report.tests.ladders.capOk",
+     "op": "truthy"
+    },
+    {
+     "path": "report.tests.ladders.roadOk",
+     "op": "truthy"
+    },
+    {
+     "path": "report.tests.ladders.downOk",
+     "op": "truthy"
+    }
+   ]
+  },
+  "rationale": "Ladders are the only way onto the caps; the engine has none of its own.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "209d79ae023289cefe51a4d62ccaf94fba549c2f243a1d9490985d2cfc29f638",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp2j_673ac71007"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.460Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.902Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.tests.ladders.ok truthy undefined (got undefined); report.tests.ladders.capOk truthy undefined (got undefined); report.tests.ladders.roadOk truthy undefined (got undefined); report.tests.ladders.downOk truthy undefined (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "boat-run",
+  "description": "In the game the players' boat drives from the dock under all three pier caps to the right end of the underpass without sticking or being lost.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean",
+   "lane-static"
+  ],
+  "priority": 80,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/play-06.js",
+     "report": "levels/results/06-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.tests.boat.ok",
+     "op": "truthy"
+    },
+    {
+     "path": "report.tests.boat.passedCaps",
+     "op": "len_gte",
+     "value": 5
+    }
+   ]
+  },
+  "rationale": "Vehicles fit and can leave.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "23253a4fbe75cb177fd0136a0c407a11a9730c2c60a4384b48054332b0f06094",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp2j_673ac71007"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.460Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.tests.boat.ok truthy undefined (got undefined); report.tests.boat.passedCaps len_gte 5 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "objective-gates-exit",
+  "description": "The extraction stays locked until the command-room console is held for its full time; holding it completes the objective and then the extraction clears the level.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 78,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/play-06.js",
+     "report": "levels/results/06-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.tests.objective.ok",
+     "op": "truthy"
+    },
+    {
+     "path": "report.tests.objective.lockedFirst",
+     "op": "truthy"
+    },
+    {
+     "path": "report.tests.objective.complete",
+     "op": "truthy"
+    }
+   ]
+  },
+  "rationale": "Objectives in any order, then extraction.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "08ee238303acc23eb7d0b02dd2f4e5a146f6b6ab71a661d4a4a3429e7c595bd3",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp2j_673ac71007"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.460Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.tests.objective.ok truthy undefined (got undefined); report.tests.objective.lockedFirst truthy undefined (got undefined); report.tests.objective.complete truthy undefined (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "tank-drivable",
+  "description": "A raider boards the CS-2 Bastion in the vehicle bay and drives it along the deck interior.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 70,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/play-06.js",
+     "report": "levels/results/06-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.tests.tank.ok",
+     "op": "truthy"
+    },
+    {
+     "path": "report.tests.tank.inside",
+     "op": "truthy"
+    }
+   ]
+  },
+  "rationale": "The deck interior's vehicle bay holds tanks the raiders can drive.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "7b07d0df66cfee86f81199fef9db36f0205d7beb40ffab7f6cabccdaff98e569",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp2j_673ac71007"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.460Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.tests.tank.ok truthy undefined (got undefined); report.tests.tank.inside truthy undefined (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "editor-views",
+  "description": "The level's screenshots are published: at least 12, of which at least 3 are the editor's Alt 2.5D angled views, plus flat editor views, overviews, the lane and eye-level shots, with a contact sheet.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 60,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.check",
+    "params": {
+     "script": "tools/harness/levels/shots-index.js",
+     "args": [
+      "06"
+     ]
+    }
+   },
+   "asserts": [
+    {
+     "path": "json.count",
+     "op": "gte",
+     "value": 12
+    },
+    {
+     "path": "json.altViews",
+     "op": "gte",
+     "value": 3
+    },
+    {
+     "path": "json.editorFlat",
+     "op": "gte",
+     "value": 1
+    },
+    {
+     "path": "json.overviews",
+     "op": "gte",
+     "value": 2
+    },
+    {
+     "path": "json.lane",
+     "op": "gte",
+     "value": 3
+    },
+    {
+     "path": "json.eyeLevel",
+     "op": "gte",
+     "value": 3
+    },
+    {
+     "path": "json.sheet",
+     "op": "truthy"
+    }
+   ]
+  },
+  "rationale": "Screenshots from 4+ angles per chunk, including the Alt view.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "fdf342af490aa0de7bb70d3be00e4792ee153320743d7a20e668b25bf011f151",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp45_330fcb6b73"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.461Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp45_330fcb6b73"
+    ],
+    "why": "contract FAIL (cycle 0): failed json.count gte 12 (got undefined); json.altViews gte 3 (got undefined); json.editorFlat gte 1 (got undefined); json.overviews gte 2 (got undefined); json.lane gte 3 (got undefined); json.eyeLevel gte 3 (got undefined); json.sheet truthy undefined (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "look-dusk-palette",
+  "description": "The pulled-back view of the middle shares the concept's dusk palette and tone: palette distance at most 24, warmth and luma within 20, saturation within 0.12, luma histogram overlap at least 0.55.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 55,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.image",
+    "params": {
+     "image": "tools/harness/levels/results/06-overview-middle.png",
+     "reference": "docs/cs-coastal-tower/concept/10-middle-side.webp"
+    }
+   },
+   "asserts": [
+    {
+     "path": "metrics.distance.palette",
+     "op": "lte",
+     "value": 24
+    },
+    {
+     "path": "metrics.distance.warmth",
+     "op": "gte",
+     "value": -20
+    },
+    {
+     "path": "metrics.distance.warmth",
+     "op": "lte",
+     "value": 20
+    },
+    {
+     "path": "metrics.distance.lumaMean",
+     "op": "gte",
+     "value": -20
+    },
+    {
+     "path": "metrics.distance.lumaMean",
+     "op": "lte",
+     "value": 20
+    },
+    {
+     "path": "metrics.distance.saturation",
+     "op": "gte",
+     "value": -0.12
+    },
+    {
+     "path": "metrics.distance.saturation",
+     "op": "lte",
+     "value": 0.12
+    },
+    {
+     "path": "metrics.distance.lumaHistOverlap",
+     "op": "gte",
+     "value": 0.55
+    }
+   ]
+  },
+  "rationale": "Limits set before comparing. For scale, level 01 (night) against the same concept: palette 29.0, warmth -32.1, saturation +0.19, overlap 0.66, so these limits reject a night look.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "1d38d87462476f660ce0dde27e3fd0aab4cc286a1fbbee8c101df9ac5b4f6993",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp5y_280f99fc03"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.461Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp5y_280f99fc03"
+    ],
+    "why": "contract FAIL (cycle 0): failed metrics.distance.palette lte 24 (got undefined); metrics.distance.warmth gte -20 (got undefined); metrics.distance.warmth lte 20 (got undefined); metrics.distance.lumaMean gte -20 (got undefined); metrics.distance.lumaMean lte 20 (got undefined); metrics.distance.saturation gte -0.12 (got undefined); metrics.distance.saturation lte 0.12 (got undefined); metrics.distance.lumaHistOverlap gte 0.55 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "look-interior",
+  "description": "The deck interior at eye level carries the concept's warm/red interior light: palette distance to the concept's deck band at most 30, warmth within 25.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 50,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.image",
+    "params": {
+     "image": "tools/harness/levels/results/06-eye-interior-security.png",
+     "reference": "docs/cs-coastal-tower/concept/11-middle-deck-interior.webp",
+     "crop": [
+      0.05,
+      0.36,
+      0.95,
+      0.6
+     ]
+    }
+   },
+   "asserts": [
+    {
+     "path": "metrics.distance.palette",
+     "op": "lte",
+     "value": 30
+    },
+    {
+     "path": "metrics.distance.warmth",
+     "op": "gte",
+     "value": -25
+    },
+    {
+     "path": "metrics.distance.warmth",
+     "op": "lte",
+     "value": 25
+    }
+   ]
+  },
+  "rationale": "The concept's deck interior image.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "c15ddb2bb69e2a905e8209c1a93deadd2cceedce68bda35d88c578dc883d8cad",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp7f_19a083f9df"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.461Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp7f_19a083f9df"
+    ],
+    "why": "contract FAIL (cycle 0): failed metrics.distance.palette lte 30 (got undefined); metrics.distance.warmth gte -25 (got undefined); metrics.distance.warmth lte 25 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "underpass-framing",
+  "description": "Seen from the boat in the underpass, the soffit, the legs, the hanging containers and the lit deck frame the view like the concept's middle span, not an empty sky.",
+  "required": true,
+  "dependsOn": [
+   "boat-run"
+  ],
+  "priority": 45,
+  "contract": {
+   "kind": "semantic",
+   "probe": {
+    "tool": "pb3x.image",
+    "params": {
+     "image": "tools/harness/levels/results/06-lane-bay1.png",
+     "reference": "docs/cs-coastal-tower/concept/10-middle-side.webp",
+     "crop": [
+      0.25,
+      0.35,
+      0.75,
+      1
+     ]
+    }
+   },
+   "question": "Given the lane screenshot's measurements (and the screenshot itself, tools/harness/levels/results/06-lane-bay1.png), does the view from the boat show structure framing it (soffit band above, legs/footings, hanging containers, lamps) the way the concept's middle span does?"
+  },
+  "rationale": "The user: the top is seen from the boat in the underpass; the focus is under the bridge.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "7e24091d8b6b4531105c4948f9635020139a3c9b0d74e1eac480be05157670a9",
+  "status": "UNKNOWN",
+  "evidence": [
+   "ev_muk2wp8q_3be378ca9e",
+   "dk_muk321cx_59d9c887a7"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.461Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:18:57.633Z",
+    "from": "UNTESTED",
+    "to": "UNKNOWN",
+    "evidence": [
+     "ev_muk2wp8q_3be378ca9e",
+     "dk_muk321cx_59d9c887a7"
+    ],
+    "why": "semantic judgement UNSURE (dk_muk321cx_59d9c887a7): There's no lane screenshot yet: imgmetrics couldn't open 06-lane-bay1.png."
+   }
+  ]
+ },
+ {
+  "id": "frame-cost",
+  "description": "The level's frame time at its busiest spots stays within 1.5 times the editor's starting map's in the same browser.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 65,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/perf.js",
+     "args": [
+      "06"
+     ],
+     "report": "levels/results/06-perf.json",
+     "timeoutMs": 1500000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.failed",
+     "op": "falsy"
+    },
+    {
+     "path": "report.worstRatio",
+     "op": "lte",
+     "value": 1.5
+    }
+   ]
+  },
+  "rationale": "Quality threshold: frame rate holds.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "4be8d66f7caf94ddb8459e369e7993374213107f811bfb5669fca558c3f3168a",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2yanh_c50a414c6c"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.461Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2yanh_c50a414c6c"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.failed falsy undefined (got \"page.evaluate: TypeError: Cannot read properties of null (reading 'length')\\n  ); report.worstRatio lte 1.5 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "enemies-path",
+  "description": "The hunters walk towards a player waiting in the deck interior: at least three enemies move more than 150 px in 20 s while the posts hold.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 62,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/waypoints.js",
+     "args": [
+      "06"
+     ],
+     "report": "levels/results/06-waypoints.json",
+     "timeoutMs": 900000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.failed",
+     "op": "falsy"
+    },
+    {
+     "path": "report.movedCount",
+     "op": "gte",
+     "value": 3
+    }
+   ]
+  },
+  "rationale": "Checklist: enemies path.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "fb0a36ea2e85bd61dd6a0935c95515928a1243e18743171e71936a96ff3e6183",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2yui3_881df54913"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.461Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2yui3_881df54913"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.failed falsy undefined (got \"page.evaluate: TypeError: Cannot read properties of null (reading 'length')\\n  ); report.movedCount gte 3 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "coop-two",
+  "description": "With two players the level loads, both get characters on the raiders' side, the [2+] enemies stay, and a guest who dies comes back.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 58,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/coop-06.js",
+     "args": [
+      "--players",
+      "2"
+     ],
+     "report": "levels/results/06-coop2-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.ok",
+     "op": "truthy"
+    },
+    {
+     "path": "report.guests",
+     "op": "gte",
+     "value": 1
+    },
+    {
+     "path": "report.coop.players",
+     "op": "eq",
+     "value": 2
+    }
+   ]
+  },
+  "rationale": "Checklist: a co-op pass with 2+ players.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "9aacd7910dc9e6dca5d3dc482aeeccc640dece9392300a8cb88461c4c80f0857",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2yuke_eb969c3ddc"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.461Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2yuke_eb969c3ddc"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.ok truthy undefined (got undefined); report.guests gte 1 (got undefined); report.coop.players eq 2 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "three-chunks",
+  "description": "The level spans the whole bridge from the left cliff facility to the right bunker shore (at least 14000 px wide) with three objectives reachable in any order.",
+  "required": true,
+  "dependsOn": [
+   "route-complete"
+  ],
+  "priority": 30,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.check",
+    "params": {
+     "script": "tools/harness/levels/lint.js",
+     "args": [
+      "06"
+     ]
+    }
+   },
+   "asserts": [
+    {
+     "path": "json.route.objectives",
+     "op": "len_gte",
+     "value": 3
+    },
+    {
+     "path": "json.bounds.2",
+     "op": "gte",
+     "value": 14000
+    },
+    {
+     "path": "json.route.unreachable",
+     "op": "len_lte",
+     "value": 0
+    }
+   ]
+  },
+  "rationale": "The intent's three objectives; the middle chunk comes first.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "f5b9c25cfe0d0574669b7b3cbf747641be51ebf1938b0f29865d11b1d7f760c5",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wozn_ef415f7a83"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.462Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "why": "contract FAIL (cycle 0): failed json.route.objectives len_gte 3 (got undefined); json.bounds.2 gte 14000 (got undefined); json.route.unreachable len_lte 0 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "work-landed",
+  "description": "The level, its instruments and screenshots are committed and pushed on the branch cs-coastal-tower.",
+  "required": true,
+  "dependsOn": [
+   "editor-views"
+  ],
+  "priority": 20,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.check",
+    "params": {
+     "script": "tools/harness/levels/git-state.js"
+    }
+   },
+   "asserts": [
+    {
+     "path": "json.branch",
+     "op": "eq",
+     "value": "cs-coastal-tower"
+    },
+    {
+     "path": "json.uncommitted",
+     "op": "eq",
+     "value": 0
+    },
+    {
+     "path": "json.pushed",
+     "op": "truthy"
+    }
+   ]
+  },
+  "rationale": "Hard constraint: the work lands on cs-coastal-tower.",
+  "parent": null,
+  "origin": "compile",
+  "criteriaHash": "bedf77fadb4dd6b539aa502e46e45672f3a8d063aecf81c76bddbea773b268cc",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2yulh_50fde4e69d"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:13:37.462Z",
+    "to": "UNTESTED",
+    "why": "compiled (compile)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2yulh_50fde4e69d"
+    ],
+    "why": "contract FAIL (cycle 0): failed json.branch eq \"cs-coastal-tower\" (got undefined); json.uncommitted eq 0 (got undefined); json.pushed truthy undefined (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "respawn-works",
+  "description": "A player killed on the deck comes back within 8 s at the last checkpoint reached, standing on a floor.",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 74,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/play-06.js",
+     "report": "levels/results/06-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.tests.respawn.ok",
+     "op": "truthy"
+    }
+   ]
+  },
+  "rationale": "Checkpoints are the co-op and solo safety net.",
+  "parent": null,
+  "origin": "adversarial",
+  "criteriaHash": "8dcfc7deccd6f15f36a8b4a68e86ab57d096a05dd1384753bf18f0b833ebc626",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp2j_673ac71007"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:14:18.219Z",
+    "to": "UNTESTED",
+    "why": "compiled (adversarial)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.903Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.tests.respawn.ok truthy undefined (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "boat-returns",
+  "description": "After its run east the players' boat drives back west at least 1500 px under the caps.",
+  "required": true,
+  "dependsOn": [
+   "boat-run"
+  ],
+  "priority": 66,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/play-06.js",
+     "report": "levels/results/06-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.tests.boat.returned",
+     "op": "gte",
+     "value": 1500
+    }
+   ]
+  },
+  "rationale": "Checklist: vehicles fit and can leave.",
+  "parent": null,
+  "origin": "adversarial",
+  "criteriaHash": "49ca13744e82f29ff8fddf5432c6b2bd49b6464dfa2d246d7fa6d86515fe7a25",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp2j_673ac71007"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:14:18.219Z",
+    "to": "UNTESTED",
+    "why": "compiled (adversarial)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.904Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.tests.boat.returned gte 1500 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "tower-climb",
+  "description": "From the tower lobby a player climbs the tower's shaft to the command room floor and on to the observation deck.",
+  "required": true,
+  "dependsOn": [
+   "ladders-work"
+  ],
+  "priority": 76,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/play-06.js",
+     "report": "levels/results/06-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.tests.tower.ok",
+     "op": "truthy"
+    },
+    {
+     "path": "report.tests.tower.l2",
+     "op": "truthy"
+    },
+    {
+     "path": "report.tests.tower.l3",
+     "op": "truthy"
+    }
+   ]
+  },
+  "rationale": "The centre objective must be reachable in play, not only on paper.",
+  "parent": null,
+  "origin": "adversarial",
+  "criteriaHash": "6faf0d326aa24b73a8972f17ba1b77835fce6453cfded1b44d54bf08ce7cc070",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp2j_673ac71007"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:14:18.219Z",
+    "to": "UNTESTED",
+    "why": "compiled (adversarial)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.904Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.tests.tower.ok truthy undefined (got undefined); report.tests.tower.l2 truthy undefined (got undefined); report.tests.tower.l3 truthy undefined (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "look-structure",
+  "description": "The pulled-back view of the middle has the concept's structure: brightness profile top to bottom within 30 levels on average, and edge detail spread over the frame like the concept's (detail-grid distance at most 0.06).",
+  "required": true,
+  "dependsOn": [
+   "plays-clean"
+  ],
+  "priority": 52,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.image",
+    "params": {
+     "image": "tools/harness/levels/results/06-overview-middle.png",
+     "reference": "docs/cs-coastal-tower/concept/10-middle-side.webp"
+    }
+   },
+   "asserts": [
+    {
+     "path": "metrics.distance.profile",
+     "op": "lte",
+     "value": 30
+    },
+    {
+     "path": "metrics.distance.detailGrid",
+     "op": "lte",
+     "value": 0.06
+    }
+   ]
+  },
+  "rationale": "Closes a way to game the look residue.",
+  "parent": null,
+  "origin": "adversarial",
+  "criteriaHash": "feb54e5af6a506b16cbab6c1d31169fd2f55d961d56cef5df96b556461a5f72d",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp5y_280f99fc03"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:14:18.220Z",
+    "to": "UNTESTED",
+    "why": "compiled (adversarial)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.904Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp5y_280f99fc03"
+    ],
+    "why": "contract FAIL (cycle 0): failed metrics.distance.profile lte 30 (got undefined); metrics.distance.detailGrid lte 0.06 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "cap-cover",
+  "description": "Every pier cap carries cover to fight from (at least one block 40-110 px tall standing on it) besides its ladders and neighbouring containers.",
+  "required": true,
+  "dependsOn": [
+   "design-rules"
+  ],
+  "priority": 72,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.check",
+    "params": {
+     "script": "tools/harness/levels/lint.js",
+     "args": [
+      "06"
+     ]
+    }
+   },
+   "asserts": [
+    {
+     "path": "json.capsWithCover",
+     "op": "gte",
+     "value": 3
+    }
+   ]
+  },
+  "rationale": "Pitstop fight points need cover.",
+  "parent": null,
+  "origin": "adversarial",
+  "criteriaHash": "2b5030a9cdb2f69e9efffaeec4482717c245c5d75aa3b7edda2e05ea8fb21223",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wozn_ef415f7a83"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:14:18.220Z",
+    "to": "UNTESTED",
+    "why": "compiled (adversarial)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.904Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "why": "contract FAIL (cycle 0): failed json.capsWithCover gte 3 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "coop-ladder",
+  "description": "In a two-player match a guest climbs a pier cap's ladder out of the water onto the cap.",
+  "required": true,
+  "dependsOn": [
+   "coop-two"
+  ],
+  "priority": 56,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/coop-06.js",
+     "args": [
+      "--players",
+      "2"
+     ],
+     "report": "levels/results/06-coop2-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.guestLadder",
+     "op": "truthy"
+    }
+   ]
+  },
+  "rationale": "Co-op players need the ladders as much as the host.",
+  "parent": null,
+  "origin": "adversarial",
+  "criteriaHash": "c58690d71d86d76d5ccf6f830127c307bbe07b9d874e033ea5776698dbc0a1c6",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2yuke_eb969c3ddc"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:14:18.220Z",
+    "to": "UNTESTED",
+    "why": "compiled (adversarial)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.904Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2yuke_eb969c3ddc"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.guestLadder truthy undefined (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "layers-held",
+  "description": "Civil Security holds every layer of the middle: the pier caps, the hanging containers, the deck interior, the road deck, the tower and the water (crewed patrol boats).",
+  "required": true,
+  "dependsOn": [
+   "route-complete"
+  ],
+  "priority": 68,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.check",
+    "params": {
+     "script": "tools/harness/levels/lint.js",
+     "args": [
+      "06"
+     ]
+    }
+   },
+   "asserts": [
+    {
+     "path": "json.enemyLayers.cap",
+     "op": "gte",
+     "value": 3
+    },
+    {
+     "path": "json.enemyLayers.container",
+     "op": "gte",
+     "value": 1
+    },
+    {
+     "path": "json.enemyLayers.interior",
+     "op": "gte",
+     "value": 4
+    },
+    {
+     "path": "json.enemyLayers.road",
+     "op": "gte",
+     "value": 3
+    },
+    {
+     "path": "json.enemyLayers.tower",
+     "op": "gte",
+     "value": 3
+    },
+    {
+     "path": "json.enemies.crews",
+     "op": "gte",
+     "value": 4
+    }
+   ]
+  },
+  "rationale": "Intent: CS enemies hold every layer.",
+  "parent": null,
+  "origin": "adversarial",
+  "criteriaHash": "9f854f5bec3bbd5336951e621fdc1170b1b0871513e656d18b6b8490b32c5ed6",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wozn_ef415f7a83"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:14:37.917Z",
+    "to": "UNTESTED",
+    "why": "compiled (adversarial)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.904Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "why": "contract FAIL (cycle 0): failed json.enemyLayers.cap gte 3 (got undefined); json.enemyLayers.container gte 1 (got undefined); json.enemyLayers.interior gte 4 (got undefined); json.enemyLayers.road gte 3 (got undefined); json.enemyLayers.tower gte 3 (got undefined); json.enemies.crews gte 4 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "patrols-drive",
+  "description": "In the game the CS patrol boats move under their autopilot when the raiders come near (at least one moves 200 px or more).",
+  "required": true,
+  "dependsOn": [
+   "boat-run"
+  ],
+  "priority": 54,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.harness",
+    "params": {
+     "script": "levels/play-06.js",
+     "report": "levels/results/06-report.json",
+     "timeoutMs": 1800000
+    }
+   },
+   "asserts": [
+    {
+     "path": "report.tests.boat.patrolsMoved",
+     "op": "gte",
+     "value": 1
+    }
+   ]
+  },
+  "rationale": "Intent: patrol boats drive the lane.",
+  "parent": null,
+  "origin": "adversarial",
+  "criteriaHash": "5fd424328f4e2b1be28a8a6b22e8d6b64ad8f27023d0ffd329504cbde6cdbeb3",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wp2j_673ac71007"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:14:37.917Z",
+    "to": "UNTESTED",
+    "why": "compiled (adversarial)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.904Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "why": "contract FAIL (cycle 0): failed report.tests.boat.patrolsMoved gte 1 (got undefined)"
+   }
+  ]
+ },
+ {
+  "id": "coop-scaling-names",
+  "description": "06 names enough enemies for co-op strength: at least 4 marked [2+] and 2 marked [3+].",
+  "required": true,
+  "dependsOn": [
+   "level-builds"
+  ],
+  "priority": 40,
+  "contract": {
+   "kind": "check",
+   "probe": {
+    "tool": "pb3x.check",
+    "params": {
+     "script": "tools/harness/levels/lint.js",
+     "args": [
+      "06"
+     ]
+    }
+   },
+   "asserts": [
+    {
+     "path": "json.enemies.byStrength.2+",
+     "op": "gte",
+     "value": 4
+    },
+    {
+     "path": "json.enemies.byStrength.3+",
+     "op": "gte",
+     "value": 2
+    }
+   ]
+  },
+  "rationale": "Intent: [2+]/[3+]/[4+] scale the fight for 2 to 4 players.",
+  "parent": null,
+  "origin": "adversarial",
+  "criteriaHash": "9743d6eb8944687eb2450549d97d9dfeac908dc801855dfb8461ff21bbed96b0",
+  "status": "CONTRADICTED",
+  "evidence": [
+   "ev_muk2wozn_ef415f7a83"
+  ],
+  "history": [
+   {
+    "at": "2026-09-27T17:14:37.917Z",
+    "to": "UNTESTED",
+    "why": "compiled (adversarial)"
+   },
+   {
+    "at": "2026-09-27T17:16:28.904Z",
+    "from": "UNTESTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "why": "contract FAIL (cycle 0): failed json.enemies.byStrength.2+ gte 4 (got undefined); json.enemies.byStrength.3+ gte 2 (got undefined)"
+   }
+  ]
+ }
+]

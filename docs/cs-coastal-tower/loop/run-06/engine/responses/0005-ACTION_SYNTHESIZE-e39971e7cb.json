@@ -1,0 +1,260 @@
+{
+ "actions": [
+  {
+   "targets": [
+    "level-builds",
+    "design-rules",
+    "route-complete",
+    "lane-static",
+    "cap-cover",
+    "layers-held",
+    "coop-scaling-names",
+    "three-chunks"
+   ],
+   "rationale": "Every lint-bound residue needs the static linter. It was validated in staging against level 01, a level known to play well: the lane runs to the shore, the stairs and quay are reached, and it reports no false violations.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "lint.js",
+    "path": "tools/harness/levels/lint.js"
+   },
+   "predictedEffect": "The lint probe prints one JSON line per level with counts, violations, the route, the boat lane, caps with cover and enemy layers.",
+   "expectedEvidence": [
+    "lint probe exitCode 0 with json.level == '06'"
+   ],
+   "failureSignatures": [
+    "MODULE_NOT_FOUND",
+    "json.error set"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path (the repository holds the previous version)"
+   }
+  },
+  {
+   "targets": [
+    "level-builds",
+    "plays-clean",
+    "ladders-work",
+    "objective-gates-exit",
+    "tower-climb",
+    "cap-cover",
+    "layers-held"
+   ],
+   "rationale": "The level itself: 06 \u00b7 Underhang (the middle chunk), ladders, objective consoles, the extraction gated on objectives, and the Underhang bridge set pieces, all added to the cs-coastal-tower mod.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "cs-coastal-tower.user.js",
+    "path": "mods/cs-coastal-tower.user.js"
+   },
+   "predictedEffect": "The mod defines level 06. The linter finds 0 violations, nothing unreachable, 3 caps with cover and enemies on every layer (all of this was checked in staging).",
+   "expectedEvidence": [
+    "json.violationCount == 0",
+    "json.route.unreachable empty"
+   ],
+   "failureSignatures": [
+    "json.error: level06 threw"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path (the repository holds the previous version)"
+   }
+  },
+  {
+   "targets": [
+    "plays-clean"
+   ],
+   "rationale": "The game loads mods from the extension bundle, so the new mod source has to be baked into pb3x-extension/pb3x.js.",
+   "tool": "pb3x.bake",
+   "params": {},
+   "predictedEffect": "The bundle holds the new mod, the bake's --check passes and the bundle parses.",
+   "expectedEvidence": [
+    "bake ok true"
+   ],
+   "failureSignatures": [
+    "bake exitCode != 0",
+    "syntax error"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path (the repository holds the previous version)"
+   }
+  },
+  {
+   "targets": [
+    "plays-clean",
+    "ladders-work",
+    "boat-run",
+    "boat-returns",
+    "objective-gates-exit",
+    "tower-climb",
+    "tank-drivable",
+    "respawn-works",
+    "patrols-drive",
+    "editor-views",
+    "look-dusk-palette",
+    "look-interior",
+    "look-structure"
+   ],
+   "rationale": "The in-game probe for 06: editor shots including the Alt 2.5D views; ladders, the tower, the objective and exit gating, the tank, the boat there and back, patrols, respawn and frame times.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "play-06.js",
+    "path": "tools/harness/levels/play-06.js"
+   },
+   "predictedEffect": "The play probe writes levels/results/06-report.json and 06-*.png screenshots.",
+   "expectedEvidence": [
+    "report.tests.* present"
+   ],
+   "failureSignatures": [
+    "report null",
+    "report.failed"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path (the repository holds the previous version)"
+   }
+  },
+  {
+   "targets": [
+    "coop-two",
+    "coop-ladder"
+   ],
+   "rationale": "The co-op pass for 06, with stand-in guest connections as in coop-01.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "coop-06.js",
+    "path": "tools/harness/levels/coop-06.js"
+   },
+   "predictedEffect": "It writes 06-coop2-report.json with guests, strength, guestLadder and guestBack.",
+   "expectedEvidence": [
+    "report.guests >= 1"
+   ],
+   "failureSignatures": [
+    "report.failed"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path (the repository holds the previous version)"
+   }
+  },
+  {
+   "targets": [
+    "editor-views"
+   ],
+   "rationale": "The index of published screenshots that the editor-views residue reads.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "shots-index.js",
+    "path": "tools/harness/levels/shots-index.js"
+   },
+   "predictedEffect": "It prints the count, names, Alt views and sheet for shots/06.",
+   "expectedEvidence": [
+    "json.count"
+   ],
+   "failureSignatures": [
+    "MODULE_NOT_FOUND"
+   ],
+   "risk": "low",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path (the repository holds the previous version)"
+   }
+  },
+  {
+   "targets": [
+    "work-landed"
+   ],
+   "rationale": "The git-state probe, read-only: the branch, uncommitted paths and whether the branch is pushed.",
+   "tool": "file.write_from",
+   "params": {
+    "from": "git-state.js",
+    "path": "tools/harness/levels/git-state.js"
+   },
+   "predictedEffect": "It prints the branch, pushed and uncommitted.",
+   "expectedEvidence": [
+    "json.branch == cs-coastal-tower"
+   ],
+   "failureSignatures": [
+    "MODULE_NOT_FOUND"
+   ],
+   "risk": "low",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path (the repository holds the previous version)"
+   }
+  },
+  {
+   "targets": [
+    "frame-cost"
+   ],
+   "rationale": "perf.js needs spots for 06 and one ratio to assert on: the busiest spot's median frame time over the editor starting map's.",
+   "tool": "file.patch",
+   "params": {
+    "path": "tools/harness/levels/perf.js",
+    "edits": [
+     {
+      "find": "const SPOTS = { '01': [ [ 'start', 800, -300 ], [ 'arch B', 5300, -350 ], [ 'shore', 8400, -420 ] ] };",
+      "replace": "const SPOTS = { '01': [ [ 'start', 800, -300 ], [ 'arch B', 5300, -350 ], [ 'shore', 8400, -420 ] ],\n\t'06': [ [ 'start', 4900, -250 ], [ 'tower span', 7500, -600 ], [ 'deck', 8400, -700 ], [ 'road', 6500, -950 ] ] };"
+     },
+     {
+      "find": "\tfs.writeFileSync( path.join( OUT, LEVEL + '-perf.json' ), JSON.stringify( out, null, 1 ) );",
+      "replace": "\t// (the busiest spot against the editor's starting map: what the levels' frame-cost rule reads)\n\tconst medians = Object.keys( out.spots ).map( ( k )=>out.spots[ k ].msMedian ).filter( ( v )=>v > 0 );\n\tif ( out.baseline && out.baseline.msMedian > 0 && medians.length ) out.worstRatio = +( Math.max( ...medians ) / out.baseline.msMedian ).toFixed( 2 );\n\tfs.writeFileSync( path.join( OUT, LEVEL + '-perf.json' ), JSON.stringify( out, null, 1 ) );"
+     }
+    ]
+   },
+   "predictedEffect": "06-perf.json gains spots for 06 and a worstRatio.",
+   "expectedEvidence": [
+    "report.worstRatio"
+   ],
+   "failureSignatures": [
+    "report.failed"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path (the repository holds the previous version)"
+   }
+  },
+  {
+   "targets": [
+    "enemies-path"
+   ],
+   "rationale": "waypoints.js needs 06's bait (in the services room on the deck), its shot spots and a moved count.",
+   "tool": "file.patch",
+   "params": {
+    "path": "tools/harness/levels/waypoints.js",
+    "edits": [
+     {
+      "find": "const SPOTS = { '01': [ [ 'landing', 7950, -250, 1.4 ], [ 'quay', 8700, -300, 1.4 ], [ 'arch-b', 5350, -700, 1.4 ] ] };",
+      "replace": "const SPOTS = { '01': [ [ 'landing', 7950, -250, 1.4 ], [ 'quay', 8700, -300, 1.4 ], [ 'arch-b', 5350, -700, 1.4 ] ],\n\t'06': [ [ 'services', 5700, -700, 1.4 ], [ 'deck', 8000, -700, 1.6 ], [ 'road', 6300, -950, 1.4 ] ] };"
+     },
+     {
+      "find": "const BAIT = { '01': [ 7590, -90 ] };",
+      "replace": "const BAIT = { '01': [ 7590, -90 ], '06': [ 5700, -664 ] };"
+     },
+     {
+      "find": "\t\tfor ( const [ name, x, y, zoom ] of SPOTS[ LEVEL ] ) { await shoot(",
+      "replace": "\t\tout.movedCount = out.moved.filter( ( m )=>m.moved > 150 ).length;\n\t\tfor ( const [ name, x, y, zoom ] of SPOTS[ LEVEL ] ) { await shoot("
+     }
+    ]
+   },
+   "predictedEffect": "06-waypoints.json records who moved and a movedCount.",
+   "expectedEvidence": [
+    "report.movedCount"
+   ],
+   "failureSignatures": [
+    "report.failed"
+   ],
+   "risk": "medium",
+   "cost": 1,
+   "rollback": {
+    "how": "git checkout -- the path (the repository holds the previous version)"
+   }
+  }
+ ]
+}

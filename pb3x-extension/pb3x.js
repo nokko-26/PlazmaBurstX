@@ -17246,12 +17246,15 @@ const err = ( where, e )=>{ state.error = where + ': ' + ( e && e.message || e )
 // ---------- the basics ----------
 // ================================================================================================
 
-const T_TOWER = 120, T_SEARCHLIGHT = 121, T_CHECKPOINT = 122, T_EXIT = 123;
+const T_TOWER = 120, T_SEARCHLIGHT = 121, T_CHECKPOINT = 122, T_EXIT = 123, T_LADDER = 124, T_OBJECTIVE = 125, T_BRIDGE = 126;
 const TYPES = [
 	{ id: T_TOWER, konst: 'pb2Entity.TYPE_CS_TOWER', name: 'Coastal Tower backdrop', list: true },
 	{ id: T_SEARCHLIGHT, konst: 'pb2Entity.TYPE_CS_SEARCHLIGHT', name: 'Searchlight', list: true },
 	{ id: T_CHECKPOINT, konst: 'pb2Entity.TYPE_CS_CHECKPOINT', name: 'Checkpoint', list: true },
-	{ id: T_EXIT, konst: 'pb2Entity.TYPE_CS_EXIT', name: 'Level exit', list: true }
+	{ id: T_EXIT, konst: 'pb2Entity.TYPE_CS_EXIT', name: 'Level exit', list: true },
+	{ id: T_LADDER, konst: 'pb2Entity.TYPE_CS_LADDER', name: 'Ladder', list: true },
+	{ id: T_OBJECTIVE, konst: 'pb2Entity.TYPE_CS_OBJECTIVE', name: 'Objective', list: true },
+	{ id: T_BRIDGE, konst: 'pb2Entity.TYPE_CS_BRIDGE', name: 'Underhang bridge set', list: true }
 ];
 const SPACER = '── CS Coastal Tower ──';
 const SPACER_ID = TYPES[ 0 ].konst + ' /* cs tower */';
@@ -17305,8 +17308,9 @@ function unhookAll() { for ( const h of hooks.splice( 0 ) ) { h.live.on = false;
 // ---------- the entities: backdrop, searchlight, checkpoint, exit ----------
 // ================================================================================================
 //
-// All four are markers the level places: no body to bump into, never moved, can't be hurt. What they are is drawn
-// by this mod (the tower, the beams, the beacons) and what they do runs on the host (see the host logic below).
+// All are markers the level places: no body to bump into, never moved, can't be hurt. What they are is drawn by this
+// mod (the tower, the beams, the beacons, ladders, consoles, the Underhang bridge) and what they do runs on the host
+// (see the host logic below). A ladder runs from its marker (the top) down to its To Y; an objective is a console.
 
 const estate = new WeakMap();                                              // entity → { kind, style, x, y, … } (instances are sealed)
 const marked = new Set();
@@ -17318,7 +17322,8 @@ function markerInit( e, params, kind, style )
 	const b = e.box2d_bodies && e.box2d_bodies[ 0 ];
 	if ( b ) { for ( const f of fixtures( b ) ) f.SetFilterData( pb2_mp.Box2D_filter_nothing ); opt( ()=>b.SetType( 0 ) ); }
 	// (where it stands is read from its body every frame: the engine places the body after this constructor)
-	estate.set( e, { kind, style: style | 0 || 1, side: ( +params.side || 1 ) < 0 ? -1 : 1, rot: +params.rotation || 0, x: +params.x || 0, y: +params.y || 0, on: 0 } );
+	estate.set( e, { kind, style: style | 0 || 1, side: ( +params.side || 1 ) < 0 ? -1 : 1, rot: +params.rotation || 0, x: +params.x || 0, y: +params.y || 0, on: 0,
+		toy: isFinite( +params.toy ) && params.toy !== null && params.toy !== '' ? +params.toy : null } );
 	marked.add( e );
 }
 const hideBase = ( e )=>
@@ -17330,8 +17335,8 @@ const classes = {};
 function makeClass( t )
 {
 	if ( classes[ t.id ] ) return classes[ t.id ];
-	const kind = { [ T_TOWER ]: 'tower', [ T_SEARCHLIGHT ]: 'searchlight', [ T_CHECKPOINT ]: 'checkpoint', [ T_EXIT ]: 'exit' }[ t.id ];
-	const title = { tower: 'Coastal Tower', searchlight: 'Searchlight', checkpoint: 'Checkpoint', exit: 'Exit' }[ kind ];
+	const kind = { [ T_TOWER ]: 'tower', [ T_SEARCHLIGHT ]: 'searchlight', [ T_CHECKPOINT ]: 'checkpoint', [ T_EXIT ]: 'exit', [ T_LADDER ]: 'ladder', [ T_OBJECTIVE ]: 'objective', [ T_BRIDGE ]: 'bridge' }[ t.id ];
+	const title = { tower: 'Coastal Tower', searchlight: 'Searchlight', checkpoint: 'Checkpoint', exit: 'Exit', ladder: 'Ladder', objective: 'Objective', bridge: 'Underhang bridge' }[ kind ];
 	classes[ t.id ] = class pb2EntityCsTowerMarker extends pb2EntityCrate
 	{
 		// (its Style ID read before the crate's constructor, which forces a crate's to 1)
@@ -17440,6 +17445,8 @@ function hookRelevance()
 // there on foot. Enemies named "… [N+]" leave the match at its start when fewer than N play (co-op strength).
 
 const RESPAWN = 5, BOAT_BACK = 8;
+// objectives: Style ID 1 the cliff facility's power, 2 the command room, 3 the bunker basement
+const OBJ = { hold: 5, reach: 60, names: [ '', 'Cliff power', 'Command room', 'Basement' ], verbs: [ '', 'Cutting the power', 'Taking the command room', 'Sabotaging the basement' ] };
 const host = { level: 0, since: 0, gone: new Map(), lastX: new WeakMap(), template: null, scaled: false, completeAt: 0 };
 const markers = ( kind )=>[ ...marked ].filter( ( e )=>!e.is_being_removed && estate.get( e ) && estate.get( e ).kind === kind );
 const BOAT = ()=>opt( ()=>pb2Entity.TYPE_BOAT );
@@ -17463,7 +17470,8 @@ function newLevel()
 {
 	host.level++; host.since = clock(); host.gone.clear(); host.lastX = new WeakMap(); host.template = null; host.scaled = false; host.completeAt = 0;
 	state.checkpoint = null; state.complete = false; state.respawns = 0;
-	for ( const e of marked ) { const s = estate.get( e ); if ( s && s.kind === 'checkpoint' ) s.on = 0; }
+	for ( const e of marked ) { const s = estate.get( e ); if ( s && ( s.kind === 'checkpoint' || s.kind === 'objective' ) ) { s.on = 0; s.progress = 0; } }
+	state.objectives = null;
 }
 function hostTick( dt )
 {
@@ -17486,16 +17494,36 @@ function hostTick( dt )
 			sfx( 's_corvette_alert', s.x, s.y, 0.5, 1.2 );
 		}
 	}
-	// the exit: reached by a living player (or crossed: between two frames a runner can cover more than its width)
+	// objectives: a player holds position at the console for OBJ.hold s (the time runs back slowly when nobody's there)
+	const objs = markers( 'objective' );
+	for ( const e of objs )
+	{
+		const s = estate.get( e );
+		if ( s.on >= 100 ) continue;
+		const here = players.some( ( c )=>Math.abs( c.x - s.x ) < OBJ.reach && Math.abs( c.y + 44 - s.y ) < 90 );
+		s.progress = clamp( ( s.progress || 0 ) + ( here ? dt : -dt * 0.25 ), 0, OBJ.hold );
+		s.on = s.progress >= OBJ.hold ? 100 : Math.floor( 99 * s.progress / OBJ.hold );
+		if ( s.on >= 100 )
+		{
+			const left = objs.filter( ( o )=>estate.get( o ).on < 100 ).length;
+			banner( OBJ.names[ s.style ] + ' — done' + ( left ? ' (' + left + ' to go)' : ': get to the extraction' ), 4 );
+			sfx( 's_corvette_alert', s.x, s.y, 0.7, 0.8 );
+			state.objectives = objs.map( ( o )=>estate.get( o ).on );
+		}
+		else if ( here && clock() - ( s.said || 0 ) > 0.6 ) { s.said = clock(); banner( OBJ.verbs[ s.style ] + ' ' + s.on + '%', 0.9 ); }
+	}
+	const openObjectives = objs.filter( ( e )=>estate.get( e ).on < 100 ).length;
+	// the exit: reached by a living player (or crossed: between two frames a runner can cover more than its width), once
+	// every objective is done
 	for ( const e of markers( 'exit' ) )
 	{
 		const s = estate.get( e );
 		const at = ( c )=>{ const was = host.lastX.get( c ); return Math.abs( c.y - s.y ) < 140 && ( Math.abs( c.x - s.x ) < 70 || ( was !== undefined && ( was - s.x ) * ( c.x - s.x ) <= 0 ) ); };
-		if ( !state.complete && players.some( at ) )
-		{
-			state.complete = true; s.on = 1; host.completeAt = clock();
-			banner( LEVEL_TITLE[ state.level ] ? LEVEL_TITLE[ state.level ] + ' — cleared' : 'Level cleared', 6 );
-		}
+		s.locked = openObjectives > 0;
+		if ( state.complete || !players.some( at ) ) continue;
+		if ( s.locked ) { if ( clock() - ( s.said || 0 ) > 3 ) { s.said = clock(); banner( 'The extraction opens when every objective is done (' + openObjectives + ' to go)', 2.5 ); } continue; }
+		state.complete = true; s.on = 1; host.completeAt = clock();
+		banner( LEVEL_TITLE[ state.level ] ? LEVEL_TITLE[ state.level ] + ' — cleared' : 'Level cleared', 6 );
 	}
 	for ( const c of players ) host.lastX.set( c, c.x );
 	// the team's boat lost with players still alive (in the water): a new one at the last berth after BOAT_BACK s
@@ -17605,6 +17633,7 @@ function hookAutopilot()
 	{
 		const r = orig.apply( this, arguments );
 		try { if ( isHost() ) autopilot(); } catch ( e ) { err( 'autopilot', e ); }
+		try { ladders(); } catch ( e ) { err( 'ladders', e ); }
 		return r;
 	} );
 }
@@ -17668,6 +17697,55 @@ function autopilot()
 		}
 	}
 	state.boats = n;
+}
+// ---- ladders ----
+//
+// A ladder runs from its marker (its top) down to its To Y. A character in its shaft who holds up (W) or down (S) takes
+// hold: then up and down climb at LAD.speed, nothing held keeps them where they are, and left / right move them off it
+// (onto a floor beside the top, or away). The engine has no climbing of its own, so the character's body is moved
+// straight: every atom gets the same velocity each tick (gravity barely moves it between two). The host moves everyone;
+// a guest moves its own character too, so its view doesn't wait for the host.
+const LAD = { half: 28, speed: 190, side: 150, pull: 6 };
+const onLadder = new WeakMap();
+function setVel( ch, vx, vy )
+{
+	for ( const a of opt( ()=>ch.ragdoll.local_atoms ) || [] )
+	{
+		const b = a && a.box2d_body;
+		if ( !b ) continue;
+		try { b.SetLinearVelocity( new b2Vec2( vx / 30, vy / 30 ) ); } catch ( e ) { try { b.SetVel( vx / 30, vy / 30 ); } catch ( e2 ) { /* no body */ } }
+		opt( ()=>b.SetAwake( true ) );
+	}
+}
+function ladders()
+{
+	const list = markers( 'ladder' );
+	if ( !list.length ) return;
+	const host_ = isHost(), mine = opt( ()=>pb2_mp.my_controller.character ) || null;
+	for ( const ch of opt( ()=>pb2Character.characters ) || [] )
+	{
+		if ( !alive( ch ) || ( !host_ && ch !== mine ) ) { onLadder.delete( ch ); continue; }
+		const ctl = ch.controller || controllerOf( ch );
+		if ( !ctl || !isPlayer( ch ) || opt( ()=>ch.ragdoll.driver_of ) ) { onLadder.delete( ch ); continue; }
+		const feet = ch.y + 44;
+		let L = onLadder.get( ch ) || null;
+		const inShaft = ( s )=>Math.abs( ch.x - s.x ) < LAD.half && feet > s.y - 10 && feet < ( s.toy === null ? s.y + 300 : s.toy ) + 50;
+		if ( L && ( !estate.get( L ) || !inShaft( estate.get( L ) ) ) ) { onLadder.delete( ch ); L = null; }
+		if ( !L )
+		{
+			if ( !ctl.act_y ) continue;
+			L = list.find( ( e )=>inShaft( estate.get( e ) ) ) || null;
+			if ( !L ) continue;
+			onLadder.set( ch, L );
+		}
+		const s = estate.get( L ), bottom = s.toy === null ? s.y + 300 : s.toy;
+		let vy = ( ctl.act_y || 0 ) * LAD.speed;
+		if ( vy < 0 && feet <= s.y ) vy = 0;                                        // (at the top: step off sideways)
+		if ( vy > 0 && feet >= bottom ) { onLadder.delete( ch ); continue; }          // (off the foot of it)
+		const vx = ctl.act_x ? ctl.act_x * LAD.side : clamp( ( s.x - ch.x ) * LAD.pull, -LAD.side, LAD.side );
+		if ( ctl.act_x && !ctl.act_y && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { onLadder.delete( ch ); continue; }
+		setVel( ch, vx, vy );
+	}
 }
 function waterUnder( x, y )
 {
@@ -17921,7 +17999,7 @@ function hookRender()
 	renderHooked.add( XM );
 	hookFn( XM, 'render', ( orig )=>function()
 	{
-		try { placeTowers(); } catch ( e ) { err( 'placeTowers', e ); }
+		try { placeTowers(); placeBridge(); } catch ( e ) { err( 'placeTowers', e ); }
 		return orig.apply( this, arguments );
 	} );
 }
@@ -17996,7 +18074,7 @@ function beaconVisual( e, scene, dt, t )
 	}
 	if ( B.grp.parent !== scene ) scene.add( B.grp );
 	B.grp.position.set( s.x, -s.y, 10 );
-	const col = s.kind === 'exit' ? ( s.on ? 0x40ff80 : 0x40c0ff ) : ( s.on ? 0x40ff80 : 0xffb030 );
+	const col = s.kind === 'exit' ? ( s.on ? 0x40ff80 : s.locked ? 0xff3020 : 0x40c0ff ) : ( s.on ? 0x40ff80 : 0xffb030 );
 	setColor( B.lamp.material, col );
 	setColor( B.halo.material, col, HALF * ( 0.6 + 0.4 * Math.sin( t * 4 ) ) );
 }
@@ -18006,6 +18084,274 @@ function beaconDispose( e )
 	if ( !B ) return;
 	if ( B.grp.parent ) B.grp.parent.remove( B.grp );
 	beacons.delete( e );
+}
+
+// ---- ladders: two rails and rungs, just behind the characters ----
+const ladderGfx = new Map();
+function ladderVisual( e, scene )
+{
+	const s = estate.get( e );
+	let G = ladderGfx.get( e );
+	const bottom = s.toy === null ? s.y + 300 : s.toy, len = Math.max( 40, bottom - s.y );
+	if ( !G || G.len !== len )
+	{
+		if ( G ) ladderDispose( e );
+		const grp = new THREE.Group(), m = unlitMat( 0xb89a3a ), dark = unlitMat( 0x3a3630 );
+		for ( const dx of [ -16, 16 ] ) { const r = new THREE.Mesh( new THREE.BoxBufferGeometry( 4, len, 4 ), m ); r.position.set( dx, -len / 2, 0 ); grp.add( r ); }
+		for ( let y = 12; y < len; y += 24 ) { const r = new THREE.Mesh( new THREE.BoxBufferGeometry( 32, 3, 3 ), dark ); r.position.set( 0, -y, 0 ); grp.add( r ); }
+		mergeStatic( grp, new Set() );
+		G = { grp, len, mats: [ m, dark ] };
+		ladderGfx.set( e, G );
+	}
+	if ( G.grp.parent !== scene ) scene.add( G.grp );
+	G.grp.position.set( s.x, -s.y, -26 );
+}
+function ladderDispose( e )
+{
+	const G = ladderGfx.get( e );
+	if ( !G ) return;
+	if ( G.grp.parent ) G.grp.parent.remove( G.grp );
+	G.grp.traverse( ( o )=>{ if ( o.geometry ) o.geometry.dispose(); } );
+	for ( const m of G.mats ) m.dispose();
+	ladderGfx.delete( e );
+}
+
+// ---- objectives: a console, its screen red until it's done (then green), a column of light over it ----
+const consoles = new Map();
+function consoleVisual( e, scene, dt, t )
+{
+	const s = estate.get( e );
+	let C = consoles.get( e );
+	if ( !C )
+	{
+		const grp = new THREE.Group();
+		const body = new THREE.Mesh( new THREE.BoxBufferGeometry( 50, 56, 30 ), unlitMat( 0x2c2e33 ) ); body.position.set( 0, 28, -20 );
+		const screen = new THREE.Mesh( new THREE.PlaneBufferGeometry( 38, 24 ), unlitMat( 0xff3020 ) ); screen.position.set( 0, 40, -4 );
+		const bar = new THREE.Mesh( new THREE.PlaneBufferGeometry( 38, 4 ), unlitMat( 0x40ff80 ) ); bar.position.set( 0, 22, -4 );
+		const beam = new THREE.Mesh( new THREE.CylinderBufferGeometry( 22, 22, 260, 16, 1, true ), beamMat( 0xff4030, 0.6 ) ); beam.position.set( 0, 150, -20 );
+		grp.add( body ); grp.add( screen ); grp.add( bar ); grp.add( beam );
+		C = { grp, screen, bar, beam };
+		consoles.set( e, C );
+	}
+	if ( C.grp.parent !== scene ) scene.add( C.grp );
+	C.grp.position.set( s.x, -s.y, 0 );
+	const done = s.on >= 100, k = Math.min( 1, s.on / 100 );
+	setColor( C.screen.material, done ? 0x40ff80 : ( ( t * 2 ) % 1 < 0.5 ? 0xff3020 : 0x9a1810 ) );
+	C.bar.scale.x = Math.max( 0.001, k ); C.bar.position.x = -19 * ( 1 - k );
+	setColor( C.beam.material, done ? 0x40ff80 : 0xff4030, HALF * ( done ? 0.35 : 0.6 ) );
+}
+function consoleDispose( e )
+{
+	const C = consoles.get( e );
+	if ( !C ) return;
+	if ( C.grp.parent ) C.grp.parent.remove( C.grp );
+	consoles.delete( e );
+}
+
+// ---- the Underhang bridge (Style ID 6): what the walls can't be ----
+//
+// The walls are the level: floors, pier caps, slabs, rooms. This draws the bridge around them, from the level's own
+// layout (LAYOUTS): each leg's twin columns and bracing standing on a massive footing at the waterline — behind the boat
+// lane (in side view a footing in the lane would block it: it's drawn behind, where the concept has it) — the soffit's
+// girders, pipes and lamps, the cables of the hanging containers, yellow railings, the cranes, the crown of the tower
+// numbered 4 with its orange CS banners, and the dusk hills far behind in the mist. Built once, merged into one mesh
+// per material. Nothing here collides: it's all behind the play plane (z < −150) or thin.
+const DUSK = { key: 0xe0b894, dir: [ -0.55, 0.5, 0.65 ], sky: 0x6a6272, haze: 0xa2949e };
+function duskU( hazeAmt )
+{
+	return { moon: { value: new THREE.Color( DUSK.key ) }, moonDir: { value: new THREE.Vector3( DUSK.dir[ 0 ], DUSK.dir[ 1 ], DUSK.dir[ 2 ] ) }, sky: { value: new THREE.Color( DUSK.sky ) },
+		haze: { value: new THREE.Color( DUSK.haze ) }, hazeAmt: { value: hazeAmt } };
+}
+// the tower's number, stencilled
+const numberTex = ( n )=>canvasTex( 'number' + n, 256, 256, ( g, w, h )=>
+{
+	g.fillStyle = '#3a3a3e'; g.fillRect( 0, 0, w, h );
+	g.fillStyle = '#4a4a50'; g.fillRect( 12, 12, w - 24, h - 24 );
+	g.fillStyle = '#d8d4cc'; g.font = 'bold 190px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+	g.fillText( String( n ), w / 2, h / 2 + 10 );
+	g.fillStyle = '#4a4a50'; for ( let y = 40; y < h; y += 46 ) g.fillRect( 0, y, w, 5 );                 // (stencil bridges)
+}, [ 1, 1 ] );
+// the CS banner in the concept's orange
+const orangeBannerTex = ()=>canvasTex( 'banner-orange', 128, 512, ( g, w, h )=>
+{
+	g.fillStyle = '#a8440e'; g.fillRect( 0, 0, w, h );
+	g.fillStyle = '#d8641c'; g.fillRect( 8, 0, w - 16, h );
+	g.fillStyle = '#f4ece4'; g.font = 'bold 64px Arial, sans-serif'; g.textAlign = 'center'; g.fillText( 'CS', w / 2, 150 );
+	g.strokeStyle = '#f4ece4'; g.lineWidth = 6; g.beginPath(); g.moveTo( 26, 200 ); g.lineTo( w / 2, 300 ); g.lineTo( w - 26, 200 ); g.stroke();
+	g.beginPath(); g.moveTo( 26, 250 ); g.lineTo( w / 2, 350 ); g.lineTo( w - 26, 250 ); g.stroke();
+	g.fillStyle = 'rgba(0,0,0,0.25)'; for ( let y = 0; y < h; y += 5 ) g.fillRect( 0, y, w, 1 );
+}, [ 1, 1 ] );
+// hills in the mist: three ridges, each lighter (further) than the one in front
+const hillsTex = ( seed, tone )=>canvasTex( 'hills' + seed, 2048, 256, ( g, w, h )=>
+{
+	g.clearRect( 0, 0, w, h );
+	let r = seed; const rnd = ()=>( r = ( r * 16807 ) % 2147483647 ) / 2147483647;
+	g.fillStyle = tone;
+	g.beginPath(); g.moveTo( 0, h );
+	let y = h * 0.55;
+	for ( let x = 0; x <= w; x += 16 ) { y = clamp( y + ( rnd() - 0.5 ) * 26 + Math.sin( x / 190 + seed ) * 4, h * 0.12, h * 0.85 ); g.lineTo( x, y ); }
+	g.lineTo( w, h ); g.closePath(); g.fill();
+	// (a few pines on the ridge)
+	for ( let i = 0; i < 90; i++ ) { const x = rnd() * w, b = h * ( 0.35 + rnd() * 0.5 ); g.beginPath(); g.moveTo( x - 6, b ); g.lineTo( x, b - 18 - rnd() * 16 ); g.lineTo( x + 6, b ); g.fill(); }
+}, [ 1, 1 ] );
+const bridges = new Map();
+function buildBridge( L )
+{
+	const U = duskU( 0.14 ), Uback = duskU( 0.32 );
+	const root = new THREE.Group(), far = new THREE.Group(), mats = [];
+	const mat = ( c, u = U )=>{ const m = towerMat( c, u ); mats.push( m ); return m; };
+	const M = { concrete: mat( 0x8a847c ), dark: mat( 0x4a4640 ), steel: mat( 0x6a655e ), rust: mat( 0x7a5a44 ), black: mat( 0x26241f ), yellow: mat( 0xb89a3a ), orange: mat( 0xb0582a ),
+		back: mat( 0x5c5750, Uback ), backDark: mat( 0x3c3935, Uback ) };
+	const glows = {}, glow = ( c, o = 1 )=>glows[ c + '/' + o ] || ( glows[ c + '/' + o ] = mats[ mats.push( unlitMat( c, o, true ) ) - 1 ] );
+	// a box by its extents in game px (y down) and z (towards the camera)
+	const B = ( x0, y0, x1, y1, z0, z1, m, parent = root )=>
+	{
+		const o = new THREE.Mesh( new THREE.BoxBufferGeometry( Math.abs( x1 - x0 ), Math.abs( y1 - y0 ), Math.abs( z1 - z0 ) ), m );
+		o.position.set( ( x0 + x1 ) / 2, -( y0 + y1 ) / 2, ( z0 + z1 ) / 2 ); parent.add( o ); return o;
+	};
+	// a strut from (x0, y0) to (x1, y1) at depth z
+	const strut = ( x0, y0, x1, y1, z, t, m )=>
+	{
+		const len = Math.hypot( x1 - x0, y1 - y0 );
+		const o = new THREE.Mesh( new THREE.BoxBufferGeometry( len, t, t ), m );
+		o.position.set( ( x0 + x1 ) / 2, -( y0 + y1 ) / 2, z ); o.rotation.z = -Math.atan2( y1 - y0, x1 - x0 ); root.add( o ); return o;
+	};
+	const cyl = ( r, x0, x1, y, z, m )=>{ const o = new THREE.Mesh( new THREE.CylinderBufferGeometry( r, r, x1 - x0, 10 ), m ); o.rotation.z = Math.PI / 2; o.position.set( ( x0 + x1 ) / 2, -y, z ); root.add( o ); return o; };
+	const [ x0, x1 ] = L.bridge, S = L.soffit, R = L.road;
+	// the legs: footing, twin columns, bracing, knee braces up to the soffit, lamps
+	for ( const c of L.legs )
+	{
+		B( c - 540, -34, c + 540, 140, -560, -190, M.concrete );                                   // (the footing at the waterline)
+		B( c - 560, -44, c + 560, -30, -570, -180, M.dark );                                       // (its deck edge)
+		for ( let x = c - 500; x <= c + 500; x += 90 ) cyl( 9, x - 30, x + 30, -8, -176, M.black );  // (fenders)
+		for ( const x of [ c - 420, c + 420 ] ) B( x - 10, -70, x + 10, -44, -300, -280, M.yellow ); // (bollards)
+		for ( const sx of [ -1, 1 ] )
+		{
+			const cx = c + sx * 300;
+			B( cx - 64, S, cx + 64, -30, -470, -300, M.concrete );                                  // (a column)
+			B( cx - 72, -150, cx + 72, -120, -478, -292, M.dark );                                  // (its collars)
+			B( cx - 72, -420, cx + 72, -390, -478, -292, M.dark );
+			for ( const y of [ -110, -260, -470 ] ) B( cx - sx * 50 - 10, y - 10, cx - sx * 50 + 10, y + 10, -296, -290, glow( 0xffc27a ) );
+			strut( cx, -470, cx + sx * 260, S + 4, -385, 22, M.steel );                             // (knee braces)
+			strut( cx, -470, cx - sx * 200, S + 4, -385, 18, M.steel );
+		}
+		for ( const [ ya, yb ] of [ [ -60, -300 ], [ -300, -540 ] ] )
+		{
+			strut( c - 236, ya, c + 236, yb, -385, 16, M.steel ); strut( c - 236, yb, c + 236, ya, -385, 16, M.steel );
+		}
+		B( c - 236, -310, c + 236, -290, -400, -370, M.steel );                                    // (a tie between the twins)
+		B( c - 460, S - 30, c + 460, S + 6, -500, -280, M.dark );                                   // (the pier head under the soffit)
+		glowLamp( c, -20, -560 );
+	}
+	function glowLamp( x, y, z ) { B( x - 40, y - 3, x + 40, y + 3, z - 2, z + 2, glow( 0xffc27a, 0.8 ) ); }
+	// the soffit: longitudinal girders behind the slab, cross beams, pipes, cable trays, lamps
+	B( x0, S - 40, x1, S + 26, -520, -150, M.dark );
+	B( x0, S + 20, x1, S + 34, -520, -150, M.steel );
+	for ( let x = x0 + 75; x < x1; x += 150 ) B( x - 7, S, x + 7, S + 48, -500, -150, M.steel );
+	cyl( 9, x0, x1, S + 40, -230, M.rust ); cyl( 13, x0, x1, S + 58, -310, M.steel ); cyl( 6, x0, x1, S + 34, -180, M.black );
+	for ( let x = x0 + 150; x < x1; x += 300 ) B( x - 26, S + 44, x + 26, S + 52, -174, -160, glow( 0xffd9a0 ) );
+	// the deck's side and the tower behind the rooms (depth, for the angled view)
+	B( x0, R, x1, S, -600, -170, M.back );
+	const T = L.tower;
+	B( T.x0, T.roof, T.x1, R, -600, -170, M.backDark );
+	// the hanging containers' cables and hooks
+	for ( const k of L.hanging )
+	{
+		const cx = ( k[ 0 ] + k[ 1 ] ) / 2;
+		for ( const dx of [ -60, 60 ] ) strut( cx, S + 26, cx + dx, k[ 2 ], -30, 3, M.black );
+		B( cx - 14, S + 26, cx + 14, S + 50, -40, -20, M.yellow );
+	}
+	// yellow railings: along the road's edge (front and back) and round the pier caps (behind)
+	const rail = ( a, b, y, z )=>{ B( a, y - 42, b, y - 38, z - 2, z + 2, M.yellow ); B( a, y - 22, b, y - 19, z - 2, z + 2, M.yellow ); for ( let x = a; x <= b; x += 120 ) B( x - 2, y - 42, x + 2, y, z - 2, z + 2, M.yellow ); };
+	rail( x0, T.x0 - 20, R, -150 ); rail( T.x1 + 20, x1, R, -150 );
+	for ( const c of L.legs ) rail( c - L.cap.half, c + L.cap.half, L.cap.top, -150 );
+	// cranes on the road deck: mast, cab, jib out over the water, a load on its cable
+	for ( const cr of L.cranes )
+	{
+		const cx = cr.x, top = R - 700, dir = cr.dir;
+		for ( const dx of [ -28, 28 ] ) for ( const dz of [ -120, -64 ] ) B( cx + dx - 4, top, cx + dx + 4, R - 100, dz - 4, dz + 4, M.orange );
+		for ( let y = R - 100; y > top; y -= 60 ) { strut( cx - 28, y, cx + 28, y - 60, -120, 4, M.orange ); strut( cx - 28, y, cx + 28, y - 60, -64, 4, M.orange ); }
+		B( cx - 70, R - 100, cx + 70, R, -150, -40, M.dark );                                       // (its base, behind the pedestal)
+		B( cx - 50, top - 70, cx + 50, top, -130, -50, M.orange );                                  // (the cab)
+		B( cx - 44, top - 60, cx + 20, top - 34, -48, -46, glow( 0xffe0b0, 0.8 ) );
+		B( Math.min( cx, cx + dir * 760 ), top - 96, Math.max( cx, cx + dir * 760 ), top - 70, -110, -70, M.orange );   // (the jib)
+		B( Math.min( cx, cx - dir * 260 ), top - 92, Math.max( cx, cx - dir * 260 ), top - 70, -110, -70, M.orange );
+		B( cx - dir * 260 - 40, top - 70, cx - dir * 200 + 40, top + 10, -120, -60, M.dark );        // (the counterweight)
+		strut( cx, top - 170, cx + dir * 760, top - 96, -90, 3, M.black ); strut( cx, top - 170, cx - dir * 260, top - 92, -90, 3, M.black );
+		B( cx - 8, top - 180, cx + 8, top - 96, -98, -82, M.orange );
+		const lx = cx + dir * 700, ly = cr.load;
+		strut( lx, top - 70, lx, ly - 70, -90, 3, M.black );
+		B( lx - 90, ly - 70, lx + 90, ly, -130, -50, M.rust );                                     // (its load: a container)
+	}
+	// the tower numbered 4: its crown above the roof, the number, security lights, the orange banners, masts, a beacon
+	const cx = ( T.x0 + T.x1 ) / 2, rf = T.roof;
+	B( T.x0 + 40, rf - 700, T.x1 - 40, rf, -300, -60, M.concrete );
+	B( T.x0 - 40, rf - 520, T.x0 + 70, rf, -260, -80, M.steel ); B( T.x1 - 70, rf - 520, T.x1 + 40, rf, -260, -80, M.steel );
+	B( T.x0 + 20, rf - 30, T.x1 - 20, rf, -320, -40, M.dark );
+	B( T.x0 + 60, rf - 720, T.x1 - 60, rf - 700, -310, -70, M.dark );
+	const numMat = unlitMat( 0xffffff, 1, false, numberTex( 4 ), 0.75 ); numMat.transparent = false; numMat.depthWrite = true; mats.push( numMat );
+	const num = new THREE.Mesh( new THREE.PlaneBufferGeometry( 280, 280 ), numMat ); num.position.set( cx, -( rf - 470 ), -58 ); root.add( num );
+	const win = unlitMat( 0xffffff, 1, true, windowsTex(), 0.9 ); mats.push( win );
+	for ( const [ y0, y1 ] of [ [ rf - 300, rf - 190 ], [ rf - 170, rf - 60 ] ] ) { const p = new THREE.Mesh( new THREE.PlaneBufferGeometry( T.x1 - T.x0 - 200, y1 - y0 ), win ); p.position.set( cx, -( y0 + y1 ) / 2, -57 ); root.add( p ); }
+	for ( const y of [ rf - 330, rf - 40 ] ) B( T.x0 + 60, y - 4, T.x1 - 60, y + 4, -58, -54, glow( 0xff3020, 0.9 ) );
+	const banMat = unlitMat( 0xffffff, 1, false, orangeBannerTex() ); banMat.transparent = false; banMat.depthWrite = true; mats.push( banMat );
+	const banners = [];
+	for ( const x of [ T.x0 + 5, T.x1 - 5 ] ) { const b = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 400, 1, 8 ), banMat ); b.position.set( x, -( rf - 280 ), -30 ); root.add( b ); banners.push( b ); }
+	for ( const [ dx, h ] of [ [ -200, 420 ], [ 90, 560 ], [ 250, 300 ] ] ) { const m = new THREE.Mesh( new THREE.CylinderBufferGeometry( 5, 9, h, 8 ), M.steel ); m.position.set( cx + dx, -( rf - 720 - h / 2 ), -180 ); root.add( m ); }
+	const beacon = B( cx + 84, rf - 1296, cx + 96, rf - 1284, -186, -174, glow( 0xff2a1a ) );
+	// small control towers at the bridge's ends, on the road deck (behind it)
+	for ( const tx of L.watchtowers )
+	{
+		B( tx - 60, R - 380, tx + 60, R, -330, -200, M.steel );
+		B( tx - 80, R - 470, tx + 80, R - 380, -345, -185, M.dark );
+		B( tx - 70, R - 450, tx + 70, R - 400, -186, -184, glow( 0xffc27a, 0.7 ) );
+		const m = new THREE.Mesh( new THREE.CylinderBufferGeometry( 3, 5, 220, 6 ), M.steel ); m.position.set( tx + 30, -( R - 580 ), -260 ); root.add( m );
+	}
+	// the far shore: three ridges of hills in the mist, far behind (placed each frame so they sit on the horizon)
+	const hills = [];
+	for ( const [ i, tone, depth, w, h ] of [ [ 0, '#9d919c', 16000, 90000, 5200 ], [ 1, '#8a7e8a', 11000, 70000, 3600 ], [ 2, '#76697a', 7000, 52000, 2600 ] ] )
+	{
+		const m = unlitMat( 0xffffff, 1, false, hillsTex( 7 + i * 13, tone ), 0.5 ); mats.push( m );
+		const p = new THREE.Mesh( new THREE.PlaneBufferGeometry( w, h ), m );
+		p.userData = { depth, h }; far.add( p ); hills.push( p );
+	}
+	mergeStatic( root, new Set( [ beacon, ...banners, num ] ) );
+	return { root, far, hills, mats, beacon, banners };
+}
+function bridgeVisual( e, scene, dt, t )
+{
+	const s = estate.get( e ), L = LAYOUTS[ s.style ];
+	if ( !L ) return;
+	let G = bridges.get( e );
+	if ( !G ) { G = buildBridge( L ); bridges.set( e, G ); }
+	if ( G.root.parent !== scene ) scene.add( G.root );
+	if ( G.far.parent !== scene ) scene.add( G.far );
+	placeBridge();
+	G.beacon.visible = ( t % 1.4 ) < 0.3;
+	G.banners.forEach( ( b, i )=>{ b.rotation.y = Math.sin( t * 0.8 + i * 2 ) * 0.1; } );
+}
+// the hills stay on the horizon wherever the camera is (as the tower backdrop does)
+function placeBridge()
+{
+	const cam = camera();
+	if ( !cam || !bridges.size ) return;
+	const cx = cam.position.x, cy = cam.position.y, camZ = Math.max( 1, cam.position.z );
+	bridges.forEach( ( G )=>
+	{
+		for ( const p of G.hills )
+		{
+			const k = ( camZ + p.userData.depth ) / camZ;
+			p.position.set( cx, cy + ( 0 - cy ) * k + p.userData.h / 2 * 0.62, -p.userData.depth );
+		}
+	} );
+}
+function bridgeDispose( e )
+{
+	const G = bridges.get( e );
+	if ( !G ) return;
+	for ( const g of [ G.root, G.far ] ) { if ( g.parent ) g.parent.remove( g ); g.traverse( ( o )=>{ if ( o.geometry ) o.geometry.dispose(); } ); }
+	for ( const m of G.mats ) m.dispose();
+	bridges.delete( e );
 }
 
 // ---- a title across the screen (the host's own screen) ----
@@ -18034,7 +18380,7 @@ function banner( text, secs = 3 )
 // follows docs/cs-coastal-tower/metrics.md § 2 (a rifleman: jumps 73 px, climbs 140, clears 300 across, drops 400
 // safely, climbs out of water onto ≤ 80).
 
-const LEVEL_TITLE = { '01': '01 · Approach' };
+const LEVEL_TITLE = { '01': '01 · Approach', '06': '06 · Underhang' };
 const S = ( v )=>String( v );
 const Q = ( v )=>"'" + String( v ).replace( /'/g, "\\'" ) + "'";
 function levelBuilder()
@@ -18239,7 +18585,214 @@ function level01()
 	B.call( 'pb2GameWorld.FinalizeWorld', true );
 	return B.out;
 }
-const LEVELS = { '01': level01 };
+// ---- 06 · Underhang ----
+//
+// Under the Civil Security sea bridge. The tower numbered 4 stands on its deck; its legs stand in the sea on twin
+// columns. The fight is under the deck, on five layers: the water lane (the boat), the pier caps on each leg (the
+// pitstop fights: 330 px up, the boat passes under them; ladders come up out of the water at both ends), the hanging
+// containers between them (a jump route from cap to cap), the deck interior (a run of rooms: services, red security
+// rooms, a vehicle bay with CS tanks), and the road deck and the tower on top. Each leg has a ladder shaft from its cap
+// through hatches in the deck to the road. Three objectives in any order open the extraction: this is the middle chunk
+// (the command room in the tower); the cliff facility (left) and the bunker shore (right) come next.
+//
+// (Seen side-on the sea is one lane: a footing at the waterline would block the boat. The footings are drawn behind the
+// lane, where the concept has them, and the caps are high enough for the boat to pass under: ≥ 290 px clear.)
+const L06 = {
+	style: 6,
+	sea: 0, bed: 700,
+	ends: [ 4200, 10800 ],                                                    // (the headlands closing the middle chunk for now)
+	bridge: [ 4600, 10400 ],
+	legs: [ 5700, 7500, 9300 ],
+	cap: { half: 450, top: -330, t: 30 },
+	soffit: -580, floor: -620, ceil: -820, road: -860, header: 40,
+	shaft: -120,                                                              // (each leg's ladder shaft, from its centre)
+	hatch: 30,                                                                // (half the hatch it climbs through)
+	containerH: 90, containerTop: -400,
+	partitions: [ 5250, 6150, 6850, 7050, 7950, 8850, 9750 ],
+	rooms: [ [ 4600, 5250, 'bg_room', 'Store' ], [ 5250, 6150, 'bg_room', 'Services' ], [ 6150, 6850, 'bg_sec', 'Security' ], [ 6850, 7050, 'bg_room', 'Vestibule' ],
+		[ 7050, 7950, 'bg_tower', 'Tower base' ], [ 7950, 8850, 'bg_bay', 'Vehicle bay' ], [ 8850, 9750, 'bg_room', 'Services' ], [ 9750, 10400, 'bg_sec', 'Security' ] ],
+	tower: { x0: 7100, x1: 7900, wall: 40, l2: -1100, l3: -1340, slab: 20, roof: -1600, roofT: 40, doorTop: -1020, l3Open: -1520, shaft: 7800 },
+	cranes: [ { x: 5850, dir: -1, load: -1180 }, { x: 9450, dir: 1, load: -1180 } ],
+	watchtowers: [ 4880, 10150 ],
+	start: { dock: [ 4600, 4680 ], boat: 4900 },
+	hanging: []
+};
+( ()=>
+{
+	for ( let i = 0; i < L06.legs.length - 1; i++ )
+	{
+		const a = L06.legs[ i ] + L06.cap.half, b = L06.legs[ i + 1 ] - L06.cap.half;
+		L06.hanging.push( [ a + 170, a + 370, L06.containerTop ], [ b - 370, b - 170, L06.containerTop ] );
+	}
+} )();
+const LAYOUTS = { 6: L06 };
+state.layouts = { '06': L06 };
+function level06()
+{
+	const B = levelBuilder(), L = L06, T = L.tower, [ bx0, bx1 ] = L.bridge, SF = L.soffit, R = L.road;
+	// dusk in the mist: a low warm sun, a mauve sky; the lamps are sodium, the security rooms red
+	B.world( { sun_color: '0xffc49a', sun_intensity: '0.42', sky_color: '0x9a8ea2', sky_intensity: '0.62', fog_intensity: '0', brightness: '1', raining: 'false', snowing: 'false',
+		foreground_snow: 'false', background_snow: 'false', terrain_enabled: 'false', generate_shadowmap: 'true', camera_collisions: 'false', wind_amplitude: '-0.8', wind_random_part: '0.4' } );
+	B.call( 'pb2GameWorld.EnableSimplePlayerAssignmentLogic' );
+	B.skin( 'skin_raider', 1 ); B.skin( 'skin_cs_lite', 8 ); B.skin( 'skin_cs_heavy', 7 ); B.skin( 'skin_cs_ghost', 12 ); B.skin( 'skin_cs_boss', 11 );
+	const metal = { debris_material: 'pb2Entity.MATERIAL_METAL' };
+	B.surface( 'cliff', 'mat_cliff', 'Headland', '0x8a8a90', { debris_material: 'pb2Entity.MATERIAL_ROCK' } );
+	B.surface( 'seabed', 'mat_sand', 'Seabed', '0x55606a' );
+	B.surface( 'pier', 'platform_texture', 'Pier concrete', '0x9a948c' );
+	B.surface( 'slab', 'metal_slice', 'Deck steel', '0x8a8680', metal );
+	B.surface( 'road', 'pb2platform_texture', 'Road deck', '0x8c8a86' );
+	B.surface( 'shell', 'mat_panel_tile', 'Tower panels', '0x8e8e94', metal );
+	B.surface( 'box_rust', 'mat_panel4_tile', 'Container (rust)', '0xb0643a', metal );
+	B.surface( 'box_blue', 'mat_panel4_tile', 'Container (blue)', '0x4a6e8a', metal );
+	B.surface( 'box_red', 'mat_panel4_tile', 'Container (red)', '0x9a3a30', metal );
+	B.surface( 'plant', 'mat_panel3_tile', 'Machinery', '0x8a8470', metal );
+	B.backSurface( 'bg_room', 'mat_plate1_bg', 'Deck rooms (behind)', '0x6e6a64' );
+	B.backSurface( 'bg_sec', 'mat_plate2_bg', 'Security rooms (behind)', '0x6a4644' );
+	B.backSurface( 'bg_bay', 'mat_plate3_bg', 'Vehicle bay (behind)', '0x5e605e' );
+	B.backSurface( 'bg_tower', 'mat_plate2_bg', 'Tower (behind)', '0x5a5a60' );
+	B.liquid( 'sea', { color: '0x2a3440', opacity: '0.8', reflection: '0.6' } );
+	B.team( 'raiders', { title: Q( 'Raiders' ), hud_color: 'new pb2HighRangeColor( 0x6a94ff )', friendly_fire: 'false' } );
+	B.team( 'cs', { ai_in_team: 'true', title: Q( 'Civil Security' ), hud_color: 'new pb2HighRangeColor( 0xff4a3a )', friendly_fire: 'false', overheads_visibility: 'pb2OverheadHUD.OVERHEAD_VISIBILITY_TEAMMATES_ONLY' } );
+	B.ai( 'cs_post', { skill: '0.75', behavior: 'pb2AIModule.BEHAVIOR_IDLE', hear_range: '700', hunt_random_known_threats_range: '0' } );
+	B.ai( 'cs_hunter', { skill: '0.8', behavior: 'pb2AIModule.BEHAVIOR_MPBOT', hear_range: '800', hunt_random_known_threats_range: '1400' } );
+	B.ai( 'cs_crew', { skill: '0.7', behavior: 'pb2AIModule.BEHAVIOR_IDLE', hear_range: '900', hunt_random_known_threats_range: '0' } );
+	// the headlands, the seabed, the sea
+	const top = -1300, bot = L.bed + 250;
+	B.wall( L.ends[ 0 ], top, bx0 - L.ends[ 0 ], bot - top, 'cliff' );
+	B.wall( bx1, top, L.ends[ 1 ] - bx1, bot - top, 'cliff' );
+	B.wall( bx0, L.bed, bx1 - bx0, bot - L.bed, 'seabed' );
+	for ( const [ x, w, h ] of [ [ 5300, 420, 120 ], [ 6500, 300, 90 ], [ 8200, 460, 140 ], [ 9900, 280, 100 ] ] ) B.wall( x, L.bed - h, w, h, 'seabed' );
+	B.water( bx0, L.sea, bx1 - bx0, L.bed, 'sea' );
+	// the start: a dock at the foot of the left headland, level with the boat's deck, solid to the seabed
+	B.wall( L.start.dock[ 0 ], -48, L.start.dock[ 1 ] - L.start.dock[ 0 ], L.bed + 48, 'pier' );
+	// a slab with hatches: a floor [ x0, x1 ] at y (thickness h), open over each leg's shaft
+	const hatches = L.legs.map( ( c )=>[ c + L.shaft - L.hatch, c + L.shaft + L.hatch ] );
+	const slab = ( x0, x1, y, h, m, holes )=>
+	{
+		let segs = [ [ x0, x1 ] ];
+		for ( const [ a, b ] of holes ) { const out = []; for ( const [ p, q ] of segs ) { if ( b <= p || a >= q ) { out.push( [ p, q ] ); continue; } if ( a > p ) out.push( [ p, a ] ); if ( b < q ) out.push( [ b, q ] ); } segs = out; }
+		for ( const [ p, q ] of segs ) B.wall( p, y, q - p, h, m );
+	};
+	// the legs' pier caps (330 up: the lane runs under them), their ladders out of the water, their lamps
+	for ( const c of L.legs )
+	{
+		B.wall( c - L.cap.half, L.cap.top, 2 * L.cap.half, L.cap.t, 'pier' );
+		for ( const sx of [ -1, 1 ] ) B.entity( c + sx * ( L.cap.half + 20 ), L.cap.top - 70, 'pb2Entity.TYPE_CS_LADDER', { toy: '40' } );
+		B.entity( c + L.shaft, R - 60, 'pb2Entity.TYPE_CS_LADDER', { toy: S( L.cap.top ) } );
+		B.lamp( c - 300, L.cap.top - 90, '0xffc890', 0.45, 4 ); B.lamp( c + 300, L.cap.top - 90, '0xffc890', 0.45, 4 );
+		B.lamp( c, -40, '0xffb070', 0.35, 5 );                                                  // (the footing's lamps, on the water)
+		B.entity( c + 250, L.cap.top, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
+		// (cover on the cap: a crate to crouch behind and a machinery block, clear of the shaft and the ladders)
+		B.wall( c - 40, L.cap.top - 60, 50, 60, 'box_blue' );
+		B.wall( c + 120, L.cap.top - 70, 50, 70, 'plant' );
+	}
+	// the hanging containers between the caps (≥ 290 px over the water)
+	L.hanging.forEach( ( [ x0, x1, y ], i )=>B.wall( x0, y, x1 - x0, L.containerH, [ 'box_rust', 'box_blue', 'box_red', 'box_rust' ][ i % 4 ] ) );
+	// the deck: the soffit slab (the interior's floor), the road slab (its ceiling), headers between the rooms
+	slab( bx0, bx1, L.floor, SF - L.floor, 'slab', hatches );
+	slab( bx0, bx1, R, L.ceil - R, 'road', hatches );
+	for ( const p of L.partitions ) B.wall( p - 15, L.ceil, 30, L.header, 'slab' );
+	for ( const [ x0, x1, bg ] of L.rooms ) B.back( x0, L.ceil, x1 - x0, L.floor - L.ceil, bg );
+	for ( const [ x0, x1, bg ] of L.rooms )
+	{
+		const red = bg === 'bg_sec', cx = ( x0 + x1 ) / 2;
+		B.lamp( cx, L.ceil + 60, red ? '0xff3020' : '0xffd0a0', red ? 0.65 : 0.5, 5 );
+		if ( red ) B.lamp( cx + ( x1 - x0 ) / 4, L.floor - 40, '0xff2010', 0.4, 3 );
+	}
+	// cover in the rooms (none in the tank run: the tower base, the vehicle bay, the services beyond it)
+	for ( const [ x, w, h, m ] of [ [ 4800, 90, 60, 'box_blue' ], [ 5000, 60, 60, 'plant' ], [ 5420, 70, 60, 'plant' ], [ 5960, 90, 60, 'box_rust' ], [ 6320, 60, 60, 'box_red' ], [ 6620, 60, 60, 'box_red' ], [ 9900, 70, 60, 'plant' ], [ 10180, 90, 60, 'box_blue' ] ] )
+		B.wall( x, L.floor - h, w, h, m );
+	// the road deck: crane pedestals, container stacks, a utility module
+	for ( const cr of L.cranes ) B.wall( cr.x - 60, R - 100, 120, 100, 'plant' );
+	// (stacks of two, the upper one set back: climb the first, then the second)
+	for ( const [ x, y, w, h, m ] of [ [ 6300, R - 90, 240, 90, 'box_rust' ], [ 6360, R - 180, 180, 90, 'box_blue' ], [ 8480, R - 90, 240, 90, 'box_red' ], [ 8480, R - 180, 180, 90, 'box_rust' ], [ 5120, R - 130, 180, 130, 'plant' ] ] )
+		B.wall( x, y, w, h, m );
+	for ( let x = bx0 + 300; x < bx1; x += 900 ) if ( x < T.x0 - 60 || x > T.x1 + 60 ) B.lamp( x, R - 130, '0xffb070', 0.45, 5 );
+	for ( let x = bx0 + 200; x < bx1; x += 450 ) B.lamp( x, SF + 40, '0xffb070', 0.55, 6 );         // (the soffit's lamps, over the lane)
+	// the tower numbered 4: lobby (road level: doors each side), the command room (closed), the observation deck
+	// (open sides), the roof; a ladder shaft on its right from the lobby to the roof
+	const th = [ [ T.shaft - L.hatch, T.shaft + L.hatch ] ];
+	slab( T.x0, T.x1, T.l2, T.slab, 'slab', th );
+	slab( T.x0, T.x1, T.l3, T.slab, 'slab', th );
+	slab( T.x0 - 40, T.x1 + 40, T.roof - T.roofT, T.roofT, 'shell', th );
+	for ( const x of [ T.x0, T.x1 - T.wall ] )
+	{
+		B.wall( x, T.roof, T.wall, T.l3Open - T.roof, 'shell' );
+		B.wall( x, T.l3 + T.slab, T.wall, T.doorTop - T.l3 - T.slab, 'shell' );
+	}
+	B.back( T.x0, T.roof, T.x1 - T.x0, R - T.roof, 'bg_tower' );
+	B.entity( T.shaft, T.roof - T.roofT - 60, 'pb2Entity.TYPE_CS_LADDER', { toy: S( R ) } );
+	B.lamp( ( T.x0 + T.x1 ) / 2, T.l2 + 60, '0xffd0a0', 0.5, 5 );
+	B.lamp( T.x0 + 200, T.l3 + 70, '0xff3020', 0.6, 5 ); B.lamp( T.x1 - 200, T.l3 + 70, '0xffd0a0', 0.4, 4 );
+	B.lamp( ( T.x0 + T.x1 ) / 2, T.l3 - 130, '0xffd0a0', 0.4, 5 );
+	B.lamp( ( T.x0 + T.x1 ) / 2, T.roof - 160, '0xff3020', 0.5, 6 );
+	// the command room's console: the middle objective
+	B.entity( T.x0 + 300, T.l2, 'pb2Entity.TYPE_CS_OBJECTIVE', { style_id: '2' } );
+	B.entity( T.x0 + 150, R, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '2' } );
+	// the set pieces: the bridge's legs, soffit, cranes, the tower's crown, the hills
+	B.entity( ( bx0 + bx1 ) / 2, 0, 'pb2Entity.TYPE_CS_BRIDGE', { style_id: String( L.style ) } );
+	// the raiders: on the dock, their boat moored off it (a berth here), a rifle and a pistol
+	B.char( 4640, -48 - 44, { id: 'raider1', skin: 'skin_raider', team: 'raiders', player_controllable: 'true', hmax: '150', side: '1' } );
+	B.gun( 4630, -48 - 20, 'gun_real_rifle' ); B.gun( 4660, -48 - 20, 'gun_pistol2' );
+	B.entity( L.start.boat, -60, 'pb2Entity.TYPE_BOAT', { id: 'raider_boat', style_id: '1', side: '1', multiply_health: '2' } );
+	B.entity( L.start.boat + 25, 0, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '1' } );
+	for ( let i = 0; i < L.legs.length - 1; i++ ) B.entity( ( L.legs[ i ] + L.legs[ i + 1 ] ) / 2, 0, 'pb2Entity.TYPE_CS_CHECKPOINT', { style_id: '1' } );
+	// the CS tanks in the vehicle bay (unmanned: the raiders can take them) and guns to find
+	B.entity( 8250, L.floor - 80, 'pb2Entity.TYPE_TANK', { style_id: '3', side: '-1' } );
+	B.entity( 8620, L.floor - 80, 'pb2Entity.TYPE_TANK', { style_id: '4', side: '-1' } );
+	B.gun( 5600, L.floor - 20, 'gun_real_shotgun' ); B.gun( 7200, R - 20, 'gun_rl' ); B.gun( 9500, L.cap.top - 20, 'gun_sniper' );
+	// Civil Security: the pier caps and the containers (they shoot down at the lane), the rooms, the road, the tower
+	const cap = L.cap.top, fl = L.floor;
+	const [ c1, c2, c3 ] = L.legs;
+	B.cs( c1 - 200, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
+	B.cs( c1 + 260 + 80, cap, 'skin_cs_lite', 'gun_real_shotgun', 'cs_post', 'CS Trooper [2+]', -1 );
+	B.cs( L.hanging[ 1 ][ 0 ] + 100, L.containerTop, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
+	B.cs( c2 - 200, cap, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy', -1 );
+	B.cs( c2 + 200, cap, 'skin_cs_lite', 'gun_rl', 'cs_post', 'CS Rocketeer', -1 );
+	B.cs( c2 + 40, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper [3+]', -1 );
+	B.cs( L.hanging[ 2 ][ 0 ] + 100, L.containerTop, 'skin_cs_lite', 'gun_gl', 'cs_post', 'CS Grenadier', -1 );
+	B.cs( c3 - 200, cap, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
+	B.cs( c3 + 200 + 150, cap, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman [2+]', -1 );
+	B.cs( 5500, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 5850, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper [2+]', -1 );
+	B.cs( 6480, fl, 'skin_cs_heavy', 'gun_flame', 'cs_post', 'CS Heavy', -1 );
+	B.cs( 6760, fl, 'skin_cs_lite', 'gun_real_shotgun', 'cs_post', 'CS Trooper [2+]', -1 );
+	B.cs( 7250, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
+	B.cs( 7700, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper [3+]', -1 );
+	B.cs( 8420, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Tank crew', -1 );
+	B.cs( 8760, fl, 'skin_cs_lite', 'gun_real_shotgun', 'cs_hunter', 'CS Trooper [2+]', -1 );
+	B.cs( 9150, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 10020, fl, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy [3+]', -1 );
+	B.cs( 10300, fl, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Trooper', -1 );
+	B.cs( 5300, R - 130, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman', -1 );
+	B.cs( 6080, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 6450, R - 180, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Marksman [2+]', -1 );
+	B.cs( 8200, R, 'skin_cs_lite', 'gun_rl', 'cs_post', 'CS Rocketeer', -1 );
+	B.cs( 9050, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_hunter', 'CS Trooper', -1 );
+	B.cs( 9700, R, 'skin_cs_heavy', 'gun_minigun', 'cs_post', 'CS Heavy [2+]', -1 );
+	B.cs( T.x0 + 120, R, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Tower guard', -1 );
+	B.cs( T.x1 - 180, R, 'skin_cs_lite', 'gun_real_shotgun', 'cs_post', 'CS Tower guard [2+]', -1 );
+	B.cs( T.x1 - 220, T.l2, 'skin_cs_boss', 'gun_oicw', 'cs_post', 'CS Commander', -1 );
+	B.cs( T.x0 + 160, T.l2, 'skin_cs_lite', 'gun_real_rifle', 'cs_post', 'CS Command guard', -1 );
+	B.cs( T.x0 + 200, T.l3, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Observer', -1 );
+	B.cs( T.x1 - 240, T.l3, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Observer [3+]', 1 );
+	B.cs( ( T.x0 + T.x1 ) / 2 - 150, T.roof - T.roofT, 'skin_cs_ghost', 'gun_sniper', 'cs_post', 'CS Roof sniper [2+]', -1 );
+	// CS patrol boats (the autopilot drives them): a helmsman and a gunner each
+	const eboat = ( id, x, name )=>
+	{
+		B.entity( x, -60, 'pb2Entity.TYPE_BOAT', { id, style_id: '1', side: '-1', multiply_health: '0.5' } );
+		B.cs( x, -60, 'skin_cs_lite', null, 'cs_crew', name + ' helm', -1, { driver_of: id } );
+		B.cs( x, -60, 'skin_cs_lite', null, 'cs_crew', name + ' gunner', -1, { driver_of: id } );
+	};
+	eboat( 'cs_boat1', 7000, 'Patrol 1' );
+	eboat( 'cs_boat2', 8900, 'Patrol 2' );
+	eboat( 'cs_boat3', 9900, 'Patrol 3 [2+]' );
+	// the extraction (for now at the road's right end: the shore chunk will have the real one)
+	B.entity( bx1 - 100, R, 'pb2Entity.TYPE_CS_EXIT', { style_id: '1' } );
+	B.call( 'pb2GameWorld.FinalizeWorld', true );
+	return B.out;
+}
+const LEVELS = { '01': level01, '06': level06 };
 
 // load a level into the open Level Editor (unsaved changes there are offered for saving first)
 function loadLevel( id )
@@ -18294,7 +18847,9 @@ function openMenu()
 		[ 'Searchlight', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_SEARCHLIGHT', 0, 0, { rotation: '0' } ), 'Searchlight (Rotation: where it points, from straight down)' ) ],
 		[ 'Checkpoint (berth)', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_CHECKPOINT', 0, 0, { style_id: '1' } ), 'Berth checkpoint (on the water: a lost boat is replaced here)' ) ],
 		[ 'Checkpoint (on foot)', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_CHECKPOINT', 0, 0, { style_id: '2' } ), 'Checkpoint (on the floor)' ) ],
-		[ 'Level exit', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_EXIT', 0, 0 ), 'Level exit (on the floor)' ) ]
+		[ 'Level exit', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_EXIT', 0, 0 ), 'Level exit (on the floor)' ) ],
+		[ 'Ladder', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_LADDER', 0, 0, { toy: '300' } ), 'Ladder (placed by its top; To Y is its foot)' ) ],
+		[ 'Objective console', ()=>placeInEditor( editorObject( 'pb2Entity.TYPE_CS_OBJECTIVE', 0, 0, { style_id: '2' } ), 'Objective (on the floor; Style ID 1 power, 2 command room, 3 basement)' ) ]
 	] );
 	const W = 330, H = 29, gap = 5, pad = 8;
 	const panel = opt( ()=>pb2Interfaces.bvk );
@@ -18350,7 +18905,7 @@ function frame( nowMs )
 			const s = estate.get( e );
 			if ( !s || e.is_being_removed || ents.indexOf( e ) === -1 || !scene )
 			{
-				towerDispose( e ); searchlightDispose( e ); beaconDispose( e );
+				towerDispose( e ); searchlightDispose( e ); beaconDispose( e ); ladderDispose( e ); consoleDispose( e ); bridgeDispose( e );
 				if ( !s || e.is_being_removed || ents.indexOf( e ) === -1 ) marked.delete( e );
 				continue;
 			}
@@ -18359,6 +18914,9 @@ function frame( nowMs )
 			if ( p && isFinite( p[ 0 ] ) && Math.abs( p[ 0 ] ) < 1e7 ) { s.x = p[ 0 ]; s.y = p[ 1 ]; }
 			if ( s.kind === 'tower' ) towerVisual( e, scene, dt, t );
 			else if ( s.kind === 'searchlight' ) searchlightVisual( e, scene, dt, t );
+			else if ( s.kind === 'ladder' ) ladderVisual( e, scene );
+			else if ( s.kind === 'objective' ) consoleVisual( e, scene, dt, t );
+			else if ( s.kind === 'bridge' ) bridgeVisual( e, scene, dt, t );
 			else beaconVisual( e, scene, dt, t );
 		}
 		if ( isHost() && scene && ents.length ) hostTick( dt );
@@ -18372,7 +18930,7 @@ requestAnimationFrame( frame );
 state.dispose = ()=>
 {
 	state.disposed = true;
-	for ( const e of [ ...marked ] ) { towerDispose( e ); searchlightDispose( e ); beaconDispose( e ); }
+	for ( const e of [ ...marked ] ) { towerDispose( e ); searchlightDispose( e ); beaconDispose( e ); ladderDispose( e ); consoleDispose( e ); bridgeDispose( e ); }
 	closeMenu(); if ( ED.btn ) opt( ()=>ED.btn.remove() );
 	if ( bannerEl ) bannerEl.remove();
 	unhookAll();

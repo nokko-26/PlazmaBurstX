@@ -9,9 +9,10 @@ const { shoot } = require( '../shots' );
 const { LABKIT } = require( '../labkit' );
 const OUT = path.join( __dirname, 'results' );
 const LEVEL = process.argv[ 2 ] || '01';
-const SPOTS = { '01': [ [ 'landing', 7950, -250, 1.4 ], [ 'quay', 8700, -300, 1.4 ], [ 'arch-b', 5350, -700, 1.4 ] ] };
+const SPOTS = { '01': [ [ 'landing', 7950, -250, 1.4 ], [ 'quay', 8700, -300, 1.4 ], [ 'arch-b', 5350, -700, 1.4 ] ],
+	'06': [ [ 'services', 5700, -700, 1.4 ], [ 'deck', 8000, -700, 1.6 ], [ 'road', 6300, -950, 1.4 ] ] };
 // where the player waits (unhurt) for the hunters to come: the jetty's front slab
-const BAIT = { '01': [ 7590, -90 ] };
+const BAIT = { '01': [ 7590, -90 ], '06': [ 5700, -664 ] };
 const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...a );
 
 ( async ()=>
@@ -41,6 +42,7 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		out.enemies = start;
 		out.moved = await page.evaluate( ()=>window.__wpStart.map( ( { c, x, y } )=>( { name: String( ( c.ragdoll.name || {} ).text || '' ), from: [ Math.round( x ), Math.round( y ) ],
 			to: c.hea > 0 && !c.is_being_removed ? [ Math.round( c.x ), Math.round( c.y ) ] : 'dead', moved: Math.round( Math.hypot( c.x - x, c.y - y ) ) } ) ) );
+		out.movedCount = out.moved.filter( ( m )=>m.moved > 150 ).length;
 		for ( const [ name, x, y, zoom ] of SPOTS[ LEVEL ] ) { await shoot( page, path.join( OUT, LEVEL + '-waypoints-' + name + '.png' ), { x, y, zoom, frames: 40 } ); log( 'shot', name ); }
 	}
 	catch ( e ) { out.failed = e.message.slice( 0, 800 ); log( 'FAILED', out.failed ); }

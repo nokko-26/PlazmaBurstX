@@ -1,0 +1,135 @@
+{
+ "findings": [
+  {
+   "kind": "GAP",
+   "description": "'CS enemies hold every layer' has no residue: all enemies could sit on one layer and every other residue still hold.",
+   "material": true,
+   "residue": {
+    "id": "layers-held",
+    "description": "Civil Security holds every layer of the middle: the pier caps, the hanging containers, the deck interior, the road deck, the tower and the water (crewed patrol boats).",
+    "required": true,
+    "priority": 68,
+    "dependsOn": [
+     "route-complete"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.check",
+      "params": {
+       "script": "tools/harness/levels/lint.js",
+       "args": [
+        "06"
+       ]
+      }
+     },
+     "asserts": [
+      {
+       "path": "json.enemyLayers.cap",
+       "op": "gte",
+       "value": 3
+      },
+      {
+       "path": "json.enemyLayers.container",
+       "op": "gte",
+       "value": 1
+      },
+      {
+       "path": "json.enemyLayers.interior",
+       "op": "gte",
+       "value": 4
+      },
+      {
+       "path": "json.enemyLayers.road",
+       "op": "gte",
+       "value": 3
+      },
+      {
+       "path": "json.enemyLayers.tower",
+       "op": "gte",
+       "value": 3
+      },
+      {
+       "path": "json.enemies.crews",
+       "op": "gte",
+       "value": 4
+      }
+     ]
+    },
+    "rationale": "Intent: CS enemies hold every layer."
+   }
+  },
+  {
+   "kind": "GAP",
+   "description": "'CS patrol boats drive the lane by autopilot' is unverified in 06: the boat test only records where the patrols ended.",
+   "material": true,
+   "residue": {
+    "id": "patrols-drive",
+    "description": "In the game the CS patrol boats move under their autopilot when the raiders come near (at least one moves 200 px or more).",
+    "required": true,
+    "priority": 54,
+    "dependsOn": [
+     "boat-run"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.boat.patrolsMoved",
+       "op": "gte",
+       "value": 1
+      }
+     ]
+    },
+    "rationale": "Intent: patrol boats drive the lane."
+   }
+  },
+  {
+   "kind": "GAP",
+   "description": "Co-op strength for 3 and 4 players rests on the names: nothing checks that 06 has enough [2+] and [3+] enemies to scale.",
+   "material": true,
+   "residue": {
+    "id": "coop-scaling-names",
+    "description": "06 names enough enemies for co-op strength: at least 4 marked [2+] and 2 marked [3+].",
+    "required": true,
+    "priority": 40,
+    "dependsOn": [
+     "level-builds"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.check",
+      "params": {
+       "script": "tools/harness/levels/lint.js",
+       "args": [
+        "06"
+       ]
+      }
+     },
+     "asserts": [
+      {
+       "path": "json.enemies.byStrength.2+",
+       "op": "gte",
+       "value": 4
+      },
+      {
+       "path": "json.enemies.byStrength.3+",
+       "op": "gte",
+       "value": 2
+      }
+     ]
+    },
+    "rationale": "Intent: [2+]/[3+]/[4+] scale the fight for 2 to 4 players."
+   }
+  }
+ ]
+}

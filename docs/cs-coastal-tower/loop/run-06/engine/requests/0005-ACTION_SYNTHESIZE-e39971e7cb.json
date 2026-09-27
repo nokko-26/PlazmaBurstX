@@ -1,0 +1,1053 @@
+{
+ "callId": "0005-ACTION_SYNTHESIZE-e39971e7cb",
+ "mode": "ACTION_SYNTHESIZE",
+ "task": "Given the remaining residue delta, propose the highest-leverage next transformation(s) as structured ActionRequests.",
+ "outputSchema": {
+  "type": "object",
+  "required": [
+   "actions"
+  ],
+  "props": {
+   "actions": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "required": [
+      "targets",
+      "rationale",
+      "tool",
+      "params",
+      "predictedEffect",
+      "expectedEvidence",
+      "failureSignatures",
+      "risk"
+     ],
+     "props": {
+      "id": {
+       "type": "string"
+      },
+      "targets": {
+       "type": "array",
+       "min": 1,
+       "items": {
+        "type": "string"
+       }
+      },
+      "rationale": {
+       "type": "string",
+       "min": 3
+      },
+      "prerequisites": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "tool": {
+       "type": "string",
+       "min": 1
+      },
+      "params": {
+       "type": "object",
+       "props": {}
+      },
+      "predictedEffect": {
+       "type": "string",
+       "min": 3
+      },
+      "expectedEvidence": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "failureSignatures": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "risk": {
+       "type": "string",
+       "enum": [
+        "low",
+        "medium",
+        "high"
+       ]
+      },
+      "cost": {
+       "type": "number",
+       "min": 0
+      },
+      "rollback": {
+       "type": "object",
+       "nullable": true,
+       "props": {}
+      }
+     }
+    }
+   },
+   "needHuman": {
+    "type": "string"
+   }
+  }
+ },
+ "context": {
+  "intent": {
+   "desiredBehaviors": [
+    "The Level Editor's CS Tower menu loads '06 · Underhang' as an ordinary editor map, and 'Play as tester' runs it without map errors.",
+    "The raiders start in the water lane under the bridge with a CS Patrol Boat and can drive it along the whole underpass, from the left cliff to the right shore, passing every foundation.",
+    "The bridge legs stand on foundations: each is a pitstop fight point with docks level with the boat's deck, a leg platform above the boat channel, CS defenders and a respawn checkpoint.",
+    "Stairs and hatches link every layer (water, foundations, leg platforms, the deck interior, the road deck and roof, the tower) without a stuck spot.",
+    "The deck interior is a run of rooms under the road deck: work rooms, red-lit security rooms and a vehicle bay holding CS tanks that the raiders can drive.",
+    "There are three objectives, taken in any order: the cliff facility's power (left), the command room in the tower numbered 4 (centre), and the bunker basement (right shore). Once all three are done the extraction on the right hilltop opens.",
+    "CS enemies hold every layer. Enemies named [2+], [3+] or [4+] scale the fight up for co-op with 2 to 4 players, and CS patrol boats drive the lane by autopilot."
+   ],
+   "emergentProperties": [
+    "From the boat in the underpass, the soffit, the legs, the hanging containers and the lit deck interior frame the view: the top of the bridge is dressed, but the fight is under it.",
+    "Each foundation reads as a distinct fight with cover, height and a flank, and the route between foundations offers both water and foot options."
+   ],
+   "hardConstraints": [
+    "Every size follows docs/cs-coastal-tower/metrics.md § 2: ceilings ≥ 100 px over walkways and ≥ 170 px where people fight; stair risers ≤ 30 and treads ≥ 30; required gaps ≤ 300 px; required drops ≤ 400 px; docks level with the boat deck (48 px up); ≥ 240 px clear round a berth checkpoint; nothing a swimmer can get under that ends at a wall; a way out of the water at every foundation.",
+    "The boat lane is ≥ 290 px clear above the water under any span it passes, and the water is ≥ 60 px deep everywhere a boat goes.",
+    "The level is built only from the Level Editor's own objects plus the cs-coastal-tower mod's entities, so it stays editable and saveable.",
+    "The work lands on the branch cs-coastal-tower; nothing secret (the .auth file, passwords, session codes) is committed or printed.",
+    "The page never crashes, and the level adds no uncaught page errors."
+   ],
+   "preferences": [
+    "Middle chunk first, then the left, then the right.",
+    "Palette: dusk and grey steel with warm sodium lamps and red CS security lighting, as in the concept images.",
+    "Deterministic checks over judgement wherever possible."
+   ],
+   "prohibitedOutcomes": [
+    "A hand-painted look.",
+    "A route the player must take that needs a jump past the design rules.",
+    "A boat that gets stuck, or can't leave a berth.",
+    "Enemies placed where they can't be reached or fought."
+   ],
+   "qualityThresholds": [
+    "The frame cost stays within 1.5× the editor's starting map's frame cost.",
+    "The static linter reports zero rule violations, and every objective is reachable on foot from the start or from a dock.",
+    "Screenshots from ≥ 4 angles per chunk, including the editor's Alt 2.5D angled view, are saved in docs/cs-coastal-tower/shots/06/.",
+    "Measured against the matching concept image, the screenshots share its structure (a dark water band at the bottom, a soffit and deck band above it) and keep a colour distance within limits set before the comparison."
+   ],
+   "resources": [
+    "mods/cs-coastal-tower.user.js (level builder, set-piece entities); tools/harness (the real game in Chromium, with the extension)",
+    "docs/cs-coastal-tower/concept/*.webp (concept images: whole, per chunk, side views, deck interior)",
+    "docs/cs-coastal-tower/metrics.md (measured character and vehicle numbers, the design rules)"
+   ],
+   "ambiguities": [
+    "The CS banner colour (default: red and orange CS banners with the white emblem, as in the concepts).",
+    "Whether the tanks are drivable (default: yes, the CS-4 Ranger and CS-2 Bastion via the More vehicles mod).",
+    "The basement objective (default: sabotage a generator, then leave).",
+    "The 4×4's role (default: the extraction vehicle on the hilltop)."
+   ],
+   "references": [
+    "docs/cs-coastal-tower/PLAN.md",
+    "docs/cs-coastal-tower/levels/01-approach.md"
+   ],
+   "objective": "Level 06 · Underhang of the CS Coastal Tower campaign: an open, playable, AAA-feeling side-view level under a Civil Security sea bridge whose centre carries the tower numbered 4. It plays in the real PB3 game through the cs-coastal-tower mod, in the game's own style: editor walls with textures, lamps and mod 3D set pieces, not a painted look."
+  },
+  "delta": {
+   "size": 27,
+   "open": [
+    {
+     "id": "level-builds",
+     "status": "CONTRADICTED",
+     "priority": 95,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "plays-clean",
+     "status": "CONTRADICTED",
+     "priority": 90,
+     "actionable": false,
+     "blockedBy": [
+      "level-builds"
+     ]
+    },
+    {
+     "id": "design-rules",
+     "status": "CONTRADICTED",
+     "priority": 88,
+     "actionable": false,
+     "blockedBy": [
+      "level-builds"
+     ]
+    },
+    {
+     "id": "route-complete",
+     "status": "CONTRADICTED",
+     "priority": 86,
+     "actionable": false,
+     "blockedBy": [
+      "level-builds"
+     ]
+    },
+    {
+     "id": "lane-static",
+     "status": "CONTRADICTED",
+     "priority": 84,
+     "actionable": false,
+     "blockedBy": [
+      "level-builds"
+     ]
+    },
+    {
+     "id": "ladders-work",
+     "status": "CONTRADICTED",
+     "priority": 82,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "boat-run",
+     "status": "CONTRADICTED",
+     "priority": 80,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean",
+      "lane-static"
+     ]
+    },
+    {
+     "id": "objective-gates-exit",
+     "status": "CONTRADICTED",
+     "priority": 78,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "tower-climb",
+     "status": "CONTRADICTED",
+     "priority": 76,
+     "actionable": false,
+     "blockedBy": [
+      "ladders-work"
+     ]
+    },
+    {
+     "id": "respawn-works",
+     "status": "CONTRADICTED",
+     "priority": 74,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "cap-cover",
+     "status": "CONTRADICTED",
+     "priority": 72,
+     "actionable": false,
+     "blockedBy": [
+      "design-rules"
+     ]
+    },
+    {
+     "id": "tank-drivable",
+     "status": "CONTRADICTED",
+     "priority": 70,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "layers-held",
+     "status": "CONTRADICTED",
+     "priority": 68,
+     "actionable": false,
+     "blockedBy": [
+      "route-complete"
+     ]
+    },
+    {
+     "id": "boat-returns",
+     "status": "CONTRADICTED",
+     "priority": 66,
+     "actionable": false,
+     "blockedBy": [
+      "boat-run"
+     ]
+    },
+    {
+     "id": "frame-cost",
+     "status": "CONTRADICTED",
+     "priority": 65,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "enemies-path",
+     "status": "CONTRADICTED",
+     "priority": 62,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "editor-views",
+     "status": "CONTRADICTED",
+     "priority": 60,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "coop-two",
+     "status": "CONTRADICTED",
+     "priority": 58,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "coop-ladder",
+     "status": "CONTRADICTED",
+     "priority": 56,
+     "actionable": false,
+     "blockedBy": [
+      "coop-two"
+     ]
+    },
+    {
+     "id": "look-dusk-palette",
+     "status": "CONTRADICTED",
+     "priority": 55,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "patrols-drive",
+     "status": "CONTRADICTED",
+     "priority": 54,
+     "actionable": false,
+     "blockedBy": [
+      "boat-run"
+     ]
+    },
+    {
+     "id": "look-structure",
+     "status": "CONTRADICTED",
+     "priority": 52,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "look-interior",
+     "status": "CONTRADICTED",
+     "priority": 50,
+     "actionable": false,
+     "blockedBy": [
+      "plays-clean"
+     ]
+    },
+    {
+     "id": "underpass-framing",
+     "status": "UNKNOWN",
+     "priority": 45,
+     "actionable": false,
+     "blockedBy": [
+      "boat-run"
+     ]
+    },
+    {
+     "id": "coop-scaling-names",
+     "status": "CONTRADICTED",
+     "priority": 40,
+     "actionable": false,
+     "blockedBy": [
+      "level-builds"
+     ]
+    },
+    {
+     "id": "three-chunks",
+     "status": "CONTRADICTED",
+     "priority": 30,
+     "actionable": false,
+     "blockedBy": [
+      "route-complete"
+     ]
+    },
+    {
+     "id": "work-landed",
+     "status": "CONTRADICTED",
+     "priority": 20,
+     "actionable": false,
+     "blockedBy": [
+      "editor-views"
+     ]
+    }
+   ],
+   "contradicted": [
+    "level-builds",
+    "plays-clean",
+    "design-rules",
+    "route-complete",
+    "lane-static",
+    "ladders-work",
+    "boat-run",
+    "objective-gates-exit",
+    "tower-climb",
+    "respawn-works",
+    "cap-cover",
+    "tank-drivable",
+    "layers-held",
+    "boat-returns",
+    "frame-cost",
+    "enemies-path",
+    "editor-views",
+    "coop-two",
+    "coop-ladder",
+    "look-dusk-palette",
+    "patrols-drive",
+    "look-structure",
+    "look-interior",
+    "coop-scaling-names",
+    "three-chunks",
+    "work-landed"
+   ],
+   "signature": "c9c3b7731b59"
+  },
+  "focus": [
+   {
+    "id": "level-builds",
+    "description": "The mod's level list includes 06 and its editor objects build without an exception into a level of walls, water and markers.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 95,
+    "dependsOn": [],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.check",
+      "params": {
+       "script": "tools/harness/levels/lint.js",
+       "args": [
+        "06"
+       ]
+      }
+     },
+     "asserts": [
+      {
+       "path": "json.level",
+       "op": "eq",
+       "value": "06"
+      },
+      {
+       "path": "json.error",
+       "op": "falsy"
+      },
+      {
+       "path": "json.counts.walls",
+       "op": "gte",
+       "value": 40
+      },
+      {
+       "path": "json.counts.water",
+       "op": "gte",
+       "value": 1
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.902Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wozn_ef415f7a83"
+     ],
+     "why": "contract FAIL (cycle 0): failed json.level eq \"06\" (got undefined); json.counts.walls gte 40 (got undefined); json.counts.water gte 1 (got undefined)"
+    }
+   },
+   {
+    "id": "plays-clean",
+    "description": "Play as tester runs 06 with no map errors, no uncaught page errors and no error recorded by the mod.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 90,
+    "dependsOn": [
+     "level-builds"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.frames.ok",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.frames.mapErrors",
+       "op": "eq",
+       "value": 0
+      },
+      {
+       "path": "report.tests.frames.pageErrors",
+       "op": "eq",
+       "value": 0
+      },
+      {
+       "path": "report.failed",
+       "op": "falsy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.902Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wp2j_673ac71007"
+     ],
+     "why": "contract FAIL (cycle 0): failed report.tests.frames.ok truthy undefined (got undefined); report.tests.frames.mapErrors eq 0 (got undefined); report.tests.frames.pageErrors eq 0 (got undefined)"
+    }
+   },
+   {
+    "id": "design-rules",
+    "description": "No geometry in 06 breaks the design rules: every walkway ceiling is at least 100 px, stairs keep risers of 30 px or less, berths have 240 px clear, no underwater dead end sits under a wall, and every character stands on a floor clear of walls.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 88,
+    "dependsOn": [
+     "level-builds"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.check",
+      "params": {
+       "script": "tools/harness/levels/lint.js",
+       "args": [
+        "06"
+       ]
+      }
+     },
+     "asserts": [
+      {
+       "path": "json.violationCount",
+       "op": "eq",
+       "value": 0
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.902Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wozn_ef415f7a83"
+     ],
+     "why": "contract FAIL (cycle 0): failed json.violationCount eq 0 (got undefined)"
+    }
+   },
+   {
+    "id": "route-complete",
+    "description": "From the raiders' start every objective, the exit, every foot checkpoint and every vehicle is reachable with the measured moves, and every enemy is reachable or can be engaged within 1000 px.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 86,
+    "dependsOn": [
+     "level-builds"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.check",
+      "params": {
+       "script": "tools/harness/levels/lint.js",
+       "args": [
+        "06"
+       ]
+      }
+     },
+     "asserts": [
+      {
+       "path": "json.route.unreachable",
+       "op": "len_lte",
+       "value": 0
+      },
+      {
+       "path": "json.route.objectives",
+       "op": "len_gte",
+       "value": 1
+      },
+      {
+       "path": "json.route.targets",
+       "op": "gte",
+       "value": 30
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.902Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wozn_ef415f7a83"
+     ],
+     "why": "contract FAIL (cycle 0): failed json.route.unreachable len_lte 0 (got undefined); json.route.objectives len_gte 1 (got undefined); json.route.targets gte 30 (got undefined)"
+    }
+   },
+   {
+    "id": "lane-static",
+    "description": "The boat lane runs the whole underpass with at least 290 px of clearance above the water and 60 px of depth, from the start dock to the right headland.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 84,
+    "dependsOn": [
+     "level-builds"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.check",
+      "params": {
+       "script": "tools/harness/levels/lint.js",
+       "args": [
+        "06"
+       ]
+      }
+     },
+     "asserts": [
+      {
+       "path": "json.boat.lane.0",
+       "op": "lte",
+       "value": 4950
+      },
+      {
+       "path": "json.boat.lane.1",
+       "op": "gte",
+       "value": 10150
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.902Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wozn_ef415f7a83"
+     ],
+     "why": "contract FAIL (cycle 0): failed json.boat.lane.0 lte 4950 (got undefined); json.boat.lane.1 gte 10150 (got undefined)"
+    }
+   },
+   {
+    "id": "ladders-work",
+    "description": "In the game players climb out of the water up a ladder onto a pier cap, climb a leg's shaft from the cap through the deck to the road, and climb back down.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 82,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.ladders.ok",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.ladders.capOk",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.ladders.roadOk",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.ladders.downOk",
+       "op": "truthy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.902Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wp2j_673ac71007"
+     ],
+     "why": "contract FAIL (cycle 0): failed report.tests.ladders.ok truthy undefined (got undefined); report.tests.ladders.capOk truthy undefined (got undefined); report.tests.ladders.roadOk truthy undefined (got undefined); report.tests.ladders.downOk truthy undefined (got undefined)"
+    }
+   },
+   {
+    "id": "boat-run",
+    "description": "In the game the players' boat drives from the dock under all three pier caps to the right end of the underpass without sticking or being lost.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 80,
+    "dependsOn": [
+     "plays-clean",
+     "lane-static"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.boat.ok",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.boat.passedCaps",
+       "op": "len_gte",
+       "value": 5
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.903Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wp2j_673ac71007"
+     ],
+     "why": "contract FAIL (cycle 0): failed report.tests.boat.ok truthy undefined (got undefined); report.tests.boat.passedCaps len_gte 5 (got undefined)"
+    }
+   },
+   {
+    "id": "objective-gates-exit",
+    "description": "The extraction stays locked until the command-room console is held for its full time; holding it completes the objective and then the extraction clears the level.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 78,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.objective.ok",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.objective.lockedFirst",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.objective.complete",
+       "op": "truthy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.903Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wp2j_673ac71007"
+     ],
+     "why": "contract FAIL (cycle 0): failed report.tests.objective.ok truthy undefined (got undefined); report.tests.objective.lockedFirst truthy undefined (got undefined); report.tests.objective.complete truthy undefined (got undefined)"
+    }
+   },
+   {
+    "id": "tower-climb",
+    "description": "From the tower lobby a player climbs the tower's shaft to the command room floor and on to the observation deck.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 76,
+    "dependsOn": [
+     "ladders-work"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.tower.ok",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.tower.l2",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.tower.l3",
+       "op": "truthy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.904Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wp2j_673ac71007"
+     ],
+     "why": "contract FAIL (cycle 0): failed report.tests.tower.ok truthy undefined (got undefined); report.tests.tower.l2 truthy undefined (got undefined); report.tests.tower.l3 truthy undefined (got undefined)"
+    }
+   },
+   {
+    "id": "respawn-works",
+    "description": "A player killed on the deck comes back within 8 s at the last checkpoint reached, standing on a floor.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 74,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.respawn.ok",
+       "op": "truthy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.903Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wp2j_673ac71007"
+     ],
+     "why": "contract FAIL (cycle 0): failed report.tests.respawn.ok truthy undefined (got undefined)"
+    }
+   },
+   {
+    "id": "cap-cover",
+    "description": "Every pier cap carries cover to fight from (at least one block 40-110 px tall standing on it) besides its ladders and neighbouring containers.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 72,
+    "dependsOn": [
+     "design-rules"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.check",
+      "params": {
+       "script": "tools/harness/levels/lint.js",
+       "args": [
+        "06"
+       ]
+      }
+     },
+     "asserts": [
+      {
+       "path": "json.capsWithCover",
+       "op": "gte",
+       "value": 3
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wozn_ef415f7a83"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.904Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wozn_ef415f7a83"
+     ],
+     "why": "contract FAIL (cycle 0): failed json.capsWithCover gte 3 (got undefined)"
+    }
+   },
+   {
+    "id": "tank-drivable",
+    "description": "A raider boards the CS-2 Bastion in the vehicle bay and drives it along the deck interior.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 70,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.tank.ok",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.tank.inside",
+       "op": "truthy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muk2wp2j_673ac71007"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T17:16:28.903Z",
+     "from": "UNTESTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muk2wp2j_673ac71007"
+     ],
+     "why": "contract FAIL (cycle 0): failed report.tests.tank.ok truthy undefined (got undefined); report.tests.tank.inside truthy undefined (got undefined)"
+    }
+   }
+  ],
+  "satisfied": [],
+  "tools": [
+   {
+    "tool": "file.read",
+    "readOnly": true,
+    "doc": ""
+   },
+   {
+    "tool": "file.stat",
+    "readOnly": true,
+    "doc": ""
+   },
+   {
+    "tool": "file.write",
+    "readOnly": false,
+    "doc": ""
+   },
+   {
+    "tool": "process.run",
+    "readOnly": false,
+    "doc": ""
+   },
+   {
+    "tool": "pb3x.harness",
+    "readOnly": true,
+    "doc": "{ script: \"levels/x.js\", args: [], report: \"levels/results/x.json\", timeoutMs }"
+   },
+   {
+    "tool": "pb3x.check",
+    "readOnly": true,
+    "doc": "{ script: \"tools/…/x.js\", args: [] } → the JSON it prints"
+   },
+   {
+    "tool": "pb3x.image",
+    "readOnly": true,
+    "doc": "{ image, reference?, crop?: [x0,y0,x1,y1] fractions of the reference }"
+   },
+   {
+    "tool": "pb3x.bake",
+    "readOnly": false,
+    "doc": "{} — bake mods/*.user.js into pb3x-extension/pb3x.js and verify"
+   },
+   {
+    "tool": "file.patch",
+    "readOnly": false,
+    "doc": "{ path, edits: [ { find, replace, all? } ] }"
+   },
+   {
+    "tool": "file.write_from",
+    "readOnly": false,
+    "doc": "{ from: \"<staged file under the run's engine/staging>\", path }"
+   },
+   {
+    "commands": [
+     "node",
+     "xvfb-run",
+     "python3"
+    ],
+    "probeCommands": [
+     "node",
+     "python3"
+    ]
+   }
+  ],
+  "recentActions": [],
+  "rejectedActions": []
+ }
+}

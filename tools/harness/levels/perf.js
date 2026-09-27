@@ -8,7 +8,8 @@ const { startMap, previewMap } = require( '../game' );
 const { MODS, openEditor, importLevel, playTest } = require( '../level' );
 const OUT = path.join( __dirname, 'results' );
 const LEVEL = process.argv[ 2 ] || '01';
-const SPOTS = { '01': [ [ 'start', 800, -300 ], [ 'arch B', 5300, -350 ], [ 'shore', 8400, -420 ] ] };
+const SPOTS = { '01': [ [ 'start', 800, -300 ], [ 'arch B', 5300, -350 ], [ 'shore', 8400, -420 ] ],
+	'06': [ [ 'start', 4900, -250 ], [ 'tower span', 7500, -600 ], [ 'deck', 8400, -700 ], [ 'road', 6500, -950 ] ] };
 const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...a );
 
 // hold the camera on a spot for `secs` and measure
@@ -77,6 +78,9 @@ async function measure( page, x, y, secs = 8 )
 		out.mod = await page.evaluate( ()=>( { status: window.__csTower.status, error: window.__csTower.error } ) );
 	}
 	catch ( e ) { out.failed = e.message.slice( 0, 800 ); log( 'FAILED', out.failed ); }
+	// (the busiest spot against the editor's starting map: what the levels' frame-cost rule reads)
+	const medians = Object.keys( out.spots ).map( ( k )=>out.spots[ k ].msMedian ).filter( ( v )=>v > 0 );
+	if ( out.baseline && out.baseline.msMedian > 0 && medians.length ) out.worstRatio = +( Math.max( ...medians ) / out.baseline.msMedian ).toFixed( 2 );
 	fs.writeFileSync( path.join( OUT, LEVEL + '-perf.json' ), JSON.stringify( out, null, 1 ) );
 	log( 'renderer:', out.renderer );
 	await ctx.close();
