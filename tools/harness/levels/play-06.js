@@ -143,8 +143,11 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		await test( 'boat', async ()=>
 		{
 			// (on the raiders' boat's deck, beside its helm: E takes the seat)
-			const rb = await ev( ()=>{ const b = pb2Entity.entities.find( ( e )=>e && e.type === pb2Entity.TYPE_BOAT && !e.is_being_removed && e.hea > 0 && !Array.from( e.gO || [] ).some( ( s )=>s && s.owner_character && !( s.owner_character.controller && s.owner_character.controller.player_connection ) ) ); return b ? [ Math.round( b.box2d_bodies[ 0 ].GetPosX() * 30 ), Math.round( b.box2d_bodies[ 0 ].GetPosY() * 30 ) ] : null; } );
-			if ( !rb ) return { ok: false, why: 'no raiders\' boat' };
+			const findBoat = ()=>ev( ()=>{ const b = pb2Entity.entities.find( ( e )=>e && e.type === pb2Entity.TYPE_BOAT && !e.is_being_removed && e.hea > 0 && !Array.from( e.gO || [] ).some( ( s )=>s && s.owner_character && !( s.owner_character.controller && s.owner_character.controller.player_connection ) ) ); return b ? [ Math.round( b.box2d_bodies[ 0 ].GetPosX() * 30 ), Math.round( b.box2d_bodies[ 0 ].GetPosY() * 30 ) ] : null; } );
+			// (a boat lost before the test is replaced at its berth after 8 s — the level's own rule: wait for that)
+			let rb = await findBoat(), replaced = false;
+			for ( let i = 0; i < 30 && !rb; i++ ) { await page.waitForTimeout( 500 ); rb = await findBoat(); replaced = !!rb; }
+			if ( !rb ) return { ok: false, why: 'no raiders\' boat, none replaced in 15 s' };
 			await put( rb[ 0 ] - 40, -60, 900 );
 			const aboardNow = ()=>ev( ()=>{ const m = __lab.me(); const b = pb2Entity.entities.find( ( e )=>e && e.type === pb2Entity.TYPE_BOAT && Array.from( e.gO || [] ).some( ( s )=>s && s.owner_character === m ) ); if ( !b ) return null; const B = b.box2d_bodies[ 0 ]; return { x: Math.round( B.GetPosX() * 30 ), y: Math.round( B.GetPosY() * 30 ), hea: Math.round( b.hea ) }; } );
 			for ( let i = 0; i < 6 && !( await aboardNow() ); i++ ) { await hold( 'KeyE', 200 ); await page.waitForTimeout( 800 ); if ( i === 2 ) await hold( 'KeyD', 300 ); }
@@ -190,7 +193,7 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			const reached = end ? end.x : track[ track.length - 1 ];
 			// (out of the boat again, wherever it is)
 			if ( await aboardNow() ) { await hold( 'KeyE', 200 ); await page.waitForTimeout( 800 ); }
-			return { ok: !lost && !stuck && reached >= L.bridge[ 1 ] - 460, start: start.x, reached, returned, patrolsMoved, lost, stuck, passedCaps: [ ...done ], track: track.filter( ( x, i )=>i % 3 === 0 ), patrols, boatDamageBlocked: Math.round( await ev( ()=>window.__watch.dmgBoat ) ) };
+			return { ok: !lost && !stuck && reached >= L.bridge[ 1 ] - 460, replaced, start: start.x, reached, returned, patrolsMoved, lost, stuck, passedCaps: [ ...done ], track: track.filter( ( x, i )=>i % 3 === 0 ), patrols, boatDamageBlocked: Math.round( await ev( ()=>window.__watch.dmgBoat ) ) };
 		} );
 
 		// ---- ladders ----

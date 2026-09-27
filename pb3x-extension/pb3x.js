@@ -17718,17 +17718,23 @@ function ghost( ch, on )
 	if ( on )
 	{
 		const saved = [];
-		for ( const a of opt( ()=>ch.ragdoll.local_atoms ) || [] ) { const b = a && a.box2d_body; if ( b ) for ( const f of fixtures( b ) ) { saved.push( [ f, f.GetFilterData() ] ); f.SetFilterData( pb2_mp.Box2D_filter_nothing ); } }
+		for ( const b of charBodies( ch ) ) for ( const f of fixtures( b ) ) { saved.push( [ f, f.GetFilterData() ] ); f.SetFilterData( pb2_mp.Box2D_filter_nothing ); }
 		ghosted.set( ch, saved );
 	}
 	else { for ( const [ f, d ] of ghosted.get( ch ) || [] ) opt( ()=>f.SetFilterData( d ) ); ghosted.delete( ch ); }
 }
+// every physics body a character has: its ragdoll's atoms, and the character's own (its capsule and the joints' bodies)
+function charBodies( ch )
+{
+	const out = [];
+	for ( const a of opt( ()=>ch.ragdoll.local_atoms ) || [] ) if ( a && a.box2d_body && out.indexOf( a.box2d_body ) === -1 ) out.push( a.box2d_body );
+	for ( const k of [ 'box2d_body', 'gy', 'lS' ] ) { const b = opt( ()=>ch[ k ] ); if ( b && typeof b.GetFixtureList === 'function' && out.indexOf( b ) === -1 ) out.push( b ); }
+	return out;
+}
 function setVel( ch, vx, vy )
 {
-	for ( const a of opt( ()=>ch.ragdoll.local_atoms ) || [] )
+	for ( const b of charBodies( ch ) )
 	{
-		const b = a && a.box2d_body;
-		if ( !b ) continue;
 		try { b.SetLinearVelocity( new b2Vec2( vx / 30, vy / 30 ) ); } catch ( e ) { try { b.SetVel( vx / 30, vy / 30 ); } catch ( e2 ) { /* no body */ } }
 		opt( ()=>b.SetAwake( true ) );
 	}
@@ -17806,10 +17812,14 @@ function sleepFar()
 	}
 	state.asleep = n;
 }
+// The game draws every object wherever it is (its meshes are marked not to be frustum culled), so what's far off the
+// camera — our ladders, beacons, consoles and searchlights, the vehicles, the soldiers — is hidden just before each render
+// and shown again as it comes into view (only what we hid is shown again).
 function cullFar()
 {
 	const cam = camera();
 	if ( !cam ) return;
+	cullOwn( cam );
 	// (a pulled-back screenshot's camera is scaled after this runs: its zoom counts too)
 	const k = Math.max( 1, cam.position.z ) / 820 * ( window.__shotZoom || 1 ), hw = 604 * k + FAR.margin, hh = 340 * k + FAR.margin;
 	let n = 0;
@@ -17824,6 +17834,22 @@ function cullFar()
 		else if ( culled.has( r ) ) { for ( const m of ms ) if ( hidByUs.has( m ) ) { m.visible = true; hidByUs.delete( m ); } culled.delete( r ); }
 	}
 	state.culled = n;
+}
+const offCam = ( cam, x, y, extra = 0 )=>{ const k = Math.max( 1, cam.position.z ) / 820 * ( window.__shotZoom || 1 ); return Math.abs( x - cam.position.x ) > 604 * k + FAR.margin + extra || Math.abs( -y - cam.position.y ) > 340 * k + FAR.margin + extra; };
+function cullOwn( cam )
+{
+	// ours: shown or hidden outright (a ladder by its middle, its half-length allowed for)
+	ladderGfx.forEach( ( G, e )=>{ const s = estate.get( e ); if ( s ) G.grp.visible = !offCam( cam, s.x, s.y + G.len / 2, G.len / 2 ); } );
+	for ( const m of [ consoles, beacons, lights ] ) m.forEach( ( G, e )=>{ const s = estate.get( e ), g = G.grp; if ( s && g ) g.visible = !offCam( cam, s.x, s.y, m === lights ? SL.len : 0 ); } );
+	// the vehicles: their own groups (e.cF), put back only if we hid them
+	for ( const e of opt( ()=>pb2Entity.entities ) || [] )
+	{
+		if ( !e || estate.has( e ) || !e.cF ) continue;
+		const p = bodyPos( e );
+		if ( !p ) continue;
+		const off = offCam( cam, p[ 0 ], p[ 1 ], 400 );
+		for ( const g of e.cF ) { if ( !g ) continue; if ( off ) { if ( g.visible ) { g.visible = false; hidByUs.add( g ); } } else if ( hidByUs.has( g ) ) { g.visible = true; hidByUs.delete( g ); } }
+	}
 }
 function waterUnder( x, y )
 {
@@ -18740,7 +18766,8 @@ function level06()
 	B.backSurface( 'bg_sec', 'mat_plate2_bg', 'Security rooms (behind)', '0x6a4644' );
 	B.backSurface( 'bg_bay', 'mat_plate3_bg', 'Vehicle bay (behind)', '0x5e605e' );
 	B.backSurface( 'bg_tower', 'mat_plate2_bg', 'Tower (behind)', '0x5a5a60' );
-	B.liquid( 'sea', { color: '0x1a2028', opacity: '0.9', reflection: '0.22' } );
+	// (no reflection: the mirror is a second drawing of the whole scene every frame — measured, it doubled the draw calls)
+	B.liquid( 'sea', { color: '0x1a2028', opacity: '0.92', reflection: '0' } );
 	B.team( 'raiders', { title: Q( 'Raiders' ), hud_color: 'new pb2HighRangeColor( 0x6a94ff )', friendly_fire: 'false' } );
 	B.team( 'cs', { ai_in_team: 'true', title: Q( 'Civil Security' ), hud_color: 'new pb2HighRangeColor( 0xff4a3a )', friendly_fire: 'false', overheads_visibility: 'pb2OverheadHUD.OVERHEAD_VISIBILITY_TEAMMATES_ONLY' } );
 	B.ai( 'cs_post', { skill: '0.75', behavior: 'pb2AIModule.BEHAVIOR_IDLE', hear_range: '700', hunt_random_known_threats_range: '0' } );
@@ -18946,7 +18973,7 @@ function level06()
 	eboat( 'cs_boat1', 7000, 'Patrol 1' );
 	eboat( 'cs_boat2', 8900, 'Patrol 2' );
 	eboat( 'cs_boat3', 9900, 'Patrol 3 [2+]' );
-	eboat( 'cs_boat0', 3300, 'Patrol 0' );
+	eboat( 'cs_boat0', 4400, 'Patrol 0' );                                           // (out of wake range of the start)
 	eboat( 'cs_boat4', 12000, 'Patrol 4' );
 	// the left chunk: the cliff facility's power room (the first objective), its ledge, caps 1 and 2, the deck and road
 	B.entity( C.power, L.floor, 'pb2Entity.TYPE_CS_OBJECTIVE', { style_id: '1' } );

@@ -1,7 +1,7 @@
 {
- "phase": "ACT",
- "seq": 17,
- "cycle": 6,
+ "phase": "OBSERVE",
+ "seq": 18,
+ "cycle": 7,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
@@ -44,7 +44,10 @@
    "7bf01c140875a575",
    "49945993ba0646e5",
    "0a86473e94b5aaa5",
-   "d7fae43b34bfc37d"
+   "d7fae43b34bfc37d",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
+   "0a86473e94b5aaa5"
   ],
   "hypotheses": [
    "0eb01c3a31fa5b2d",
@@ -55,10 +58,10 @@
   ]
  },
  "budgetSpent": {
-  "engineCalls": 17,
-  "actions": 29,
-  "cycles": 6,
-  "cost": 29,
+  "engineCalls": 18,
+  "actions": 32,
+  "cycles": 7,
+  "cost": 32,
   "startedAt": 1790529166395
  },
  "done": [
@@ -90,7 +93,10 @@
   "act_51fe7b95a7b39c0b82e7",
   "act_69c060db58c7a09d93db",
   "act_12aa5918a3133cbd6a04",
-  "act_ed46291ff23a2dd08a72"
+  "act_ed46291ff23a2dd08a72",
+  "act_ec9b9102b7d00eadd5a9",
+  "act_f426351b830cedab17fb",
+  "act_61705abb938d6f5fa510"
  ],
  "lastProbeIds": {
   "probe:d22e87edb3fa10bb": "ev_muk5m294_d902bd6669",
@@ -108,74 +114,57 @@
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_51fe7b95a7b39c0b82e7",
+   "id": "act_ec9b9102b7d00eadd5a9",
    "tool": "file.write_from",
    "targets": [
     "frame-cost",
-    "plays-clean",
     "ladders-work",
     "tower-climb",
-    "boat-run",
-    "look-structure"
+    "coop-ladder",
+    "boat-run"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk5m1y0_52d4f4bb4d",
+   "evidence": "ev_muk6agmd_995ff320df",
    "expectedEvidence": [
-    "report.tests.frames.mod.error null",
-    "perf drawCalls well under 1000"
+    "perf drawCalls < 500",
+    "report.tests.ladders.roadOk"
    ],
    "failureSignatures": [
-    "another sealed-object error",
-    "climb still stalls"
+    "draws unchanged",
+    "climb still falls back"
    ]
   },
   {
-   "id": "act_69c060db58c7a09d93db",
+   "id": "act_f426351b830cedab17fb",
    "tool": "pb3x.bake",
    "targets": [
     "frame-cost",
-    "plays-clean",
-    "ladders-work"
+    "ladders-work",
+    "tower-climb"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk5m245_05bf809925",
+   "evidence": "ev_muk6agsm_f129b728e1",
    "expectedEvidence": [
     "bake ok"
    ],
    "failureSignatures": []
   },
   {
-   "id": "act_12aa5918a3133cbd6a04",
+   "id": "act_61705abb938d6f5fa510",
    "tool": "file.write_from",
    "targets": [
     "boat-run",
     "boat-returns",
     "patrols-drive",
-    "ladders-work",
     "underpass-framing"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk5m247_a478ba0246",
+   "evidence": "ev_muk6agsn_5f917cde76",
    "expectedEvidence": [
     "report.tests.boat.start"
-   ],
-   "failureSignatures": []
-  },
-  {
-   "id": "act_ed46291ff23a2dd08a72",
-   "tool": "file.write_from",
-   "targets": [
-    "coop-ladder",
-    "coop-two"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk5m247_3ce24c49f0",
-   "expectedEvidence": [
-    "report.guestLadder"
    ],
    "failureSignatures": []
   }
