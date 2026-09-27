@@ -1,6 +1,6 @@
 {
- "phase": "OBSERVE",
- "seq": 28,
+ "phase": "FAILURE",
+ "seq": 29,
  "cycle": 12,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
@@ -18,7 +18,8 @@
    6,
    4,
    3,
-   3
+   3,
+   4
   ],
   "actionSigs": [
    "80fe487f50efe234",
@@ -84,11 +85,12 @@
    "944b60f670916d4c",
    "cdf4933c371f0935",
    "0c074a212190000f",
-   "4c14fc7d8c12405d"
+   "4c14fc7d8c12405d",
+   "423cdfb4e3612a41"
   ]
  },
  "budgetSpent": {
-  "engineCalls": 28,
+  "engineCalls": 29,
   "actions": 55,
   "cycles": 12,
   "cost": 51,
@@ -152,16 +154,16 @@
   "act_b37f0dcef3801f53fea9"
  ],
  "lastProbeIds": {
-  "probe:d22e87edb3fa10bb": "ev_muk8j1r8_ab1a640dc0",
-  "probe:5e40829617afc91e": "ev_muk8ql2r_1fb5a66557",
-  "probe:f0da2bbb4787153c": "ev_muk8ql3x_4a545d3a05",
-  "probe:7980a067bb842f7b": "ev_muk8qlbs_8b0f10512b",
-  "probe:3ddf0d6bd2086dd8": "ev_muk8qlhg_edb8d89558",
-  "probe:cb3bd0e8c318b9ec": "ev_muk8qlot_7afb01a83b",
-  "probe:990fb3e94a4cb262": "ev_muk8uibg_498cc9af8c",
-  "probe:5ae70d282044ba98": "ev_muk8wk2o_0078b49ce5",
-  "probe:91dd14c2d620911a": "ev_muk8y09t_5c07d68ca8",
-  "probe:aea6c2d28affb31d": "ev_muk8y0bq_cdf6b08f01"
+  "probe:d22e87edb3fa10bb": "ev_muk9xnhv_4690c8de2c",
+  "probe:5e40829617afc91e": "ev_muka55mg_055e24a002",
+  "probe:f0da2bbb4787153c": "ev_muka55nj_13e55f7dfc",
+  "probe:7980a067bb842f7b": "ev_muka55uo_c969fa4afe",
+  "probe:3ddf0d6bd2086dd8": "ev_muka560b_a6f10d2982",
+  "probe:cb3bd0e8c318b9ec": "ev_muka568b_1c1bc6ae27",
+  "probe:990fb3e94a4cb262": "ev_muka92do_5614008d65",
+  "probe:5ae70d282044ba98": "ev_mukabmdi_0da96a07c2",
+  "probe:91dd14c2d620911a": "ev_mukaczda_65a73b4f5a",
+  "probe:aea6c2d28affb31d": "ev_mukaczfa_1944dcb313"
  },
  "terminal": null,
  "finalRounds": 0,
@@ -408,7 +410,22 @@
   "ev_muk8uibg_498cc9af8c",
   "ev_muk8wk2o_0078b49ce5",
   "ev_muk8y09t_5c07d68ca8",
-  "ev_muk8y0bq_cdf6b08f01"
+  "ev_muk8y0bq_cdf6b08f01",
+  "ev_muk9xn6s_5aa969f5b9",
+  "ev_muk9xndd_525b38343e",
+  "ev_muk9xndf_19dc317ffa",
+  "ev_muk9xndh_7192a8ff5e",
+  "ev_muk9xnhv_4690c8de2c",
+  "ev_muka55mg_055e24a002",
+  "ev_muka55nj_13e55f7dfc",
+  "ev_muka55uo_c969fa4afe",
+  "ev_muka560b_a6f10d2982",
+  "ev_muka568b_1c1bc6ae27",
+  "ev_muka92do_5614008d65",
+  "ev_mukabmdi_0da96a07c2",
+  "ev_mukaczda_65a73b4f5a",
+  "ev_mukaczfa_1944dcb313"
  ],
- "failureHandled": false
+ "failureHandled": false,
+ "stallReason": "REGRESSION"
 }

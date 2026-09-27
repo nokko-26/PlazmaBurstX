@@ -1,0 +1,660 @@
+{
+ "callId": "0029-FAILURE_ANALYZE-997df62535",
+ "mode": "FAILURE_ANALYZE",
+ "task": "Progress has stalled or evidence contradicts expectations. Do not repeat the failed approach: give a changed hypothesis, a discriminating experiment, a decomposition, an alternative strategy, or a question for the human.",
+ "outputSchema": {
+  "type": "object",
+  "required": [
+   "diagnosis",
+   "strategy"
+  ],
+  "props": {
+   "diagnosis": {
+    "type": "string",
+    "min": 3
+   },
+   "strategy": {
+    "type": "string",
+    "enum": [
+     "CHANGED_HYPOTHESIS",
+     "DISCRIMINATING_EXPERIMENT",
+     "DECOMPOSE",
+     "ALTERNATIVE",
+     "NEED_HUMAN",
+     "IMPOSSIBLE"
+    ]
+   },
+   "actions": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "required": [
+      "targets",
+      "rationale",
+      "tool",
+      "params",
+      "predictedEffect",
+      "expectedEvidence",
+      "failureSignatures",
+      "risk"
+     ],
+     "props": {
+      "id": {
+       "type": "string"
+      },
+      "targets": {
+       "type": "array",
+       "min": 1,
+       "items": {
+        "type": "string"
+       }
+      },
+      "rationale": {
+       "type": "string",
+       "min": 3
+      },
+      "prerequisites": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "tool": {
+       "type": "string",
+       "min": 1
+      },
+      "params": {
+       "type": "object",
+       "props": {}
+      },
+      "predictedEffect": {
+       "type": "string",
+       "min": 3
+      },
+      "expectedEvidence": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "failureSignatures": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "risk": {
+       "type": "string",
+       "enum": [
+        "low",
+        "medium",
+        "high"
+       ]
+      },
+      "cost": {
+       "type": "number",
+       "min": 0
+      },
+      "rollback": {
+       "type": "object",
+       "nullable": true,
+       "props": {}
+      }
+     }
+    }
+   },
+   "subIntents": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "required": [
+      "residueId",
+      "intent"
+     ],
+     "props": {
+      "residueId": {
+       "type": "string"
+      },
+      "intent": {
+       "type": "object",
+       "props": {}
+      }
+     }
+    }
+   },
+   "question": {
+    "type": "string"
+   }
+  }
+ },
+ "context": {
+  "intent": {
+   "desiredBehaviors": [
+    "The Level Editor's CS Tower menu loads '06 · Underhang' as an ordinary editor map, and 'Play as tester' runs it without map errors.",
+    "The raiders start in the water lane under the bridge with a CS Patrol Boat and can drive it along the whole underpass, from the left cliff to the right shore, passing every foundation.",
+    "The bridge legs stand on foundations: each is a pitstop fight point with docks level with the boat's deck, a leg platform above the boat channel, CS defenders and a respawn checkpoint.",
+    "Stairs and hatches link every layer (water, foundations, leg platforms, the deck interior, the road deck and roof, the tower) without a stuck spot.",
+    "The deck interior is a run of rooms under the road deck: work rooms, red-lit security rooms and a vehicle bay holding CS tanks that the raiders can drive.",
+    "There are three objectives, taken in any order: the cliff facility's power (left), the command room in the tower numbered 4 (centre), and the bunker basement (right shore). Once all three are done the extraction on the right hilltop opens.",
+    "CS enemies hold every layer. Enemies named [2+], [3+] or [4+] scale the fight up for co-op with 2 to 4 players, and CS patrol boats drive the lane by autopilot."
+   ],
+   "emergentProperties": [
+    "From the boat in the underpass, the soffit, the legs, the hanging containers and the lit deck interior frame the view: the top of the bridge is dressed, but the fight is under it.",
+    "Each foundation reads as a distinct fight with cover, height and a flank, and the route between foundations offers both water and foot options."
+   ],
+   "hardConstraints": [
+    "Every size follows docs/cs-coastal-tower/metrics.md § 2: ceilings ≥ 100 px over walkways and ≥ 170 px where people fight; stair risers ≤ 30 and treads ≥ 30; required gaps ≤ 300 px; required drops ≤ 400 px; docks level with the boat deck (48 px up); ≥ 240 px clear round a berth checkpoint; nothing a swimmer can get under that ends at a wall; a way out of the water at every foundation.",
+    "The boat lane is ≥ 290 px clear above the water under any span it passes, and the water is ≥ 60 px deep everywhere a boat goes.",
+    "The level is built only from the Level Editor's own objects plus the cs-coastal-tower mod's entities, so it stays editable and saveable.",
+    "The work lands on the branch cs-coastal-tower; nothing secret (the .auth file, passwords, session codes) is committed or printed.",
+    "The page never crashes, and the level adds no uncaught page errors."
+   ],
+   "preferences": [
+    "Middle chunk first, then the left, then the right.",
+    "Palette: dusk and grey steel with warm sodium lamps and red CS security lighting, as in the concept images.",
+    "Deterministic checks over judgement wherever possible."
+   ],
+   "prohibitedOutcomes": [
+    "A hand-painted look.",
+    "A route the player must take that needs a jump past the design rules.",
+    "A boat that gets stuck, or can't leave a berth.",
+    "Enemies placed where they can't be reached or fought."
+   ],
+   "qualityThresholds": [
+    "The frame cost stays within 1.5× the editor's starting map's frame cost.",
+    "The static linter reports zero rule violations, and every objective is reachable on foot from the start or from a dock.",
+    "Screenshots from ≥ 4 angles per chunk, including the editor's Alt 2.5D angled view, are saved in docs/cs-coastal-tower/shots/06/.",
+    "Measured against the matching concept image, the screenshots share its structure (a dark water band at the bottom, a soffit and deck band above it) and keep a colour distance within limits set before the comparison."
+   ],
+   "resources": [
+    "mods/cs-coastal-tower.user.js (level builder, set-piece entities); tools/harness (the real game in Chromium, with the extension)",
+    "docs/cs-coastal-tower/concept/*.webp (concept images: whole, per chunk, side views, deck interior)",
+    "docs/cs-coastal-tower/metrics.md (measured character and vehicle numbers, the design rules)"
+   ],
+   "ambiguities": [
+    "The CS banner colour (default: red and orange CS banners with the white emblem, as in the concepts).",
+    "Whether the tanks are drivable (default: yes, the CS-4 Ranger and CS-2 Bastion via the More vehicles mod).",
+    "The basement objective (default: sabotage a generator, then leave).",
+    "The 4×4's role (default: the extraction vehicle on the hilltop)."
+   ],
+   "references": [
+    "docs/cs-coastal-tower/PLAN.md",
+    "docs/cs-coastal-tower/levels/01-approach.md"
+   ],
+   "objective": "Level 06 · Underhang of the CS Coastal Tower campaign: an open, playable, AAA-feeling side-view level under a Civil Security sea bridge whose centre carries the tower numbered 4. It plays in the real PB3 game through the cs-coastal-tower mod, in the game's own style: editor walls with textures, lamps and mod 3D set pieces, not a painted look."
+  },
+  "stall": "REGRESSION",
+  "delta": {
+   "size": 4,
+   "open": [
+    {
+     "id": "ladders-work",
+     "status": "CONTRADICTED",
+     "priority": 82,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "respawn-works",
+     "status": "CONTRADICTED",
+     "priority": 74,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "frame-cost",
+     "status": "CONTRADICTED",
+     "priority": 65,
+     "actionable": true,
+     "blockedBy": []
+    },
+    {
+     "id": "enemies-path",
+     "status": "CONTRADICTED",
+     "priority": 62,
+     "actionable": true,
+     "blockedBy": []
+    }
+   ],
+   "contradicted": [
+    "ladders-work",
+    "respawn-works",
+    "frame-cost",
+    "enemies-path"
+   ],
+   "signature": "75388fb34462"
+  },
+  "focus": [
+   {
+    "id": "ladders-work",
+    "description": "In the game players climb out of the water up a ladder onto a pier cap, climb a leg's shaft from the cap through the deck to the road, and climb back down.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 82,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.ladders.ok",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.ladders.capOk",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.ladders.roadOk",
+       "op": "truthy"
+      },
+      {
+       "path": "report.tests.ladders.downOk",
+       "op": "truthy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muka55mg_055e24a002"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T20:43:25.659Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muka55mg_055e24a002"
+     ],
+     "why": "contract FAIL (cycle 12): failed report.tests.ladders.ok truthy undefined (got false); report.tests.ladders.downOk truthy undefined (got false)"
+    }
+   },
+   {
+    "id": "respawn-works",
+    "description": "A player killed on the deck comes back within 8 s at the last checkpoint reached, standing on a floor.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 74,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/play-06.js",
+       "report": "levels/results/06-report.json",
+       "timeoutMs": 1800000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.tests.respawn.ok",
+       "op": "truthy"
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muka55mg_055e24a002"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T20:43:25.660Z",
+     "from": "SATISFIED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muka55mg_055e24a002"
+     ],
+     "why": "REGRESSION: contract FAIL (cycle 12): failed report.tests.respawn.ok truthy undefined (got false)"
+    }
+   },
+   {
+    "id": "frame-cost",
+    "description": "The level's frame time at its busiest spots stays within 1.5 times the editor's starting map's in the same browser.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 65,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/perf.js",
+       "args": [
+        "06"
+       ],
+       "report": "levels/results/06-perf.json",
+       "timeoutMs": 1500000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.failed",
+       "op": "falsy"
+      },
+      {
+       "path": "report.worstRatio",
+       "op": "lte",
+       "value": 1.5
+      }
+     ]
+    },
+    "evidence": [
+     "ev_muka92do_5614008d65"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T20:43:25.660Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_muka92do_5614008d65"
+     ],
+     "why": "contract FAIL (cycle 12): failed report.worstRatio lte 1.5 (got 4.76)"
+    }
+   },
+   {
+    "id": "enemies-path",
+    "description": "The hunters walk towards a player waiting in the deck interior: at least three enemies move more than 150 px in 20 s while the posts hold.",
+    "required": true,
+    "status": "CONTRADICTED",
+    "priority": 62,
+    "dependsOn": [
+     "plays-clean"
+    ],
+    "contract": {
+     "kind": "check",
+     "probe": {
+      "tool": "pb3x.harness",
+      "params": {
+       "script": "levels/waypoints.js",
+       "args": [
+        "06"
+       ],
+       "report": "levels/results/06-waypoints.json",
+       "timeoutMs": 900000
+      }
+     },
+     "asserts": [
+      {
+       "path": "report.failed",
+       "op": "falsy"
+      },
+      {
+       "path": "report.movedCount",
+       "op": "gte",
+       "value": 3
+      }
+     ]
+    },
+    "evidence": [
+     "ev_mukabmdi_0da96a07c2"
+    ],
+    "lastChange": {
+     "at": "2026-09-27T20:43:25.660Z",
+     "from": "CONTRADICTED",
+     "to": "CONTRADICTED",
+     "evidence": [
+      "ev_mukabmdi_0da96a07c2"
+     ],
+     "why": "contract FAIL (cycle 12): failed report.failed falsy undefined (got \"the player did not stay at the bait: {\\\"first\\\":[5702,-671,false],\\\"last\\\":[595); report.movedCount gte 3 (got 1)"
+    }
+   }
+  ],
+  "deltaHistory": [
+   12,
+   11,
+   6,
+   6,
+   4,
+   3,
+   3,
+   4
+  ],
+  "recentActions": [
+   {
+    "engineCall": "0025-ACTION_SYNTHESIZE-aef4f3de30",
+    "expectedEvidence": [],
+    "failureSignatures": [],
+    "id": "act_e0a117d8b3c5c4101ddf",
+    "params": {
+     "from": "perf-breakdown.js",
+     "path": "tools/harness/levels/perf-breakdown.js"
+    },
+    "predictedEffect": "The script is installed.",
+    "risk": "low",
+    "targets": [
+     "frame-cost"
+    ],
+    "tool": "file.write_from"
+   },
+   {
+    "engineCall": "0025-ACTION_SYNTHESIZE-aef4f3de30",
+    "expectedEvidence": [
+     "report.steps.allAsleep"
+    ],
+    "failureSignatures": [],
+    "id": "act_8d6b0aacfde512f3a3f4",
+    "params": {
+     "args": [
+      "06",
+      "8400",
+      "-700",
+      "8300",
+      "-620"
+     ],
+     "report": "levels/results/06-perf-breakdown.json",
+     "script": "levels/perf-breakdown.js",
+     "timeoutMs": 900000
+    },
+    "predictedEffect": "It shows where the frame time goes now.",
+    "risk": "low",
+    "targets": [
+     "frame-cost"
+    ],
+    "tool": "pb3x.harness"
+   },
+   {
+    "engineCall": "0027-ACTION_SYNTHESIZE-be67de2f2a",
+    "expectedEvidence": [
+     "tool.file.write_from with the new sha256"
+    ],
+    "failureSignatures": [
+     "write error",
+     "sha unchanged"
+    ],
+    "id": "act_5ec72f482c7a2cb84355",
+    "params": {
+     "from": "cs-coastal-tower.user.js",
+     "path": "mods/cs-coastal-tower.user.js"
+    },
+    "predictedEffect": "mods/cs-coastal-tower.user.js replaced by the staged build.",
+    "risk": "medium",
+    "targets": [
+     "ladders-work",
+     "frame-cost",
+     "enemies-path"
+    ],
+    "tool": "file.write_from"
+   },
+   {
+    "engineCall": "0027-ACTION_SYNTHESIZE-be67de2f2a",
+    "expectedEvidence": [
+     "tool.pb3x.bake ok"
+    ],
+    "failureSignatures": [
+     "bake verify failed"
+    ],
+    "id": "act_b1304f4dfa98133f3a74",
+    "params": {},
+    "predictedEffect": "pb3x-extension/pb3x.js carries the new mod; the bake verifies.",
+    "risk": "medium",
+    "targets": [
+     "ladders-work",
+     "frame-cost",
+     "enemies-path"
+    ],
+    "tool": "pb3x.bake"
+   },
+   {
+    "engineCall": "0027-ACTION_SYNTHESIZE-be67de2f2a",
+    "expectedEvidence": [
+     "tool.file.write_from with the new sha256"
+    ],
+    "failureSignatures": [
+     "write error"
+    ],
+    "id": "act_96593a9e3e004c833673",
+    "params": {
+     "from": "play-06.js",
+     "path": "tools/harness/levels/play-06.js"
+    },
+    "predictedEffect": "tools/harness/levels/play-06.js replaced by the stricter probe.",
+    "risk": "low",
+    "targets": [
+     "ladders-work"
+    ],
+    "tool": "file.write_from"
+   },
+   {
+    "engineCall": "0027-ACTION_SYNTHESIZE-be67de2f2a",
+    "expectedEvidence": [
+     "tool.file.write_from with the new sha256"
+    ],
+    "failureSignatures": [
+     "write error"
+    ],
+    "id": "act_b37f0dcef3801f53fea9",
+    "params": {
+     "from": "waypoints.js",
+     "path": "tools/harness/levels/waypoints.js"
+    },
+    "predictedEffect": "tools/harness/levels/waypoints.js replaced; its report carries player{first,last,deaths,worst,inVehicle} and playerHeld.",
+    "risk": "low",
+    "targets": [
+     "enemies-path"
+    ],
+    "tool": "file.write_from"
+   }
+  ],
+  "recentOutcomes": [
+   {
+    "evidence": {
+     "id": "ev_muk8fzbv_cda3764a0b",
+     "origin": "tool",
+     "producedBy": "act_e0a117d8b3c5c4101ddf",
+     "kind": "tool.file.write_from",
+     "tags": [
+      "action",
+      "target:frame-cost"
+     ],
+     "at": "2026-09-27T19:49:46.267Z",
+     "payload": "{\"ok\":true,\"params\":{\"from\":\"perf-breakdown.js\",\"path\":\"tools/harness/levels/perf-breakdown.js\"},\"result\":{\"bytes\":5617,\"from\":\"perf-breakdown.js\",\"path\":\"tools/harness/levels/perf-breakdown.js\",\"previous\":\"05d1b82092303dcb75ac29b0b5864c92765b3fa7570b2a0c4f75bb9bbd4e8644\",\"sha256\":\"019b603edc61e6be3a8647aa3b9baebbc1b1eb9a47710671916e107b9d26a0ba\"},\"tool\":\"file.write_from\"}"
+    },
+    "id": "act_e0a117d8b3c5c4101ddf",
+    "ok": true
+   },
+   {
+    "evidence": {
+     "id": "ev_muk8j1mo_8298bc6cbe",
+     "origin": "tool",
+     "producedBy": "act_8d6b0aacfde512f3a3f4",
+     "kind": "tool.pb3x.harness",
+     "tags": [
+      "action",
+      "target:frame-cost"
+     ],
+     "at": "2026-09-27T19:52:09.216Z",
+     "payload": "{\"ok\":true,\"params\":{\"args\":[\"06\",\"8400\",\"-700\",\"8300\",\"-620\"],\"report\":\"levels/results/06-perf-breakdown.json\",\"script\":\"levels/perf-breakdown.js\",\"timeoutMs\":900000},\"result\":{\"argv\":[\"xvfb-run\",\"-a\",\"-s\",\"-screen 0 1600x900x24\",\"node\",\"/home/user/PlazmaBurstX/tools/harness/levels/perf-breakdown.js\",\"06\",\"8400\",\"-700\",\"8300\",\"-620\"],\"build\":{\"bundle\":\"8f1a3d442384931ba1a6495ec65769935429d5d68ecf646c5a76f13a770be3cf\",\"mod\":\"a453515ca2749871dda249a7e3ccab39467e84bc9e1003ccd80ac0d7cfd2c8e5\"},\"exitCode\":0,\"ms\":142936,\"report\":{\"hidden\":48,\"lamps\":0,\"level\":\"06\",\"removed\":51,\"sleepAll\":true,\"spot\":[8400,-700],\"steps\":{\"allAsleep\":{\"characters\":52,\"drawCalls\":376,\"entities\":55,\"frames\":27,\"msMedian\":283,\"otherMs\":280,\"renderMs\":4,\"triangles\":0},\"asIs\":{\"characters\":52,\"drawCalls\":554,\"entities\":55,\"frames\":17,\"msMedian\":467,\"otherMs\":452,\"renderMs\":11,\"triangles\":0},\"noEnemies\":{\"characters\":1,\"drawCalls\":288,\"entities\":55,\"frames\":40,\"msMedian\":183,\"otherMs\":180,\"renderMs\":3,\"triangles\":0},\"noLights\":{\"characters\":52,\"drawCalls\":453,\"entities\":55,\"frames\":16,\"msMedian\":467,\"otherMs\":460,\"renderMs\":9,\"triangles\":0},\"noSets\":{\"characters\":52,\"drawCalls\":550,\"entities\":55,\"frames\":14,\"ms…(2159 chars; hash d2209736c052)"
+    },
+    "id": "act_8d6b0aacfde512f3a3f4",
+    "ok": true
+   },
+   {
+    "evidence": {
+     "id": "ev_muk9xn6s_5aa969f5b9",
+     "origin": "tool",
+     "producedBy": "act_5ec72f482c7a2cb84355",
+     "kind": "tool.file.write_from",
+     "tags": [
+      "action",
+      "target:ladders-work",
+      "target:frame-cost",
+      "target:enemies-path"
+     ],
+     "at": "2026-09-27T20:31:29.957Z",
+     "payload": "{\"ok\":true,\"params\":{\"from\":\"cs-coastal-tower.user.js\",\"path\":\"mods/cs-coastal-tower.user.js\"},\"result\":{\"bytes\":133690,\"from\":\"cs-coastal-tower.user.js\",\"path\":\"mods/cs-coastal-tower.user.js\",\"previous\":\"a453515ca2749871dda249a7e3ccab39467e84bc9e1003ccd80ac0d7cfd2c8e5\",\"sha256\":\"64f2850f7347c0cb6c265c2f586dded823d4f5616b54c41ba0270b3bb76161eb\"},\"tool\":\"file.write_from\"}"
+    },
+    "id": "act_5ec72f482c7a2cb84355",
+    "ok": true
+   },
+   {
+    "evidence": {
+     "id": "ev_muk9xndd_525b38343e",
+     "origin": "tool",
+     "producedBy": "act_b1304f4dfa98133f3a74",
+     "kind": "tool.pb3x.bake",
+     "tags": [
+      "action",
+      "target:ladders-work",
+      "target:frame-cost",
+      "target:enemies-path"
+     ],
+     "at": "2026-09-27T20:31:30.193Z",
+     "payload": "{\"ok\":true,\"params\":{},\"result\":{\"bake\":{\"argv\":[\"node\",\"tools/bake-mods.js\"],\"exitCode\":0,\"ms\":90,\"signal\":null,\"stderr\":\"\",\"stdout\":\"baked 1 mod(s): CS Coastal Tower -> pb3x-extension/pb3x.js\\n\",\"timedOut\":false},\"check\":{\"argv\":[\"node\",\"tools/bake-mods.js\",\"--check\"],\"exitCode\":0,\"ms\":85,\"signal\":null,\"stderr\":\"\",\"stdout\":\"checked 1 mod(s): CS Coastal Tower\\n\",\"timedOut\":false},\"ok\":true,\"syntax\":{\"argv\":[\"node\",\"--check\",\"pb3x-extension/pb3x.js\"],\"exitCode\":0,\"ms\":60,\"signal\":null,\"stderr\":\"\",\"stdout\":\"\",\"timedOut\":false}},\"tool\":\"pb3x.bake\"}"
+    },
+    "id": "act_b1304f4dfa98133f3a74",
+    "ok": true
+   },
+   {
+    "evidence": {
+     "id": "ev_muk9xndf_19dc317ffa",
+     "origin": "tool",
+     "producedBy": "act_96593a9e3e004c833673",
+     "kind": "tool.file.write_from",
+     "tags": [
+      "action",
+      "target:ladders-work"
+     ],
+     "at": "2026-09-27T20:31:30.195Z",
+     "payload": "{\"ok\":true,\"params\":{\"from\":\"play-06.js\",\"path\":\"tools/harness/levels/play-06.js\"},\"result\":{\"bytes\":28958,\"from\":\"play-06.js\",\"path\":\"tools/harness/levels/play-06.js\",\"previous\":\"53223e3621d93f8287404317b7df0eab1464da39b26070d8db2c9daabf6dafd9\",\"sha256\":\"98936296888a591fe806dc01e65aaa30d01edaa53cc8b555e464a7ae03e94e21\"},\"tool\":\"file.write_from\"}"
+    },
+    "id": "act_96593a9e3e004c833673",
+    "ok": true
+   },
+   {
+    "evidence": {
+     "id": "ev_muk9xndh_7192a8ff5e",
+     "origin": "tool",
+     "producedBy": "act_b37f0dcef3801f53fea9",
+     "kind": "tool.file.write_from",
+     "tags": [
+      "action",
+      "target:enemies-path"
+     ],
+     "at": "2026-09-27T20:31:30.198Z",
+     "payload": "{\"ok\":true,\"params\":{\"from\":\"waypoints.js\",\"path\":\"tools/harness/levels/waypoints.js\"},\"result\":{\"bytes\":5800,\"from\":\"waypoints.js\",\"path\":\"tools/harness/levels/waypoints.js\",\"previous\":\"5d9525f530bc2e3280b8b59bcf31d1ef40a84eb3dcb6ced1c1b89298fb859166\",\"sha256\":\"76ecc1560e698c448350e958eb6b6fcf44c87da3c9de7605ec954ec594af3628\"},\"tool\":\"file.write_from\"}"
+    },
+    "id": "act_b37f0dcef3801f53fea9",
+    "ok": true
+   }
+  ],
+  "hypotheses": [
+   "unknown: Whether rifle hunters close 150 px on a player they can already shoot (level 01's did, 600-1000 px); the bait's hunters within the wake window are the flame heavy (780 px), the road trooper (380 px across, 240 up), the deck trooper (200 px).",
+   "unknown: The frame matrix's numbers are from one scratch session and are noisy (the same state measured 383 and 500 ms); an in-loop run with several windows is needed.",
+   "The swimmer's drift is the boat's momentum surviving the teleport: the operator's scratch trail probe (outside the store) put a fresh swimmer at the same ladder six times from 5-45 px off, and it took the ladder and reached the top every time. The probe's put() should still every body (ragdoll atoms and the character's box2d_body, gy, lS), and the water climb should keep a trail so a failure explains itself.",
+   "Where the deck's frame goes (operator's scratch runs outside the store, same session baseline 133 ms): as is 383 ms / 532 draws; every soldier asleep 267 / 352; no enemies 217 / 290; no enemies and no set pieces 167 / 267; half resolution changes little (not fill-bound); no shader programs are linked while measuring; the main thread idles 50-65% (the software rasteriser's draw cost, not script). ThinkNow is 6-9 ms and the render call 15-23 ms of script time. Hiding every soldier's parts for the render saves ~55 ms. So the cost is draw calls — ~0.6-0.8 ms each — from the soldiers (drawn wherever they are) and their fire, and the set pieces (~2 ms each: 23 draws, 50 ms). Even the empty deck is 1.63x the baseline.",
+   "unknown: Whether the heavy's eastward walk is the AI hunting another known threat or a path around something between it and the bait.",
+   "The pathing window is short in game time: the engine's ThinkNow is given GSPEED in 30 fps ticks, and an operator measurement outside the store (6 s at level 06 as tester) gave 116.65 ticks in 5.74 s — the game runs at about 0.68x wall time here, less when frames are heavier. 20 game seconds, the residue's reading of '20 s', need ~30 wall seconds. The probe should count game time, and put a knocked player back at the bait (a waiting player holds its ground)."
+  ]
+ }
+}
