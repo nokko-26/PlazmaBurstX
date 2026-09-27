@@ -502,7 +502,7 @@ function ladders()
 		if ( !ctl || !isPlayer( ch ) || opt( ()=>ch.ragdoll.driver_of ) ) { onLadder.delete( ch ); continue; }
 		const feet = ch.y + 44;
 		let L = onLadder.get( ch ) || null;
-		const inShaft = ( s )=>Math.abs( ch.x - s.x ) < LAD.half && feet > s.y - 10 && feet < ( s.toy === null ? s.y + 300 : s.toy ) + LAD.below;
+		const inShaft = ( s )=>Math.abs( ch.x - s.x ) < LAD.half && feet > s.y - 40 && feet < ( s.toy === null ? s.y + 300 : s.toy ) + LAD.below;
 		if ( L && ( !estate.get( L ) || !inShaft( estate.get( L ) ) ) ) { onLadder.delete( ch ); L = null; }
 		if ( !L )
 		{
@@ -516,6 +516,7 @@ function ladders()
 		ladderT.set( ch, now );
 		let vy = ( ctl.act_y || 0 ) * LAD.speed;
 		if ( vy < 0 && feet <= s.y ) vy = 0;                                        // (at the top: step off sideways)
+		if ( vy < 0 ) vy = Math.max( vy, ( s.y - feet ) / Math.max( step, 1e-3 ) );   // (and never past it)
 		if ( vy > 0 && feet >= bottom ) { onLadder.delete( ch ); continue; }          // (off the foot of it)
 		const vx = ctl.act_x ? ctl.act_x * LAD.side : clamp( ( s.x - ch.x ) * LAD.pull, -LAD.side, LAD.side );
 		if ( ctl.act_x && !ctl.act_y && Math.abs( ch.x - s.x ) > LAD.half - 6 ) { onLadder.delete( ch ); ladderT.delete( ch ); continue; }
@@ -524,6 +525,54 @@ function ladders()
 		n++;
 	}
 	state.onLadder = n;
+}
+// ---- far away: out of mind and out of sight ----
+//
+// A long level holds many Civil Security soldiers, and the engine draws and thinks for every one of them wherever they
+// are: in the Underhang the soldiers were two thirds of every frame's draw calls (measured: 1706 with them, 544
+// without), most of them off screen. So a soldier far from every player doesn't think (its controller skips its turn,
+// its inputs left at rest) until a player comes within FAR.think px, and one off the camera isn't drawn (its meshes
+// hidden just before each render, put back as it comes into view).
+const FAR = { thinkX: 2600, thinkY: 1500, margin: 320 };
+const asleep = new WeakSet(), wrappedCtl = new WeakSet();
+function sleepFar()
+{
+	const players = livingPlayers();
+	let n = 0;
+	for ( const c of opt( ()=>pb2Character.characters ) || [] )
+	{
+		if ( !alive( c ) || isPlayer( c ) ) continue;
+		const k = c.controller;
+		if ( !k || typeof k._bm !== 'function' ) continue;
+		if ( !wrappedCtl.has( k ) )
+		{
+			wrappedCtl.add( k );
+			const own = k._bm;
+			k._bm = function() { if ( asleep.has( this ) ) { this.act_x = 0; this.act_y = 0; this.act_fire = 0; this.act_fire2 = 0; return; } return own.apply( this, arguments ); };
+		}
+		const near = !players.length || players.some( ( p )=>Math.abs( p.x - c.x ) < FAR.thinkX && Math.abs( p.y - c.y ) < FAR.thinkY );
+		if ( near ) asleep.delete( k ); else { asleep.add( k ); n++; }
+	}
+	state.asleep = n;
+}
+function cullFar()
+{
+	const cam = camera();
+	if ( !cam ) return;
+	// (a pulled-back screenshot's camera is scaled after this runs: its zoom counts too)
+	const k = Math.max( 1, cam.position.z ) / 820 * ( window.__shotZoom || 1 ), hw = 604 * k + FAR.margin, hh = 340 * k + FAR.margin;
+	let n = 0;
+	for ( const c of opt( ()=>pb2Character.characters ) || [] )
+	{
+		const r = c && c.ragdoll;
+		if ( !r ) continue;
+		const off = Math.abs( c.x - cam.position.x ) > hw || Math.abs( -c.y - cam.position.y ) > hh;
+		if ( !r.__csMeshes ) r.__csMeshes = Object.keys( r ).map( ( key )=>r[ key ] ).filter( ( v )=>v && v.isMesh );
+		if ( off ) { for ( const m of r.__csMeshes ) if ( m.visible ) { m.visible = false; m.__csHid = true; } n++; }
+		else if ( r.__csCulled ) for ( const m of r.__csMeshes ) if ( m.__csHid ) { m.visible = true; m.__csHid = false; }
+		r.__csCulled = off;
+	}
+	state.culled = n;
 }
 function waterUnder( x, y )
 {
@@ -778,6 +827,7 @@ function hookRender()
 	hookFn( XM, 'render', ( orig )=>function()
 	{
 		try { placeTowers(); placeBridge(); } catch ( e ) { err( 'placeTowers', e ); }
+		try { if ( state.level === '06' || markers( 'bridge' ).length ) cullFar(); } catch ( e ) { err( 'cullFar', e ); }
 		return orig.apply( this, arguments );
 	} );
 }
@@ -1826,6 +1876,7 @@ function frame( nowMs )
 			else beaconVisual( e, scene, dt, t );
 		}
 		if ( isHost() && scene && ents.length ) hostTick( dt );
+		if ( isHost() && scene && markers( 'bridge' ).length && t - ( state.sleptAt || 0 ) > 0.25 ) { state.sleptAt = t; sleepFar(); }
 		if ( bannerEl && bannerUntil && t > bannerUntil ) { bannerEl.style.opacity = '0'; bannerUntil = 0; }
 		if ( state.registered && state.status === 'waiting for the game engine' ) state.status = 'ready';
 	}

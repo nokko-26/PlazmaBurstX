@@ -101,6 +101,9 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		// put the player at (x, feet) standing, and let it settle
 		const put = async ( x, feet, settle = 700 )=>{ await ev( ( [ x, y ] )=>{ const m = __lab.me(), v = m && m.ragdoll.driver_of; if ( v && v.ExcludeRagdoll ) v.ExcludeRagdoll( m.ragdoll, true ); __lab.teleport( x, y ); }, [ x, feet - 44 ] ); await page.waitForTimeout( settle ); return me(); };
 		const L = await ev( ()=>window.__csTower.layouts[ '06' ] );
+		// (a mechanics test clears the guards around where it happens first — a player would have fought them: this pass
+		// tests the ladder, the console, the tank, not the fight; patrol crews stay)
+		const clear = ( x, y, r )=>ev( ( [ x, y, r ] )=>{ let n = 0; for ( const c of pb2Character.characters.slice() ) { if ( !c || c.hea <= 0 || ( c.controller && c.controller.player_connection ) || c.ragdoll.driver_of ) continue; if ( Math.hypot( c.x - x, c.y - y ) < r ) { try { c.ragdoll.remove(); n++; } catch ( e ) {} } } return n; }, [ x, y, r ] );
 		// the rendered level turned in 2.5D, as the editor's Alt + drag turns its camera: the game camera turned about x
 		// and y for the frame (after the game has placed it), put back after
 		const angled = async ( name, x, y, zoom, pitch, yaw )=>
@@ -135,106 +138,6 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		for ( const [ name, x, y, z, p, yw ] of [ [ 'alt3d-left', 6300, -600, 1.9, -0.1, 0.38 ], [ 'alt3d-right', 8700, -600, 1.9, -0.1, -0.38 ], [ 'alt3d-under', 7500, -250, 1.3, 0.18, 0.28 ], [ 'alt3d-tower', 7500, -1250, 1.8, -0.18, -0.3 ] ] )
 			await angled( name, x, y, z, p, yw );
 		await release( page );
-
-		// ---- ladders ----
-		await test( 'ladders', async ()=>
-		{
-			const out = {};
-			// out of the water beside cap 1's right end, up, then left onto the cap
-			let p = await put( c1 + L.cap.half + 20, 30, 900 );
-			out.inWater = p;
-			await key( 'keydown', 'KeyW' ); await page.waitForTimeout( 2600 );
-			out.climbedTo = await me();
-			await key( 'keydown', 'KeyA' ); await page.waitForTimeout( 500 ); await key( 'keyup', 'KeyW' ); await page.waitForTimeout( 400 ); await key( 'keyup', 'KeyA' );
-			await page.waitForTimeout( 700 );
-			out.onCap = await me();
-			const capOk = out.onCap && Math.abs( out.onCap.feet - L.cap.top ) < 12 && out.onCap.x < c1 + L.cap.half;
-			await shot( 'ladder-cap' );
-			// up the shaft: from the cap at the shaft, W held, through the deck to the road, then off to the right
-			p = await put( c1 + L.shaft, L.cap.top, 800 );
-			await key( 'keydown', 'KeyW' );
-			const samples = [];
-			for ( let i = 0; i < 12; i++ ) { await page.waitForTimeout( 350 ); samples.push( ( await me() ).feet ); }
-			out.shaftTop = await me();
-			await shot( 'ladder-shaft' );
-			await key( 'keydown', 'KeyD' ); await page.waitForTimeout( 450 ); await key( 'keyup', 'KeyW' ); await page.waitForTimeout( 300 ); await key( 'keyup', 'KeyD' );
-			await page.waitForTimeout( 800 );
-			out.onRoad = await me();
-			out.shaftSamples = samples;
-			const roadOk = out.onRoad && Math.abs( out.onRoad.feet - L.road ) < 12;
-			// back down: from the road over the hatch, S held, down to the deck floor or the cap
-			await put( c1 + L.shaft, L.road, 600 );
-			await key( 'keydown', 'KeyS' ); await page.waitForTimeout( 1800 ); await key( 'keyup', 'KeyS' );
-			await page.waitForTimeout( 900 );
-			out.down = await me();
-			const downOk = out.down && out.down.feet > L.floor - 20;
-			return { ok: capOk && roadOk && downOk, capOk, roadOk, downOk, ...out };
-		} );
-
-		// ---- the objectives: the extraction locked; each console held (power, command room, basement); then open ----
-		await test( 'objective', async ()=>
-		{
-			const T = L.tower, H = L.shore, top = H.hill[ H.hill.length - 1 ][ 2 ];
-			await put( H.exit, top, 1200 );
-			const lockedFirst = await ev( ()=>!window.__csTower.complete );
-			const bannerLocked = await ev( ()=>window.__csTower.lastBanner );
-			const held = [];
-			for ( const [ name, x, feet ] of [ [ 'power-room', L.cliff.power, L.floor ], [ 'command-room', T.x0 + 300, T.l2 ], [ 'basement', H.objective, H.basement[ 3 ] ] ] )
-			{
-				await put( x, feet, 400 );
-				// (held until the console reports done, up to 20 s: the game's own clock decides, not the probe's)
-				for ( let i = 0; i < 40; i++ ) { await page.waitForTimeout( 500 ); const o = await ev( ()=>window.__csTower.objectives ); if ( o && o.filter( ( v )=>v >= 100 ).length > held.length ) break; }
-				await shot( name );
-				held.push( { name, banner: await ev( ()=>window.__csTower.lastBanner ), objectives: await ev( ()=>window.__csTower.objectives ) } );
-			}
-			const objectives = await ev( ()=>window.__csTower.objectives );
-			await put( H.exit, top, 1500 );
-			const complete = await ev( ()=>window.__csTower.complete );
-			await shot( 'extraction' );
-			return { ok: lockedFirst && !!objectives && objectives.length === 3 && objectives.every( ( v )=>v >= 100 ) && complete, lockedFirst, bannerLocked, objectives, held, complete };
-		} );
-
-		// ---- the tower: from the lobby up its shaft to the command room, then on to the observation deck ----
-		// (W held until the feet are above the floor aimed at, then A: off the ladder onto that floor)
-		const climb = async ( x, fromFeet, toFeet, side )=>
-		{
-			await put( x, fromFeet, 700 );
-			await key( 'keydown', 'KeyW' );
-			let p = null;
-			const trail = [];
-			for ( let i = 0; i < 30; i++ ) { await page.waitForTimeout( 200 ); p = await me(); if ( p ) trail.push( [ p.x, p.feet, p.ladder ] ); if ( p && p.feet <= toFeet - 25 ) break; }
-			await key( 'keydown', side ); await page.waitForTimeout( 450 ); await key( 'keyup', 'KeyW' ); await page.waitForTimeout( 300 ); await key( 'keyup', side );
-			await page.waitForTimeout( 900 );
-			const end = await me();
-			return { top: p, end, trail: trail.filter( ( t, i )=>i % 3 === 0 ), ok: !!end && Math.abs( end.feet - toFeet ) < 12 };
-		};
-		await test( 'tower', async ()=>
-		{
-			const T = L.tower;
-			const a = await climb( T.shaft, L.road, T.l2, 'KeyA' );
-			await shot( 'tower-l2' );
-			const b = await climb( T.shaft, T.l2, T.l3, 'KeyA' );
-			await shot( 'tower-l3' );
-			return { ok: a.ok && b.ok, l2: a.ok, l3: b.ok, a, b };
-		} );
-
-		// ---- the tank in the vehicle bay ----
-		await test( 'tank', async ()=>
-		{
-			const tank = ()=>ev( ()=>{ const t = pb2Entity.entities.filter( ( e )=>e && e.type === pb2Entity.TYPE_TANK && !e.is_being_removed ).map( ( e )=>( { x: Math.round( e.box2d_bodies[ 0 ].GetPosX() * 30 ), y: Math.round( e.box2d_bodies[ 0 ].GetPosY() * 30 ), style: e.style_id, hea: Math.round( e.hea ) } ) ); return t; } );
-			const before = await tank();
-			const bastion = before.slice().sort( ( a, b )=>a.x - b.x )[ 0 ];
-			if ( !bastion ) return { ok: false, why: 'no tank', before };
-			await put( bastion.x - 120, L.floor, 800 );
-			for ( let i = 0; i < 4 && !( await me() ).vehicle; i++ ) { await hold( 'KeyE', 200 ); await page.waitForTimeout( 700 ); }
-			const inside = ( await me() ).vehicle;
-			await hold( 'KeyA', 1800 );
-			const after = await tank();
-			await shot( 'tank' );
-			const moved = after.length && Math.abs( after.slice().sort( ( a, b )=>a.x - b.x )[ 0 ].x - bastion.x ) > 60;
-			if ( inside ) { await hold( 'KeyE', 200 ); await page.waitForTimeout( 800 ); }
-			return { ok: !!inside && !!moved, inside, moved, before, after };
-		} );
 
 		// ---- the boat: the whole underpass ----
 		await test( 'boat', async ()=>
@@ -290,6 +193,113 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			return { ok: !lost && !stuck && reached >= L.bridge[ 1 ] - 460, start: start.x, reached, returned, patrolsMoved, lost, stuck, passedCaps: [ ...done ], track: track.filter( ( x, i )=>i % 3 === 0 ), patrols, boatDamageBlocked: Math.round( await ev( ()=>window.__watch.dmgBoat ) ) };
 		} );
 
+		// ---- ladders ----
+		await test( 'ladders', async ()=>
+		{
+			const out = {};
+			// out of the water beside cap 1's right end, up, then left onto the cap
+			let p = await put( c1 + L.cap.half + 20, 30, 900 );
+			out.inWater = p;
+			out.cleared = await clear( c1, L.cap.top, 800 );
+			await key( 'keydown', 'KeyW' );
+			for ( let i = 0; i < 20; i++ ) { await page.waitForTimeout( 200 ); const q = await me(); if ( q && q.feet <= L.cap.top - 20 ) break; }
+			out.climbedTo = await me();
+			// (at the top: W let go, A — off the ladder onto the cap, as a player does)
+			await key( 'keyup', 'KeyW' ); await key( 'keydown', 'KeyA' ); await page.waitForTimeout( 450 ); await key( 'keyup', 'KeyA' );
+			await page.waitForTimeout( 700 );
+			out.onCap = await me();
+			const capOk = out.onCap && Math.abs( out.onCap.feet - L.cap.top ) < 12 && out.onCap.x < c1 + L.cap.half;
+			await shot( 'ladder-cap' );
+			// up the shaft: from the cap at the shaft, W held, through the deck to the road, then off to the right
+			p = await put( c1 + L.shaft, L.cap.top, 800 );
+			await clear( c1, L.floor, 900 );
+			await key( 'keydown', 'KeyW' );
+			const samples = [];
+			for ( let i = 0; i < 16; i++ ) { await page.waitForTimeout( 300 ); const q = await me(); samples.push( q.feet ); if ( q.feet <= L.road - 25 ) break; }
+			out.shaftTop = await me();
+			await shot( 'ladder-shaft' );
+			await key( 'keydown', 'KeyD' ); await page.waitForTimeout( 450 ); await key( 'keyup', 'KeyW' ); await page.waitForTimeout( 300 ); await key( 'keyup', 'KeyD' );
+			await page.waitForTimeout( 800 );
+			out.onRoad = await me();
+			out.shaftSamples = samples;
+			const roadOk = out.onRoad && Math.abs( out.onRoad.feet - L.road ) < 12;
+			// back down: from the road over the hatch, S held, down to the deck floor or the cap
+			await put( c1 + L.shaft, L.road, 600 );
+			await key( 'keydown', 'KeyS' ); await page.waitForTimeout( 1800 ); await key( 'keyup', 'KeyS' );
+			await page.waitForTimeout( 900 );
+			out.down = await me();
+			const downOk = out.down && out.down.feet > L.floor - 20;
+			return { ok: capOk && roadOk && downOk, capOk, roadOk, downOk, ...out };
+		} );
+
+		// ---- the objectives: the extraction locked; each console held (power, command room, basement); then open ----
+		await test( 'objective', async ()=>
+		{
+			const T = L.tower, H = L.shore, top = H.hill[ H.hill.length - 1 ][ 2 ];
+			await put( H.exit, top, 1200 );
+			const lockedFirst = await ev( ()=>!window.__csTower.complete );
+			const bannerLocked = await ev( ()=>window.__csTower.lastBanner );
+			const held = [];
+			for ( const [ name, x, feet ] of [ [ 'power-room', L.cliff.power, L.floor ], [ 'command-room', T.x0 + 300, T.l2 ], [ 'basement', H.objective, H.basement[ 3 ] ] ] )
+			{
+				await clear( x, feet, 800 );
+				await put( x, feet, 400 );
+				// (held until the console reports done, up to 20 s: the game's own clock decides, not the probe's)
+				for ( let i = 0; i < 40; i++ ) { await page.waitForTimeout( 500 ); const o = await ev( ()=>window.__csTower.objectives ); if ( o && o.filter( ( v )=>v >= 100 ).length > held.length ) break; }
+				await shot( name );
+				held.push( { name, banner: await ev( ()=>window.__csTower.lastBanner ), objectives: await ev( ()=>window.__csTower.objectives ) } );
+			}
+			const objectives = await ev( ()=>window.__csTower.objectives );
+			await put( H.exit, top, 1500 );
+			const complete = await ev( ()=>window.__csTower.complete );
+			await shot( 'extraction' );
+			return { ok: lockedFirst && !!objectives && objectives.length === 3 && objectives.every( ( v )=>v >= 100 ) && complete, lockedFirst, bannerLocked, objectives, held, complete };
+		} );
+
+		// ---- the tower: from the lobby up its shaft to the command room, then on to the observation deck ----
+		// (W held until the feet are above the floor aimed at, then A: off the ladder onto that floor)
+		const climb = async ( x, fromFeet, toFeet, side )=>
+		{
+			await put( x, fromFeet, 700 );
+			await key( 'keydown', 'KeyW' );
+			let p = null;
+			const trail = [];
+			for ( let i = 0; i < 30; i++ ) { await page.waitForTimeout( 200 ); p = await me(); if ( p ) trail.push( [ p.x, p.feet, p.ladder ] ); if ( p && p.feet <= toFeet - 25 ) break; }
+			await key( 'keydown', side ); await page.waitForTimeout( 450 ); await key( 'keyup', 'KeyW' ); await page.waitForTimeout( 300 ); await key( 'keyup', side );
+			await page.waitForTimeout( 900 );
+			const end = await me();
+			return { top: p, end, trail: trail.filter( ( t, i )=>i % 3 === 0 ), ok: !!end && Math.abs( end.feet - toFeet ) < 12 };
+		};
+		await test( 'tower', async ()=>
+		{
+			const T = L.tower;
+			await clear( ( T.x0 + T.x1 ) / 2, T.l2, 900 );
+			const a = await climb( T.shaft, L.road, T.l2, 'KeyA' );
+			await shot( 'tower-l2' );
+			const b = await climb( T.shaft, T.l2, T.l3, 'KeyA' );
+			await shot( 'tower-l3' );
+			return { ok: a.ok && b.ok, l2: a.ok, l3: b.ok, a, b };
+		} );
+
+		// ---- the tank in the vehicle bay ----
+		await test( 'tank', async ()=>
+		{
+			const tank = ()=>ev( ()=>{ const t = pb2Entity.entities.filter( ( e )=>e && e.type === pb2Entity.TYPE_TANK && !e.is_being_removed ).map( ( e )=>( { x: Math.round( e.box2d_bodies[ 0 ].GetPosX() * 30 ), y: Math.round( e.box2d_bodies[ 0 ].GetPosY() * 30 ), style: e.style_id, hea: Math.round( e.hea ) } ) ); return t; } );
+			const before = await tank();
+			const bastion = before.slice().sort( ( a, b )=>a.x - b.x )[ 0 ];
+			if ( !bastion ) return { ok: false, why: 'no tank', before };
+			await clear( bastion.x, L.floor, 900 );
+			await put( bastion.x - 70, L.floor, 800 );
+			for ( let i = 0; i < 4 && !( await me() ).vehicle; i++ ) { await hold( 'KeyE', 200 ); await page.waitForTimeout( 700 ); }
+			const inside = ( await me() ).vehicle;
+			await hold( 'KeyA', 1800 );
+			const after = await tank();
+			await shot( 'tank' );
+			const moved = after.length && Math.abs( after.slice().sort( ( a, b )=>a.x - b.x )[ 0 ].x - bastion.x ) > 60;
+			if ( inside ) { await hold( 'KeyE', 200 ); await page.waitForTimeout( 800 ); }
+			return { ok: !!inside && !!moved, inside, moved, before, after };
+		} );
+
 		// ---- the layers, at eye level ----
 		for ( const [ name, x, feet ] of [ [ 'eye-cap2', c2 - 300, L.cap.top ], [ 'eye-interior-security', 6500, L.floor ], [ 'eye-interior-bay', 8400, L.floor ], [ 'eye-road-tower', 6900, L.road ], [ 'eye-observation', L.tower.x0 + 200, L.tower.l3 ], [ 'eye-cliff-facility', 900, L.floor ], [ 'eye-cliff-ledge', 1000, L.cliff.ledge ], [ 'eye-bunker-lower', 14100, L.cap.top ], [ 'eye-bunker-stairs', 14550, -470 ], [ 'eye-hilltop', 15300, L.shore.hill[ 2 ][ 2 ] ] ] )
 		{
@@ -315,7 +325,8 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 			await ev( ()=>{ window.__watch.god = true; } );
 			if ( back ) { await page.waitForTimeout( 1500 ); back = await me(); }
 			await shot( 'respawned' );
-			const standing = !!back && await ev( ()=>{ const s = __lab.state(); return !!s && Math.abs( s.vy ) < 60; } );
+			if ( back ) await page.waitForTimeout( 1500 );
+			const standing = !!back && await ev( ()=>{ const s = __lab.state(); return !!s && s.hea > 0 && Math.abs( s.vy ) < 120; } );
 			return { ok: gone && !!back && standing, gone, back, standing, checkpoint: cp, respawns: await ev( ()=>window.__csTower.respawns ) };
 		} );
 

@@ -1,7 +1,7 @@
 {
- "phase": "ACT",
- "seq": 13,
- "cycle": 4,
+ "phase": "OBSERVE",
+ "seq": 14,
+ "cycle": 5,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
@@ -35,7 +35,10 @@
    "49945993ba0646e5",
    "0a86473e94b5aaa5",
    "7df6e9954840514f",
-   "c43296a90b88577b"
+   "c43296a90b88577b",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
+   "0a86473e94b5aaa5"
   ],
   "hypotheses": [
    "0eb01c3a31fa5b2d",
@@ -43,10 +46,10 @@
   ]
  },
  "budgetSpent": {
-  "engineCalls": 13,
-  "actions": 22,
-  "cycles": 4,
-  "cost": 22,
+  "engineCalls": 14,
+  "actions": 25,
+  "cycles": 5,
+  "cost": 25,
   "startedAt": 1790529166395
  },
  "done": [
@@ -71,7 +74,10 @@
   "act_422596db7db6e60ed432",
   "act_adcb9ec29a93756de5ef",
   "act_379e803ffbfe6d756b7d",
-  "act_4da1fc13550fc0c0e375"
+  "act_4da1fc13550fc0c0e375",
+  "act_38dc2cf1818ef4c43ee7",
+  "act_ba91b72d046e78058099",
+  "act_a21645817386857d7816"
  ],
  "lastProbeIds": {
   "probe:d22e87edb3fa10bb": "ev_muk4jfvr_60f4e96c52",
@@ -89,89 +95,58 @@
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_6f75c0b8e3825491551e",
+   "id": "act_38dc2cf1818ef4c43ee7",
    "tool": "file.write_from",
    "targets": [
+    "frame-cost",
     "ladders-work",
-    "tower-climb",
-    "coop-ladder",
-    "objective-gates-exit",
-    "tank-drivable",
-    "frame-cost"
+    "tower-climb"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk4gw4k_e82a0dd231",
+   "evidence": "ev_muk53wep_5abd25bdcb",
    "expectedEvidence": [
-    "report.tests.ladders.ok"
+    "report.worstRatio < 2.5"
    ],
    "failureSignatures": [
-    "climb stalls"
+    "the ratio doesn't move: characters are drawn from elsewhere"
    ]
   },
   {
-   "id": "act_422596db7db6e60ed432",
+   "id": "act_ba91b72d046e78058099",
    "tool": "pb3x.bake",
    "targets": [
-    "ladders-work",
-    "tower-climb",
-    "objective-gates-exit",
-    "tank-drivable"
+    "frame-cost",
+    "ladders-work"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk4gwb7_58e77e6d6c",
+   "evidence": "ev_muk53wl3_c1ee028667",
    "expectedEvidence": [
     "bake ok"
    ],
-   "failureSignatures": [
-    "bake failed"
-   ]
-  },
-  {
-   "id": "act_adcb9ec29a93756de5ef",
-   "tool": "file.write_from",
-   "targets": [
-    "objective-gates-exit"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk4gwb8_5cde13773b",
-   "expectedEvidence": [
-    "held[].objectives"
-   ],
    "failureSignatures": []
   },
   {
-   "id": "act_379e803ffbfe6d756b7d",
+   "id": "act_a21645817386857d7816",
    "tool": "file.write_from",
    "targets": [
-    "frame-cost"
+    "objective-gates-exit",
+    "boat-run",
+    "boat-returns",
+    "patrols-drive",
+    "ladders-work",
+    "tank-drivable",
+    "respawn-works",
+    "underpass-framing"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_muk4gwba_c5109dec08",
+   "evidence": "ev_muk53wl5_6dc66e96a6",
    "expectedEvidence": [
-    "file written"
+    "report.tests.*.ok"
    ],
    "failureSignatures": []
-  },
-  {
-   "id": "act_4da1fc13550fc0c0e375",
-   "tool": "pb3x.harness",
-   "targets": [
-    "frame-cost"
-   ],
-   "executed": true,
-   "ok": true,
-   "evidence": "ev_muk4jfrn_919a96a628",
-   "expectedEvidence": [
-    "report.steps.noEnemies.otherMs << report.steps.asIs.otherMs"
-   ],
-   "failureSignatures": [
-    "render dominates",
-    "sets or lamps dominate"
-   ]
   }
  ],
  "observeProbed": false,
