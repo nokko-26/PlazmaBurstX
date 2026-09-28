@@ -17829,8 +17829,11 @@ function ladders()
 // are: in the Underhang the soldiers were two thirds of every frame's draw calls (measured: 1706 with them, 544
 // without), most of them off screen. So a soldier far from every player doesn't think (its controller skips its turn,
 // its inputs left at rest) until a player comes within FAR.think px — about a screen and a half: measured, the awake
-// soldiers' thinking was ~40% of a busy frame.
-const FAR = { thinkX: 1700, thinkY: 800, margin: 320 };
+// soldiers' thinking was ~40% of a busy frame. The window is what a player sees at the game's zoom (about 1,210 × 680
+// px) and half a screen more across: measured at the deck with the player there, waking soldiers only this near took
+// the frame from 3.5× the editor's starting map to 1.6× — the soldiers off screen, awake and fighting, were most of it —
+// and four of the hunters that come to a player waiting in the deck start inside it.
+const FAR = { thinkX: 1100, thinkY: 640, margin: 320 };
 // (the game's objects are sealed: nothing is added to them — what we keep about them lives in these maps)
 const asleep = new WeakSet(), hidByUs = new WeakSet();
 const kindOff = new Set();                                                   // (set pieces hidden by kind, for measuring)
@@ -18566,7 +18569,8 @@ function placeBridge()
 	const flat = ( cam.fov || 45 ) < 10;
 	bridges.forEach( ( G )=>
 	{
-		G.far.visible = !flat && !state.setsOff;
+		G.far.visible = !flat && !state.setsOff && !kindOff.has( 'hills' );
+		G.root.visible = !state.setsOff && !kindOff.has( 'dressing' );
 		for ( const p of G.hills )
 		{
 			const k = ( camZ + p.userData.depth ) / camZ;
@@ -19184,7 +19188,7 @@ state.debug = { buildTower, towerMat, unlitMat, beamMat, glowMat,
 	// (every character drawn, off camera too, or back to hiding the far ones: for measuring what that saves)
 	charsDrawnAll( on ) { state.charsDrawnAll = !!on; return true; },
 	// (one kind of set piece shown or hidden: towers, bridges, ladders, consoles, lights, beacons)
-	setsOf( kind, on ) { const m = { towers, bridges, ladders: ladderGfx, consoles, lights, beacons }[ kind ]; let n = 0; if ( m ) { if ( on ) kindOff.delete( m ); else kindOff.add( m ); } if ( m ) m.forEach( ( G )=>{ for ( const g of [ G.root, G.far, G.grp ] ) if ( g ) { g.visible = on; n++; } } ); return n; },
+	setsOf( kind, on ) { if ( kind === 'hills' || kind === 'dressing' ) { if ( on ) kindOff.delete( kind ); else kindOff.add( kind ); return bridges.size; } const m = { towers, bridges, ladders: ladderGfx, consoles, lights, beacons }[ kind ]; let n = 0; if ( m ) { if ( on ) kindOff.delete( m ); else kindOff.add( m ); } if ( m ) m.forEach( ( G )=>{ for ( const g of [ G.root, G.far, G.grp ] ) if ( g ) { g.visible = on; n++; } } ); return n; },
 	sets( on ) { state.setsOff = !on; let n = 0; for ( const m of [ towers, bridges, ladderGfx, consoles, lights, beacons ] ) m.forEach( ( G )=>{ for ( const g of [ G.root, G.far, G.grp ] ) if ( g ) { g.visible = on; n++; } } ); return n; } };                  // (the set pieces' makers, for tests in the page)
 state.markers = ()=>[ ...marked ].map( ( e )=>Object.assign( {}, estate.get( e ), { body: bodyPos( e ) } ) );
 

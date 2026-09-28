@@ -2,7 +2,7 @@
 // The editor's starting map first (the baseline, in its own session), then the level played as tester with the player
 // standing at the spot — out of any vehicle, stilled, unhurt (healed every frame: fire doesn't come through the
 // ragdoll's damage), its place checked — and the frame measured as the level is, then with one thing changed at a time:
-// every character drawn (the mod's hiding of the far ones off), a view-sized wake window, every soldier asleep, no
+// every character drawn (the mod's hiding of the far ones off), the wider wake window it had before, every soldier asleep, no
 // enemies, then (with no enemies) each kind of set piece hidden in turn, all of them, and half resolution. Each step is
 // three 6 s windows (the median of their medians: the software renderer is noisy). Also counts shader programs linked
 // while measuring. Writes levels/results/<level>-perf-matrix.json.
@@ -79,12 +79,12 @@ async function measure( page, cam )
 		await step( 'asIs', null, 3000 );
 		await step( 'charsDrawnAll', ()=>D( 'charsDrawnAll', true ) );
 		await D( 'charsDrawnAll', false );
-		await step( 'viewWake', ()=>D( 'far', 1100, 640 ) );
-		await D( 'far', 1700, 800 );
+		await step( 'wideWake', ()=>D( 'far', 1700, 800 ) );
+		await D( 'far', 1100, 640 );
 		await step( 'allAsleep', ()=>D( 'sleepAll', true ) );
 		await D( 'sleepAll', false );
 		await step( 'noEnemies', ()=>ev( ()=>{ let n = 0; for ( const c of pb2Character.characters.slice() ) if ( c && !( c.controller && c.controller.player_connection ) ) { try { c.ragdoll.remove(); n++; } catch ( e ) {} } return n; } ), 2500 );
-		for ( const kind of [ 'towers', 'bridges', 'ladders', 'consoles', 'lights', 'beacons' ] )
+		for ( const kind of [ 'towers', 'bridges', 'dressing', 'hills', 'ladders', 'consoles', 'lights', 'beacons' ] )
 		{
 			await step( 'noEnemies-' + kind, ()=>D( 'setsOf', kind, false ) );
 			await D( 'setsOf', kind, true );
