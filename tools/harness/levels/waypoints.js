@@ -15,9 +15,9 @@ const SPOTS = { '01': [ [ 'landing', 7950, -250, 1.4 ], [ 'quay', 8700, -300, 1.
 const BAIT = { '01': [ 7590, -90 ], '06': [ 5700, -664 ] };
 const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...a );
 
-( async ()=>
+// One trial: a fresh session, the level played, the player waiting at the bait for 20 game seconds.
+async function trial( shots )
 {
-	fs.mkdirSync( OUT, { recursive: true } );
 	const { ctx, page } = await launch( { profile: '/tmp/pb3x-profile-vehicles', width: 1600, height: 900, mods: MODS } );
 	const out = { level: LEVEL };
 	try
@@ -90,10 +90,24 @@ const log = ( ...a )=>console.log( new Date().toISOString().slice( 11, 19 ), ...
 		for ( const m of out.moved ) m.towards = m.alive && !m.crew ? ( m.closer > 150 ? 'closed' : m.moved > 150 && m.end !== null && m.end < 200 ? 'reached' : null ) : null;
 		out.movedCount = out.moved.filter( ( m )=>m.towards ).length;
 		out.anyMoved = out.moved.filter( ( m )=>m.moved > 150 ).length;
-		for ( const [ name, x, y, zoom ] of SPOTS[ LEVEL ] ) { await shoot( page, path.join( OUT, LEVEL + '-waypoints-' + name + '.png' ), { x, y, zoom, frames: 40 } ); log( 'shot', name ); }
+		if ( shots ) for ( const [ name, x, y, zoom ] of SPOTS[ LEVEL ] ) { await shoot( page, path.join( OUT, LEVEL + '-waypoints-' + name + '.png' ), { x, y, zoom, frames: 40 } ); log( 'shot', name ); }
 	}
 	catch ( e ) { out.failed = e.message.slice( 0, 800 ); log( 'FAILED', out.failed ); }
-	fs.writeFileSync( path.join( OUT, LEVEL + '-waypoints.json' ), JSON.stringify( out, null, 1 ) );
-	log( JSON.stringify( out ) );
 	await ctx.close();
+	return out;
+}
+// The AI chooses afresh each run (the count read 1, 2, 2, 5, 0 on the same level), so three independent trials: the
+// report is the median trial's count, and the probe holds only if the player held in every trial.
+( async ()=>
+{
+	fs.mkdirSync( OUT, { recursive: true } );
+	const trials = [];
+	for ( let i = 0; i < 3; i++ ) { trials.push( await trial( i === 2 ) ); log( 'trial', i, trials[ i ].movedCount, trials[ i ].failed || '' ); }
+	const counts = trials.map( ( t )=>t.movedCount || 0 ).sort( ( a, b )=>a - b );
+	const out = { level: LEVEL, trials: trials.map( ( t )=>( { movedCount: t.movedCount, anyMoved: t.anyMoved, playerHeld: t.playerHeld, gameSecs: t.gameSecs, failed: t.failed, towards: ( t.moved || [] ).filter( ( m )=>m.towards ).map( ( m )=>[ m.name, m.towards, m.closer ] ) } ) ),
+		counts, movedCount: counts[ 1 ], playerHeld: trials.every( ( t )=>t.playerHeld ), moved: trials[ 2 ].moved };
+	const bad = trials.map( ( t )=>t.failed ).filter( Boolean );
+	if ( bad.length ) out.failed = bad.join( '; ' ).slice( 0, 800 );
+	fs.writeFileSync( path.join( OUT, LEVEL + '-waypoints.json' ), JSON.stringify( out, null, 1 ) );
+	log( JSON.stringify( { counts, movedCount: out.movedCount, playerHeld: out.playerHeld } ) );
 } )();

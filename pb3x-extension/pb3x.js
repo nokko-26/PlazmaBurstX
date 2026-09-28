@@ -17829,11 +17829,9 @@ function ladders()
 // are: in the Underhang the soldiers were two thirds of every frame's draw calls (measured: 1706 with them, 544
 // without), most of them off screen. So a soldier far from every player doesn't think (its controller skips its turn,
 // its inputs left at rest) until a player comes within FAR.think px — about a screen and a half: measured, the awake
-// soldiers' thinking was ~40% of a busy frame. The window is what a player sees at the game's zoom (about 1,210 × 680
-// px) and half a screen more across: measured at the deck with the player there, waking soldiers only this near took
-// the frame from 3.5× the editor's starting map to 1.6× — the soldiers off screen, awake and fighting, were most of it —
-// and four of the hunters that come to a player waiting in the deck start inside it.
-const FAR = { thinkX: 1100, thinkY: 640, margin: 320 };
+// soldiers' thinking was ~40% of a busy frame. (A window cut to the view was tried and measured: no saving that held
+// from run to run — the frame follows the live fight at the spot — and fewer hunters came, so it stays this wide.)
+const FAR = { thinkX: 1700, thinkY: 800, margin: 320 };
 // (the game's objects are sealed: nothing is added to them — what we keep about them lives in these maps)
 const asleep = new WeakSet(), hidByUs = new WeakSet();
 const kindOff = new Set();                                                   // (set pieces hidden by kind, for measuring)
