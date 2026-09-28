@@ -1,0 +1,11 @@
+{
+ "summary": "Cycle 17 observed: 26 of 27 required residues hold. enemies-path holds over three independent trials (3, 3, 4; median 3; player held in each, 20-20.8 game seconds). Every play test passes. Only frame-cost is open: 3.76x (start 217, tower span 500, deck 500, road 217 ms against 133).",
+ "claims": [
+  {"kind": "INFERENCE", "text": "enemies-path holds as a property of the level, not of one run: trial counts 3, 3, 4 with the flame heavy closing 345-422 px in all three and the deck troopers closing or reaching the player.", "cites": ["ev_mukuhal1_f241fb94bd"], "residueIds": ["enemies-path"]},
+  {"kind": "INFERENCE", "text": "frame-cost remains 3.76x at the fight spots (tower span, deck 500 ms) while the spots without a fight (start, road 217 ms) are 1.6x. Across cycles 11-17 the worst spot read 3.7-6.1x; with no enemies the deck reads 0.8-1.1x of its run's baseline; the set pieces together are ~33 ms; neither the wake window nor off-camera culling moved the fight's cost reliably.", "cites": ["ev_mukub7hx_d23631bc25", "ev_muktiwmm_6e1e0cc0b5", "ev_mukbvlys_19d88ac69f"], "residueIds": ["frame-cost"]},
+  {"kind": "JUDGEMENT", "text": "The remaining gap is the engine drawing a live fight (awake soldiers firing at a god-mode player) under a software rasteriser, measured against a start map with no fight. Closing it inside the level means removing soldiers from the fight spots — against the intent's own dense foundation fights. Whether the 1.5x threshold applies to that measurement is the human's call; the loop does not move the threshold.", "cites": ["ev_mukub7hx_d23631bc25", "ev_muktiwmm_6e1e0cc0b5"], "residueIds": ["frame-cost"]}
+ ],
+ "transitions": [],
+ "judgements": [],
+ "unknowns": ["The same measurement on a hardware GPU."]
+}

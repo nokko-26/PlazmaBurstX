@@ -1,6 +1,6 @@
 {
- "phase": "OBSERVE",
- "seq": 38,
+ "phase": "TERMINAL",
+ "seq": 40,
  "cycle": 17,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
@@ -23,7 +23,8 @@
    3,
    2,
    1,
-   2
+   2,
+   1
   ],
   "actionSigs": [
    "80fe487f50efe234",
@@ -114,7 +115,7 @@
   ]
  },
  "budgetSpent": {
-  "engineCalls": 38,
+  "engineCalls": 40,
   "actions": 72,
   "cycles": 17,
   "cost": 51,
@@ -195,18 +196,22 @@
   "act_65dfdc7f10a7889305f1"
  ],
  "lastProbeIds": {
-  "probe:d22e87edb3fa10bb": "ev_muktiwr6_88f508b35a",
-  "probe:5e40829617afc91e": "ev_muktqe7z_c68428d024",
-  "probe:f0da2bbb4787153c": "ev_muktqe9d_072424f960",
-  "probe:7980a067bb842f7b": "ev_muktqehw_f3813b7fa0",
-  "probe:3ddf0d6bd2086dd8": "ev_muktqen9_ea9eac0b4e",
-  "probe:cb3bd0e8c318b9ec": "ev_muktqeuh_9f29452ca3",
-  "probe:990fb3e94a4cb262": "ev_muktuavm_c0bf027876",
-  "probe:5ae70d282044ba98": "ev_muktwv02_6489ccdee2",
-  "probe:91dd14c2d620911a": "ev_mukty7x6_e173df23c5",
-  "probe:aea6c2d28affb31d": "ev_mukty7ys_710c108b7d"
+  "probe:d22e87edb3fa10bb": "ev_muku09xk_778cfd369a",
+  "probe:5e40829617afc91e": "ev_muku7bgo_4c3831c197",
+  "probe:f0da2bbb4787153c": "ev_muku7bi1_33ed148128",
+  "probe:7980a067bb842f7b": "ev_muku7bqo_122041373d",
+  "probe:3ddf0d6bd2086dd8": "ev_muku7bw1_2c1d4ff918",
+  "probe:cb3bd0e8c318b9ec": "ev_muku7c35_9dc63254b8",
+  "probe:990fb3e94a4cb262": "ev_mukub7hx_d23631bc25",
+  "probe:5ae70d282044ba98": "ev_mukuhal1_f241fb94bd",
+  "probe:91dd14c2d620911a": "ev_mukuin18_08df459961",
+  "probe:aea6c2d28affb31d": "ev_mukuin2x_fd25faaaa1"
  },
- "terminal": null,
+ "terminal": {
+  "state": "NEEDS_HUMAN",
+  "why": "frame-cost is the only open residue (26 of 27 hold). The intent's threshold is 'the frame cost stays within 1.5x the editor's starting map's'. Measured here under the software renderer (SwiftShader), with the player held at each busy spot and the soldiers there fighting it, the worst spot reads 3.7-6.1x across seven cycles; the same spots with no enemies read 0.8-1.1x, so the level's geometry and set pieces are within the bar and the gap is the engine drawing the fight. Choose one: (a) keep 1.5x as measured, which means thinning the soldiers at the foundation fights (tower span, deck); (b) measure frame cost as level 01 was, without a live fight at the spot; (c) set a different bar for software rendering, or have it measured on a hardware GPU.",
+  "at": "2026-09-28T06:08:17.338Z"
+ },
  "finalRounds": 0,
  "lastActions": [
   {
@@ -500,8 +505,21 @@
   "ev_muktuavm_c0bf027876",
   "ev_muktwv02_6489ccdee2",
   "ev_mukty7x6_e173df23c5",
-  "ev_mukty7ys_710c108b7d"
+  "ev_mukty7ys_710c108b7d",
+  "ev_muku09mr_c374bcdd74",
+  "ev_muku09t3_1bf3c430fb",
+  "ev_muku09t4_926c0df4c4",
+  "ev_muku09xk_778cfd369a",
+  "ev_muku7bgo_4c3831c197",
+  "ev_muku7bi1_33ed148128",
+  "ev_muku7bqo_122041373d",
+  "ev_muku7bw1_2c1d4ff918",
+  "ev_muku7c35_9dc63254b8",
+  "ev_mukub7hx_d23631bc25",
+  "ev_mukuhal1_f241fb94bd",
+  "ev_mukuin18_08df459961",
+  "ev_mukuin2x_fd25faaaa1"
  ],
- "failureHandled": true,
+ "failureHandled": false,
  "stallReason": "REGRESSION"
 }

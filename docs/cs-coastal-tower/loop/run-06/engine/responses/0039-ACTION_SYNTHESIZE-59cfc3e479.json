@@ -1,0 +1,4 @@
+{
+ "actions": [],
+ "needHuman": "frame-cost is the only open residue (26 of 27 hold). The intent's threshold is 'the frame cost stays within 1.5x the editor's starting map's'. Measured here under the software renderer (SwiftShader), with the player held at each busy spot and the soldiers there fighting it, the worst spot reads 3.7-6.1x across seven cycles; the same spots with no enemies read 0.8-1.1x, so the level's geometry and set pieces are within the bar and the gap is the engine drawing the fight. Choose one: (a) keep 1.5x as measured, which means thinning the soldiers at the foundation fights (tower span, deck); (b) measure frame cost as level 01 was, without a live fight at the spot; (c) set a different bar for software rendering, or have it measured on a hardware GPU."
+}
