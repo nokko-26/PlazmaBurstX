@@ -1,7 +1,7 @@
 {
- "phase": "ACT",
- "seq": 35,
- "cycle": 15,
+ "phase": "FAILURE",
+ "seq": 37,
+ "cycle": 16,
  "adversarialRounds": 3,
  "invalidAnswers": 0,
  "stall": {
@@ -22,7 +22,8 @@
    4,
    3,
    2,
-   1
+   1,
+   2
   ],
   "actionSigs": [
    "80fe487f50efe234",
@@ -89,6 +90,10 @@
    "0a86473e94b5aaa5",
    "498fe5716500fe14",
    "3f74bac72552f6be",
+   "e601888a1b335334",
+   "7bf01c140875a575",
+   "49945993ba0646e5",
+   "498fe5716500fe14",
    "e601888a1b335334"
   ],
   "hypotheses": [
@@ -105,9 +110,9 @@
   ]
  },
  "budgetSpent": {
-  "engineCalls": 35,
-  "actions": 65,
-  "cycles": 15,
+  "engineCalls": 37,
+  "actions": 69,
+  "cycles": 16,
   "cost": 51,
   "startedAt": 1790529166395
  },
@@ -176,32 +181,36 @@
   "act_02e51627010288942786",
   "act_20915147d5d843791c11",
   "act_b7c533fd044317db56bd",
-  "act_f907504ed32774348aa4"
+  "act_f907504ed32774348aa4",
+  "act_2a7cf5de1c3f70b5452e",
+  "act_3e1e79e069c0e0616fe8",
+  "act_2b091047f4f7200d6007",
+  "act_bd5225ef3489694ea3c0"
  ],
  "lastProbeIds": {
-  "probe:d22e87edb3fa10bb": "ev_mukbvm2n_e2ed74c660",
-  "probe:5e40829617afc91e": "ev_mukc35gt_37d05754fa",
-  "probe:f0da2bbb4787153c": "ev_mukc35hw_45e6950cd0",
-  "probe:7980a067bb842f7b": "ev_mukc35p5_bba0f7d3e9",
-  "probe:3ddf0d6bd2086dd8": "ev_mukc35u9_88ca74ead2",
-  "probe:cb3bd0e8c318b9ec": "ev_mukc362c_1f90941f91",
-  "probe:990fb3e94a4cb262": "ev_mukc6krz_3573f8247d",
-  "probe:5ae70d282044ba98": "ev_mukc9lu5_e5e5cd9299",
-  "probe:91dd14c2d620911a": "ev_mukcayfv_038703fa5b",
-  "probe:aea6c2d28affb31d": "ev_mukcayhu_1097350dc7"
+  "probe:d22e87edb3fa10bb": "ev_muktiwr6_88f508b35a",
+  "probe:5e40829617afc91e": "ev_muktqe7z_c68428d024",
+  "probe:f0da2bbb4787153c": "ev_muktqe9d_072424f960",
+  "probe:7980a067bb842f7b": "ev_muktqehw_f3813b7fa0",
+  "probe:3ddf0d6bd2086dd8": "ev_muktqen9_ea9eac0b4e",
+  "probe:cb3bd0e8c318b9ec": "ev_muktqeuh_9f29452ca3",
+  "probe:990fb3e94a4cb262": "ev_muktuavm_c0bf027876",
+  "probe:5ae70d282044ba98": "ev_muktwv02_6489ccdee2",
+  "probe:91dd14c2d620911a": "ev_mukty7x6_e173df23c5",
+  "probe:aea6c2d28affb31d": "ev_mukty7ys_710c108b7d"
  },
  "terminal": null,
  "finalRounds": 0,
  "lastActions": [
   {
-   "id": "act_b7c533fd044317db56bd",
+   "id": "act_2a7cf5de1c3f70b5452e",
    "tool": "file.write_from",
    "targets": [
-    "enemies-path"
+    "frame-cost"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_mukbm06b_0fa9279a49",
+   "evidence": "ev_mukt84d0_e94b3dd426",
    "expectedEvidence": [
     "tool.file.write_from with a new sha256"
    ],
@@ -210,20 +219,51 @@
    ]
   },
   {
-   "id": "act_f907504ed32774348aa4",
+   "id": "act_3e1e79e069c0e0616fe8",
+   "tool": "pb3x.bake",
+   "targets": [
+    "frame-cost"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_mukt84mv_5243c74b22",
+   "expectedEvidence": [
+    "tool.pb3x.bake ok"
+   ],
+   "failureSignatures": [
+    "bake verify failed"
+   ]
+  },
+  {
+   "id": "act_2b091047f4f7200d6007",
+   "tool": "file.write_from",
+   "targets": [
+    "frame-cost"
+   ],
+   "executed": true,
+   "ok": true,
+   "evidence": "ev_mukt84mx_06df48ab09",
+   "expectedEvidence": [
+    "tool.file.write_from with a new sha256"
+   ],
+   "failureSignatures": [
+    "write error"
+   ]
+  },
+  {
+   "id": "act_bd5225ef3489694ea3c0",
    "tool": "pb3x.harness",
    "targets": [
     "frame-cost"
    ],
    "executed": true,
    "ok": true,
-   "evidence": "ev_mukbvlys_19d88ac69f",
+   "evidence": "ev_muktiwmm_6e1e0cc0b5",
    "expectedEvidence": [
-    "tool.pb3x.harness report.steps.* with ms, draws, ratio"
+    "tool.pb3x.harness report.steps"
    ],
    "failureSignatures": [
-    "report.failed",
-    "timed out"
+    "report.failed"
    ]
   }
  ],
@@ -453,7 +493,21 @@
   "ev_mukc6krz_3573f8247d",
   "ev_mukc9lu5_e5e5cd9299",
   "ev_mukcayfv_038703fa5b",
-  "ev_mukcayhu_1097350dc7"
+  "ev_mukcayhu_1097350dc7",
+  "ev_mukt84d0_e94b3dd426",
+  "ev_mukt84mv_5243c74b22",
+  "ev_mukt84mx_06df48ab09",
+  "ev_muktiwmm_6e1e0cc0b5",
+  "ev_muktiwr6_88f508b35a",
+  "ev_muktqe7z_c68428d024",
+  "ev_muktqe9d_072424f960",
+  "ev_muktqehw_f3813b7fa0",
+  "ev_muktqen9_ea9eac0b4e",
+  "ev_muktqeuh_9f29452ca3",
+  "ev_muktuavm_c0bf027876",
+  "ev_muktwv02_6489ccdee2",
+  "ev_mukty7x6_e173df23c5",
+  "ev_mukty7ys_710c108b7d"
  ],
  "failureHandled": false,
  "stallReason": "REGRESSION"

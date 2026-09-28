@@ -44,7 +44,7 @@
   "criteriaHash": "b4a8d332b2b0e3eb4f8d460fda4bcc31bc3bd6cbb8ad48e2364c3b2c1d52b89c",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukbvm2n_e2ed74c660"
+   "ev_muktiwr6_88f508b35a"
   ],
   "history": [
    {
@@ -195,6 +195,15 @@
      "ev_mukbvm2n_e2ed74c660"
     ],
     "why": "contract PASS (cycle 15): 4 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.206Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktiwr6_88f508b35a"
+    ],
+    "why": "contract PASS (cycle 16): 4 assertion(s) held"
    }
   ]
  },
@@ -243,7 +252,7 @@
   "criteriaHash": "8fc7bbe39402b7cdf89793165a12b86d1f9d9b62df26eb0460e0aa2606eeef16",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35gt_37d05754fa"
+   "ev_muktqe7z_c68428d024"
   ],
   "history": [
    {
@@ -394,6 +403,15 @@
      "ev_mukc35gt_37d05754fa"
     ],
     "why": "contract PASS (cycle 15): 4 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.206Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqe7z_c68428d024"
+    ],
+    "why": "contract PASS (cycle 16): 4 assertion(s) held"
    }
   ]
  },
@@ -430,7 +448,7 @@
   "criteriaHash": "a0e4596da54c90cbb4bbb7acc4782d2170d69b4c3a2791f27a9b9ef310d9adcf",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukbvm2n_e2ed74c660"
+   "ev_muktiwr6_88f508b35a"
   ],
   "history": [
    {
@@ -581,6 +599,15 @@
      "ev_mukbvm2n_e2ed74c660"
     ],
     "why": "contract PASS (cycle 15): 1 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.206Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktiwr6_88f508b35a"
+    ],
+    "why": "contract PASS (cycle 16): 1 assertion(s) held"
    }
   ]
  },
@@ -627,7 +654,7 @@
   "criteriaHash": "091d9ae7bcd5a196540b7450bf97ab2405a42893a6e4b97600adde45dc691e2f",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukbvm2n_e2ed74c660"
+   "ev_muktiwr6_88f508b35a"
   ],
   "history": [
    {
@@ -778,6 +805,15 @@
      "ev_mukbvm2n_e2ed74c660"
     ],
     "why": "contract PASS (cycle 15): 3 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.206Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktiwr6_88f508b35a"
+    ],
+    "why": "contract PASS (cycle 16): 3 assertion(s) held"
    }
   ]
  },
@@ -819,7 +855,7 @@
   "criteriaHash": "cc65fa4a24d450aa3045277bbf4301ba3b9e7b176b4b7df832c775b539c4e93d",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukbvm2n_e2ed74c660"
+   "ev_muktiwr6_88f508b35a"
   ],
   "history": [
    {
@@ -970,6 +1006,15 @@
      "ev_mukbvm2n_e2ed74c660"
     ],
     "why": "contract PASS (cycle 15): 2 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.206Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktiwr6_88f508b35a"
+    ],
+    "why": "contract PASS (cycle 16): 2 assertion(s) held"
    }
   ]
  },
@@ -1016,7 +1061,7 @@
   "criteriaHash": "209d79ae023289cefe51a4d62ccaf94fba549c2f243a1d9490985d2cfc29f638",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35gt_37d05754fa"
+   "ev_muktqe7z_c68428d024"
   ],
   "history": [
    {
@@ -1167,6 +1212,15 @@
      "ev_mukc35gt_37d05754fa"
     ],
     "why": "contract PASS (cycle 15): 4 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.206Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqe7z_c68428d024"
+    ],
+    "why": "contract PASS (cycle 16): 4 assertion(s) held"
    }
   ]
  },
@@ -1207,7 +1261,7 @@
   "criteriaHash": "23253a4fbe75cb177fd0136a0c407a11a9730c2c60a4384b48054332b0f06094",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35gt_37d05754fa"
+   "ev_muktqe7z_c68428d024"
   ],
   "history": [
    {
@@ -1358,6 +1412,15 @@
      "ev_mukc35gt_37d05754fa"
     ],
     "why": "contract PASS (cycle 15): 2 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.206Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqe7z_c68428d024"
+    ],
+    "why": "contract PASS (cycle 16): 2 assertion(s) held"
    }
   ]
  },
@@ -1400,7 +1463,7 @@
   "criteriaHash": "08ee238303acc23eb7d0b02dd2f4e5a146f6b6ab71a661d4a4a3429e7c595bd3",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35gt_37d05754fa"
+   "ev_muktqe7z_c68428d024"
   ],
   "history": [
    {
@@ -1551,6 +1614,15 @@
      "ev_mukc35gt_37d05754fa"
     ],
     "why": "contract PASS (cycle 15): 3 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.206Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqe7z_c68428d024"
+    ],
+    "why": "contract PASS (cycle 16): 3 assertion(s) held"
    }
   ]
  },
@@ -1589,7 +1661,7 @@
   "criteriaHash": "7b07d0df66cfee86f81199fef9db36f0205d7beb40ffab7f6cabccdaff98e569",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35gt_37d05754fa"
+   "ev_muktqe7z_c68428d024"
   ],
   "history": [
    {
@@ -1740,6 +1812,15 @@
      "ev_mukc35gt_37d05754fa"
     ],
     "why": "contract PASS (cycle 15): 2 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqe7z_c68428d024"
+    ],
+    "why": "contract PASS (cycle 16): 2 assertion(s) held"
    }
   ]
  },
@@ -1805,7 +1886,7 @@
   "criteriaHash": "fdf342af490aa0de7bb70d3be00e4792ee153320743d7a20e668b25bf011f151",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35hw_45e6950cd0"
+   "ev_muktqe9d_072424f960"
   ],
   "history": [
    {
@@ -1956,6 +2037,15 @@
      "ev_mukc35hw_45e6950cd0"
     ],
     "why": "contract PASS (cycle 15): 7 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqe9d_072424f960"
+    ],
+    "why": "contract PASS (cycle 16): 7 assertion(s) held"
    }
   ]
  },
@@ -2025,7 +2115,7 @@
   "criteriaHash": "1d38d87462476f660ce0dde27e3fd0aab4cc286a1fbbee8c101df9ac5b4f6993",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35p5_bba0f7d3e9"
+   "ev_muktqehw_f3813b7fa0"
   ],
   "history": [
    {
@@ -2176,6 +2266,15 @@
      "ev_mukc35p5_bba0f7d3e9"
     ],
     "why": "contract PASS (cycle 15): 8 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqehw_f3813b7fa0"
+    ],
+    "why": "contract PASS (cycle 16): 8 assertion(s) held"
    }
   ]
  },
@@ -2226,7 +2325,7 @@
   "criteriaHash": "c15ddb2bb69e2a905e8209c1a93deadd2cceedce68bda35d88c578dc883d8cad",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35u9_88ca74ead2"
+   "ev_muktqen9_ea9eac0b4e"
   ],
   "history": [
    {
@@ -2377,6 +2476,15 @@
      "ev_mukc35u9_88ca74ead2"
     ],
     "why": "contract PASS (cycle 15): 3 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqen9_ea9eac0b4e"
+    ],
+    "why": "contract PASS (cycle 16): 3 assertion(s) held"
    }
   ]
  },
@@ -2541,7 +2649,7 @@
   "criteriaHash": "4be8d66f7caf94ddb8459e369e7993374213107f811bfb5669fca558c3f3168a",
   "status": "CONTRADICTED",
   "evidence": [
-   "ev_mukc6krz_3573f8247d"
+   "ev_muktuavm_c0bf027876"
   ],
   "history": [
    {
@@ -2692,6 +2800,15 @@
      "ev_mukc6krz_3573f8247d"
     ],
     "why": "contract FAIL (cycle 15): failed report.worstRatio lte 1.5 (got 4.64)"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "CONTRADICTED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muktuavm_c0bf027876"
+    ],
+    "why": "contract FAIL (cycle 16): failed report.worstRatio lte 1.5 (got 6.14)"
    }
   ]
  },
@@ -2732,9 +2849,9 @@
   "parent": null,
   "origin": "compile",
   "criteriaHash": "fb0a36ea2e85bd61dd6a0935c95515928a1243e18743171e71936a96ff3e6183",
-  "status": "SATISFIED",
+  "status": "CONTRADICTED",
   "evidence": [
-   "ev_mukc9lu5_e5e5cd9299"
+   "ev_muktwv02_6489ccdee2"
   ],
   "history": [
    {
@@ -2885,6 +3002,15 @@
      "ev_mukc9lu5_e5e5cd9299"
     ],
     "why": "contract PASS (cycle 15): 2 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "CONTRADICTED",
+    "evidence": [
+     "ev_muktwv02_6489ccdee2"
+    ],
+    "why": "REGRESSION: contract FAIL (cycle 16): failed report.movedCount gte 3 (got 0)"
    }
   ]
  },
@@ -2933,7 +3059,7 @@
   "criteriaHash": "9aacd7910dc9e6dca5d3dc482aeeccc640dece9392300a8cb88461c4c80f0857",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukcayfv_038703fa5b"
+   "ev_mukty7x6_e173df23c5"
   ],
   "history": [
    {
@@ -3084,6 +3210,15 @@
      "ev_mukcayfv_038703fa5b"
     ],
     "why": "contract PASS (cycle 15): 3 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_mukty7x6_e173df23c5"
+    ],
+    "why": "contract PASS (cycle 16): 3 assertion(s) held"
    }
   ]
  },
@@ -3130,7 +3265,7 @@
   "criteriaHash": "f5b9c25cfe0d0574669b7b3cbf747641be51ebf1938b0f29865d11b1d7f760c5",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukbvm2n_e2ed74c660"
+   "ev_muktiwr6_88f508b35a"
   ],
   "history": [
    {
@@ -3281,6 +3416,15 @@
      "ev_mukbvm2n_e2ed74c660"
     ],
     "why": "contract PASS (cycle 15): 3 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktiwr6_88f508b35a"
+    ],
+    "why": "contract PASS (cycle 16): 3 assertion(s) held"
    }
   ]
  },
@@ -3323,7 +3467,7 @@
   "criteriaHash": "bedf77fadb4dd6b539aa502e46e45672f3a8d063aecf81c76bddbea773b268cc",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukcayhu_1097350dc7"
+   "ev_mukty7ys_710c108b7d"
   ],
   "history": [
    {
@@ -3474,6 +3618,15 @@
      "ev_mukcayhu_1097350dc7"
     ],
     "why": "contract PASS (cycle 15): 3 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_mukty7ys_710c108b7d"
+    ],
+    "why": "contract PASS (cycle 16): 3 assertion(s) held"
    }
   ]
  },
@@ -3508,7 +3661,7 @@
   "criteriaHash": "8dcfc7deccd6f15f36a8b4a68e86ab57d096a05dd1384753bf18f0b833ebc626",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35gt_37d05754fa"
+   "ev_muktqe7z_c68428d024"
   ],
   "history": [
    {
@@ -3659,6 +3812,15 @@
      "ev_mukc35gt_37d05754fa"
     ],
     "why": "contract PASS (cycle 15): 1 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqe7z_c68428d024"
+    ],
+    "why": "contract PASS (cycle 16): 1 assertion(s) held"
    }
   ]
  },
@@ -3694,7 +3856,7 @@
   "criteriaHash": "49ca13744e82f29ff8fddf5432c6b2bd49b6464dfa2d246d7fa6d86515fe7a25",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35gt_37d05754fa"
+   "ev_muktqe7z_c68428d024"
   ],
   "history": [
    {
@@ -3845,6 +4007,15 @@
      "ev_mukc35gt_37d05754fa"
     ],
     "why": "contract PASS (cycle 15): 1 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqe7z_c68428d024"
+    ],
+    "why": "contract PASS (cycle 16): 1 assertion(s) held"
    }
   ]
  },
@@ -3887,7 +4058,7 @@
   "criteriaHash": "6faf0d326aa24b73a8972f17ba1b77835fce6453cfded1b44d54bf08ce7cc070",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35gt_37d05754fa"
+   "ev_muktqe7z_c68428d024"
   ],
   "history": [
    {
@@ -4038,6 +4209,15 @@
      "ev_mukc35gt_37d05754fa"
     ],
     "why": "contract PASS (cycle 15): 3 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqe7z_c68428d024"
+    ],
+    "why": "contract PASS (cycle 16): 3 assertion(s) held"
    }
   ]
  },
@@ -4077,7 +4257,7 @@
   "criteriaHash": "feb54e5af6a506b16cbab6c1d31169fd2f55d961d56cef5df96b556461a5f72d",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35p5_bba0f7d3e9"
+   "ev_muktqehw_f3813b7fa0"
   ],
   "history": [
    {
@@ -4228,6 +4408,15 @@
      "ev_mukc35p5_bba0f7d3e9"
     ],
     "why": "contract PASS (cycle 15): 2 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqehw_f3813b7fa0"
+    ],
+    "why": "contract PASS (cycle 16): 2 assertion(s) held"
    }
   ]
  },
@@ -4264,7 +4453,7 @@
   "criteriaHash": "2b5030a9cdb2f69e9efffaeec4482717c245c5d75aa3b7edda2e05ea8fb21223",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukbvm2n_e2ed74c660"
+   "ev_muktiwr6_88f508b35a"
   ],
   "history": [
    {
@@ -4415,6 +4604,15 @@
      "ev_mukbvm2n_e2ed74c660"
     ],
     "why": "contract PASS (cycle 15): 1 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktiwr6_88f508b35a"
+    ],
+    "why": "contract PASS (cycle 16): 1 assertion(s) held"
    }
   ]
  },
@@ -4453,7 +4651,7 @@
   "criteriaHash": "c58690d71d86d76d5ccf6f830127c307bbe07b9d874e033ea5776698dbc0a1c6",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukcayfv_038703fa5b"
+   "ev_mukty7x6_e173df23c5"
   ],
   "history": [
    {
@@ -4604,6 +4802,15 @@
      "ev_mukcayfv_038703fa5b"
     ],
     "why": "contract PASS (cycle 15): 1 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_mukty7x6_e173df23c5"
+    ],
+    "why": "contract PASS (cycle 16): 1 assertion(s) held"
    }
   ]
  },
@@ -4665,7 +4872,7 @@
   "criteriaHash": "9f854f5bec3bbd5336951e621fdc1170b1b0871513e656d18b6b8490b32c5ed6",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukbvm2n_e2ed74c660"
+   "ev_muktiwr6_88f508b35a"
   ],
   "history": [
    {
@@ -4816,6 +5023,15 @@
      "ev_mukbvm2n_e2ed74c660"
     ],
     "why": "contract PASS (cycle 15): 6 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.207Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktiwr6_88f508b35a"
+    ],
+    "why": "contract PASS (cycle 16): 6 assertion(s) held"
    }
   ]
  },
@@ -4851,7 +5067,7 @@
   "criteriaHash": "5fd424328f4e2b1be28a8a6b22e8d6b64ad8f27023d0ffd329504cbde6cdbeb3",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukc35gt_37d05754fa"
+   "ev_muktqe7z_c68428d024"
   ],
   "history": [
    {
@@ -5002,6 +5218,15 @@
      "ev_mukc35gt_37d05754fa"
     ],
     "why": "contract PASS (cycle 15): 1 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.208Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktqe7z_c68428d024"
+    ],
+    "why": "contract PASS (cycle 16): 1 assertion(s) held"
    }
   ]
  },
@@ -5043,7 +5268,7 @@
   "criteriaHash": "9743d6eb8944687eb2450549d97d9dfeac908dc801855dfb8461ff21bbed96b0",
   "status": "SATISFIED",
   "evidence": [
-   "ev_mukbvm2n_e2ed74c660"
+   "ev_muktiwr6_88f508b35a"
   ],
   "history": [
    {
@@ -5194,6 +5419,15 @@
      "ev_mukbvm2n_e2ed74c660"
     ],
     "why": "contract PASS (cycle 15): 2 assertion(s) held"
+   },
+   {
+    "at": "2026-09-28T05:51:49.208Z",
+    "from": "SATISFIED",
+    "to": "SATISFIED",
+    "evidence": [
+     "ev_muktiwr6_88f508b35a"
+    ],
+    "why": "contract PASS (cycle 16): 2 assertion(s) held"
    }
   ]
  }

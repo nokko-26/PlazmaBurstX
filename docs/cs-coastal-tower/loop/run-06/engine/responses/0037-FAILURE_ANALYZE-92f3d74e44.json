@@ -1,0 +1,9 @@
+{
+ "diagnosis": "Two residues are now governed by run-to-run variance, not by a defect the next edit can remove. enemies-path has read 1, 2, 2, 5, 0 across cycles with the level essentially unchanged: a single 20-game-second trial samples the AI's choice once. frame-cost reads 2.3-3.5x (matrix, deck) and 4.6-6.1x (perf, worst of four spots) with the fight on, and 0.8-1.1x with no enemies; the one lever tried last cycle (a view-sized wake window) showed no saving that held, and cost the far hunters. Repeating edits against single noisy runs is the failed approach.",
+ "strategy": "DISCRIMINATING_EXPERIMENT",
+ "actions": [
+  {"targets": ["enemies-path", "frame-cost"], "rationale": "Undo the view-sized wake window (no measurable saving, fewer hunters woke): back to the reviewed 1700 x 800; nothing else changes.", "tool": "file.write_from", "params": {"from": "cs-coastal-tower.user.js", "path": "mods/cs-coastal-tower.user.js"}, "predictedEffect": "mods/cs-coastal-tower.user.js with FAR 1700 x 800.", "expectedEvidence": ["tool.file.write_from with a new sha256"], "failureSignatures": ["write error"], "risk": "low"},
+  {"targets": ["enemies-path", "frame-cost"], "rationale": "Bake it.", "tool": "pb3x.bake", "params": {}, "predictedEffect": "the extension carries it.", "expectedEvidence": ["tool.pb3x.bake ok"], "failureSignatures": ["bake verify failed"], "risk": "low"},
+  {"targets": ["enemies-path"], "rationale": "Discriminate the AI's variance from the level: three independent trials (a fresh session each), the report the median trial's count, holding only if the player held in every trial; each trial's count and hunters recorded.", "tool": "file.write_from", "params": {"from": "waypoints.js", "path": "tools/harness/levels/waypoints.js"}, "predictedEffect": "waypoints report carries trials[], counts, movedCount = median.", "expectedEvidence": ["tool.file.write_from with a new sha256"], "failureSignatures": ["write error"], "risk": "low"}
+ ]
+}
